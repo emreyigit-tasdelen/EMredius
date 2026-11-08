@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block content %}
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+      <p style="color:#64748b; font-size:0.95rem;">Departman veya rol bazlı şablonlar (Gruptaki tüm kullanıcılar VLAN ve hız sınırını devralır). Var olan bir grup adıyla kayıt yapılırsa grubun VLAN / hız ayarları güncellenir.</p>
+      <button class="btn btn-primary" data-on-click="openModal('addGroupModal');">
+        <i class="fa-solid fa-plus"></i> Yeni Grup Oluştur
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3><i class="fa-solid fa-layer-group"></i> Tanımlı Gruplar & Profiller</h3>
+        <span class="badge" style="background:#f3e8ff; color:#7e22ce;">{{ groups | length }} Grup</span>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:50px;">#</th>
+              <th>Grup Adı</th>
+              <th>Grup VLAN</th>
+              <th>Grup Hız Limiti</th>
+              <th>Üye Sayısı</th>
+              <th style="text-align:right;">İşlem</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for g in groups %}
+            {% set members = (g.member_count or 0) | int %}
+            <tr>
+              <td style="color:#94a3b8; font-weight:600;">{{ loop.index }}</td>
+              <td><strong>{{ g.groupname }}</strong></td>
+              <td>{% if g.vlan_id %}<span class="badge badge-vlan">VLAN {{ g.vlan_id }}</span>{% else %}Varsayılan{% endif %}</td>
+              <td>{% if g.rate_limit %}<span class="badge badge-rate">{{ g.rate_limit }}</span>{% else %}Limitsiz{% endif %}</td>
+              <td><span class="badge" style="background:#e0e7ff; color:#3730a3;">{{ members }} Üye</span></td>
+              <td style="text-align:right;">
+                <a href="/group/delete/{{ g.groupname | url_seg }}" class="btn btn-danger btn-sm" data-on-click="return confirm('{{ g.groupname | js }} grubunu silmek istediğinize emin misiniz?{% if members %} {{ members }} kullanıcının grup üyeliği de kaldırılacak.{% endif %}');">
+                  <i class="fa-solid fa-trash"></i> Sil
+                </a>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" style="text-align:center; padding:3rem; color:#94a3b8;">Henüz oluşturulmuş grup bulunmuyor.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Modal: Add / Update Group -->
+    <div class="modal-backdrop" id="addGroupModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Yeni Grup & Yetki Profili</h3>
+          <button class="btn btn-secondary btn-sm" data-on-click="closeModal('addGroupModal');">&times;</button>
+        </div>
+        <form method="POST" action="/group/add">
+          <div class="modal-body">
+            <div class="form-group">
+              <label>Grup Adı</label>
+              <input type="text" name="groupname" placeholder="Örn: Muhasebe, Yonetim, ArGe" required maxlength="64" pattern="[a-zA-Z0-9._\-]+">
+            </div>
+            <div class="form-group">
+              <label>Grup VLAN ID (Opsiyonel)</label>
+              <input type="number" name="vlan_id" min="1" max="4094" placeholder="Örn: 30">
+            </div>
+            <div class="form-group">
+              <label>Grup Hız Sınırı</label>
+              <select name="rate_limit">
+                <option value="">Limitsiz</option>
+                <option value="10M/5M">10 Mbps / 5 Mbps</option>
+                <option value="25M/10M" selected>25 Mbps / 10 Mbps</option>
+                <option value="50M/20M">50 Mbps / 20 Mbps</option>
+                <option value="100M/50M">100 Mbps / 50 Mbps</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-on-click="closeModal('addGroupModal');">İptal</button>
+            <button type="submit" class="btn btn-primary">Kaydet</button>
+          </div>
+        </form>
+      </div>
+    </div>
+{% endblock %}

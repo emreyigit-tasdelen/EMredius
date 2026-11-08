@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1rem;">
+  Kendi panonuzu hazır bileşenlerden kurun: envanter, alarmlar, sağlık, izlenen IP'ler, ekipman, döngü ve akış özetleri. Bileşenlere tıklayınca ilgili menü açılır. Pano 15 sn'de bir kendiliğinden yenilenir.
+</p>
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-table-columns"></i> Panolar</h3></div>
+  <div class="card-body">
+    <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem;">
+      {% for b in boards %}<a class="btn {{ 'btn-primary' if board and board.id == b.id }}" href="/boards?id={{ b.id }}">{{ b.name }} <small>({{ b.count }})</small></a>
+      {% else %}<span style="color:var(--text-muted);">Henüz pano yok. Aşağıdan oluşturun.</span>{% endfor %}
+    </div>
+    <form method="POST" action="/boards/add" style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:flex-end;">
+      {{ csrf_input() }}
+      <div class="form-group" style="flex:1 1 220px; margin-bottom:0;"><label>Yeni pano adı</label><input type="text" name="name" maxlength="64" required></div>
+      <button class="btn btn-primary" type="submit"><i class="fa-solid fa-plus"></i> Pano oluştur</button>
+    </form>
+  </div>
+</div>
+{% if board %}
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-gauge-high"></i> {{ board.name }}</h3>
+    <span><a class="btn" href="/boards/{{ board.id }}/export.json">JSON</a></span></div>
+  <div class="card-body">
+    <div id="bGrid" data-board="{{ board.id }}" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:1rem;"></div>
+  </div>
+</div>
+<div class="card">
+  <div class="card-header"><h3><i class="fa-solid fa-pen"></i> Panoyu düzenle</h3></div>
+  <div class="card-body">
+    <form method="POST" action="/boards/{{ board.id }}/widgets">
+      {{ csrf_input() }}
+      <div style="display:flex; flex-wrap:wrap; gap:1rem; margin-bottom:1rem;">
+        {% for k, label in catalog.items() %}<label style="display:flex; align-items:center; gap:0.4rem;"><input type="checkbox" name="widgets" value="{{ k }}" style="width:auto;" {{ 'checked' if k in board.widgets }}> {{ label }}</label>{% endfor %}
+      </div>
+      <button class="btn btn-primary" type="submit">Bileşenleri kaydet</button>
+    </form>
+    <div style="display:flex; flex-wrap:wrap; gap:1rem; margin-top:1rem;">
+      <form method="POST" action="/boards/{{ board.id }}/rename" style="display:flex; gap:0.5rem;">{{ csrf_input() }}
+        <input type="text" name="name" maxlength="64" value="{{ board.name }}" required><button class="btn">Yeniden adlandır</button></form>
+      <form method="POST" action="/boards/{{ board.id }}/delete" class="b-del">{{ csrf_input() }}<button class="btn btn-danger"><i class="fa-solid fa-trash"></i> Panoyu sil</button></form>
+    </div>
+  </div>
+</div>
+<script src="/static/js/boards.js?v={{ asset_version }}"></script>
+{% endif %}
+{% endblock %}

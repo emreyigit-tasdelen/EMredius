@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1rem;">
+  Kullanıcı adı, MAC veya IP yazın: kimlik doğrulama sonuçları, RADIUS oturumları, bağlı olduğu cihaz/port ve etkin kara liste/karantina işaretleri tek ekranda.
+</p>
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-diagram-project"></i> Korelasyon</h3>
+    <span class="status-pill online" id="coInfo">-</span></div>
+  <div class="card-body">
+    <div style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem; align-items:center;">
+      <input type="text" id="coQ" placeholder="Kullanıcı, MAC veya IP" value="{{ q }}" style="flex:1 1 240px;">
+      <select id="coDays" style="width:auto;">
+        {% for d in (1, 7, 30, 90, 365) %}<option value="{{ d }}" {{ 'selected' if d == days else '' }}>Son {{ d }} gün</option>{% endfor %}
+      </select>
+      <button class="btn btn-primary" type="button" id="coGo"><i class="fa-solid fa-magnifying-glass"></i> Ara</button>
+    </div>
+    <div id="coIds" style="margin-bottom:1rem;"></div>
+    <h4 style="margin:0.5rem 0;">Etkin işaretler</h4>
+    <div style="overflow-x:auto;"><table><thead><tr><th>Tür</th><th>MAC</th><th>Kullanıcı</th><th>Neden</th><th>Başlangıç</th></tr></thead><tbody id="coMarks"></tbody></table></div>
+    <h4 style="margin:1rem 0 0.5rem;">Kimlik doğrulama</h4>
+    <div style="overflow-x:auto;"><table><thead><tr><th>Zaman</th><th>Kullanıcı</th><th>Sonuç</th></tr></thead><tbody id="coAuth"></tbody></table></div>
+    <h4 style="margin:1rem 0 0.5rem;">RADIUS oturumları</h4>
+    <div style="overflow-x:auto;"><table><thead><tr><th>Kullanıcı</th><th>MAC</th><th>NAS</th><th>NAS portu</th><th>IP</th><th>Başlangıç</th><th>Bitiş</th></tr></thead><tbody id="coSess"></tbody></table></div>
+    <h4 style="margin:1rem 0 0.5rem;">Bağlanılan cihaz / port</h4>
+    <div style="overflow-x:auto;"><table><thead><tr><th>MAC</th><th>Cihaz</th><th>Port</th><th>VLAN</th><th>İlk</th><th>Son</th></tr></thead><tbody id="coPorts"></tbody></table></div>
+  </div>
+</div>
+<script src="/static/js/correlation.js?v={{ asset_version }}"></script>
+{% endblock %}

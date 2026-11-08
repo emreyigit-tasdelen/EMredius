@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1rem;">
+  Eşik kuralları (CPU, bellek, sıcaklık, izlenen IP kapalı), SNMP trap'ler ve NMS poller alarmları tek listede toplanır. Aynı olay tekrar ederse sayaç artar;
+  değer normale dönünce alarm kendiliğinden çözülür. E-posta bildirimi varsayılan kapalıdır (ayar: alarm_smtp_enabled, alarm_smtp_host).
+  Sayfa 10 sn'de bir kendiliğinden yenilenir.
+</p>
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-bell"></i> Alarmlar</h3>
+    <span class="status-pill online" id="aStats">{{ stats.active }} aktif · {{ stats.critical }} kritik · {{ stats.ack }} onaylı</span></div>
+  <div class="card-body">
+    <div style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem;">
+      <select id="aStatus"><option value="active">Aktif</option><option value="">Tümü</option><option value="ack">Onaylı</option><option value="resolved">Çözülen</option></select>
+      <select id="aSev"><option value="">Tüm önemler</option>{% for s in severities %}<option>{{ s }}</option>{% endfor %}</select>
+      <select id="aSrc"><option value="">Tüm kaynaklar</option><option value="rule">Kural</option><option value="trap">Trap</option><option value="ssh">SSH</option><option value="poller">NMS poller</option></select>
+      <input type="text" id="aQ" placeholder="Ara: IP, mesaj…" style="flex:1 1 200px;">
+      <a class="btn" id="aCsv" href="/alarms/export.csv">CSV</a><a class="btn" id="aJson" href="/alarms/export.json">JSON</a>
+      <a class="btn" href="/health">Sağlık</a><a class="btn" href="/watch">İzlenen IP'ler</a>
+    </div>
+    <div style="overflow-x:auto;"><table><thead><tr><th>Önem</th><th>Durum</th><th>Cihaz</th><th>Mesaj</th><th>Kaynak</th><th>İlk</th><th>Son</th><th>Adet</th><th></th></tr></thead>
+      <tbody id="aBody"></tbody></table></div>
+  </div>
+</div>
+<div class="card">
+  <div class="card-header"><h3><i class="fa-solid fa-sliders"></i> Eşik ve e-posta kuralları</h3></div>
+  <div class="card-body">
+    <form method="POST" action="/alarms/rule/add" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end; margin-bottom:1rem;">
+      {{ csrf_input() }}
+      <div class="form-group" style="flex:1 1 160px; margin-bottom:0;"><label>Ad</label><input type="text" name="name" maxlength="64" required></div>
+      <div class="form-group" style="flex:0 1 180px; margin-bottom:0;"><label>Ölçüt</label><select name="metric">{% for k, v in metrics.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div>
+      <div class="form-group" style="flex:0 1 100px; margin-bottom:0;"><label>Eşik (≥)</label><input type="number" name="threshold" step="any" value="80"></div>
+      <div class="form-group" style="flex:0 1 130px; margin-bottom:0;"><label>Önem</label><select name="severity">{% for s in severities %}<option {{ 'selected' if s=='WARNING' }}>{{ s }}</option>{% endfor %}</select></div>
+      <div class="form-group" style="flex:1 1 200px; margin-bottom:0;"><label>E-posta (virgülle, isteğe bağlı)</label><input type="text" name="email_to" maxlength="200"></div>
+      <button class="btn btn-primary" type="submit"><i class="fa-solid fa-plus"></i> Ekle</button>
+    </form>
+    <div style="overflow-x:auto;"><table><thead><tr><th>Ad</th><th>Ölçüt</th><th>Eşik</th><th>Önem</th><th>E-posta</th><th>Durum</th><th></th></tr></thead><tbody>
+      {% for r in rules %}<tr><td>{{ r.name }}</td><td>{{ r.metric_label }}</td><td>{{ r.threshold if r.metric != 'host_down' else '-' }}</td><td>{{ r.severity }}</td><td>{{ r.email_to or '-' }}</td>
+        <td>{{ 'açık' if r.enabled else 'kapalı' }}</td><td style="white-space:nowrap;">
+          <form method="POST" action="/alarms/rule/{{ r.id }}/toggle" style="display:inline;">{{ csrf_input() }}<button class="btn" style="padding:0.3rem 0.7rem;">Aç/Kapa</button></form>
+          <form method="POST" action="/alarms/rule/{{ r.id }}/delete" style="display:inline;" class="a-del">{{ csrf_input() }}<button class="btn btn-danger" style="padding:0.3rem 0.7rem;"><i class="fa-solid fa-trash"></i></button></form></td></tr>
+      {% else %}<tr><td colspan="7" style="color:var(--text-muted);">Henüz kural yok.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </div>
+</div>
+<div class="card" style="margin-top:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-terminal"></i> SSH cihaz alarmı</h3><span class="status-pill {{ 'online' if ssh.enabled else 'offline' }}">{{ 'açık' if ssh.enabled else 'kapalı' }}</span></div>
+  <div class="card-body">
+    <form method="POST" action="/alarms/ssh" style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:flex-end;">{{ csrf_input() }}
+      <label><input type="checkbox" name="enabled" value="1" style="width:auto;" {{ 'checked' if ssh.enabled }}> Etkin</label>
+      <div class="form-group" style="margin-bottom:0;"><label>SSH kimliği (Konfig Yönetimi)</label><select name="cred_id">{% for k in creds %}<option value="{{ k.id }}" {{ 'selected' if k.id == ssh.cred_id }}>{{ k.name }}</option>{% endfor %}</select></div>
+      <div class="form-group" style="margin-bottom:0; flex:0 1 120px;"><label>Dakika</label><input type="number" name="minutes" min="5" max="1440" value="{{ ssh.minutes }}"></div>
+      <button class="btn btn-primary">Kaydet</button></form>
+    <p style="font-size:0.85rem; color:var(--text-muted);">SSH'li aktif cihazların günlükleri taranır; kritik/uyarı satırları alarm olur (aynı satır tekrar açılmaz). Varsayılan kapalı. <span>Son: {{ ssh.last or '-' }} {{ ssh.result }}</span></p>
+  </div>
+</div>
+<script src="/static/js/alarms.js?v={{ asset_version }}"></script>
+{% endblock %}

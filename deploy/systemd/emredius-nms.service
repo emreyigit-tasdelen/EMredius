@@ -1,0 +1,26 @@
+# Production TACACS+ (TCP 49) + SNMP poller daemons (replaces enterprise-daemons.service at cut-over).
+# Never run this on staging: it binds port 49, which the live daemons own.
+[Unit]
+Description=EMredius NMS daemons (TACACS+ TCP 49, SNMP poller)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/emredius
+EnvironmentFile=-/etc/emredius/nms.env
+# Must match the panel's NMS_DB_PATH in /etc/emredius/emredius.env; change both together.
+Environment=NMS_DB_PATH=/opt/emredius/nms/data/enterprise_nms.db
+Environment=TACACS_PORT=49
+Environment=SNMP_POLL_INTERVAL=15.0
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/emredius/.venv/bin/python -m nms.runner
+Restart=always
+RestartSec=3
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

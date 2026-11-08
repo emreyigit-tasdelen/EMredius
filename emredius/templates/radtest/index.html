@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem;">
+      <div class="card">
+        <div class="card-header">
+          <h3><i class="fa-solid fa-flask"></i> Anlık RADIUS Testi Yap</h3>
+        </div>
+        <div class="card-body">
+          <form method="POST">
+            <div class="form-group">
+              <label>Kullanıcı Adı (veya MAC/Kupon)</label>
+              <input type="text" name="username" value="{{ username }}" maxlength="253" placeholder="Örn: testuser" required autofocus>
+            </div>
+            <div class="form-group">
+              <label>Şifre</label>
+              <input type="password" name="password" value="" maxlength="128" placeholder="Örn: testpass" required autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label>Local NAS Secret</label>
+              <input type="text" name="secret" value="{{ secret }}" maxlength="128" required autocomplete="off">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; padding:0.8rem;">
+              <i class="fa-solid fa-paper-plane"></i> Doğrula (radtest)
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3><i class="fa-solid fa-reply"></i> Test Sonucu & Paket Yanıtı</h3>
+          {% if test_result %}{% if test_result.success %}<span class="status-pill online"><i class="fa-solid fa-check"></i> Access-Accept</span>{% else %}<span class="status-pill offline"><i class="fa-solid fa-xmark"></i> Access-Reject</span>{% endif %}{% endif %}
+        </div>
+        <div class="card-body">
+          {% if test_result %}<pre style="background:#0f172a; color:#f8fafc; font-family:monospace; padding:1.25rem; border-radius:10px; font-size:0.85rem; height:320px; overflow-y:auto; line-height:1.5; white-space:pre-wrap;">{{ test_result.output }}</pre>{% else %}<div style="text-align:center; padding:5rem 1rem; color:#94a3b8;"><i class="fa-solid fa-terminal" style="font-size:3rem; margin-bottom:1rem;"></i><p>Sol taraftaki formu doldurup test butonuna basarak anlık RADIUS paket cevabını görüntüleyin.</p></div>{% endif %}
+        </div>
+      </div>
+    </div>
+{% endblock %}

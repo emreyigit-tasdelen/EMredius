@@ -1,0 +1,510 @@
+{% extends "base.html" %}
+{% block content %}
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+      <p style="color:#64748b; font-size:0.95rem;">Web yönetim paneline erişebilecek bağımsız kullanıcıları ve yetkili AlmaLinux kullanıcılarını yönetin.</p>
+      <div style="display:flex; gap:0.75rem;">
+        <button class="btn btn-secondary" data-on-click="openModal('modalAddRole');">
+          <i class="fa-solid fa-shield-halved"></i> <span data-i18n="Yeni Rol Tanımla">Yeni Rol Tanımla</span>
+        </button>
+        <button class="btn btn-primary" data-on-click="openModal('modalAddAdminUnified');">
+          <i class="fa-solid fa-user-plus"></i> <span data-i18n="Yeni Yönetici Ekle">Yeni Yönetici Ekle</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card blue">
+        <div class="info">
+          <div class="lbl">Toplam Yönetici</div>
+          <div class="val">{{ total_admins }}</div>
+        </div>
+        <div class="icon-box"><i class="fa-solid fa-users-gear"></i></div>
+      </div>
+      <div class="stat-card purple">
+        <div class="info">
+          <div class="lbl">Bağımsız Web Hesabı</div>
+          <div class="val">{{ web_admins }}</div>
+        </div>
+        <div class="icon-box"><i class="fa-solid fa-globe"></i></div>
+      </div>
+      <div class="stat-card green">
+        <div class="info">
+          <div class="lbl">AlmaLinux OS Hesabı</div>
+          <div class="val">{{ sys_admins }}</div>
+        </div>
+        <div class="icon-box"><i class="fa-brands fa-linux"></i></div>
+      </div>
+      <div class="stat-card amber">
+        <div class="info">
+          <div class="lbl">Aktif Hesaplar</div>
+          <div class="val">{{ active_admins }}</div>
+        </div>
+        <div class="icon-box"><i class="fa-solid fa-shield-check"></i></div>
+      </div>
+    </div>
+
+    <!-- Admin List Table -->
+    <div class="card">
+      <div class="card-header">
+        <h3><i class="fa-solid fa-user-shield"></i> Yetkili Yöneticiler & Erişim Rolleri</h3>
+        <span class="badge badge-vlan">RBAC & Hibrit Doğrulama</span>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px;">#</th>
+              <th>Kullanıcı Adı</th>
+              <th>Ad Soyad</th>
+              <th>Hesap Türü</th>
+              <th>Yetki Rolü</th>
+              <th>Durum</th>
+              <th>Son Giriş</th>
+              <th style="text-align:right;">İşlemler</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in admins %}
+        <tr>
+          <td style="color:#94a3b8; font-weight:600;">{{ loop.index }}</td>
+          <td>
+            <div style="font-weight:700; font-size:0.95rem; color:#0f172a;">{{ a.username }}</div>
+            <div style="font-size:0.78rem; color:#64748b;">{{ a.email or 'E-posta yok' }}</div>
+          </td>
+          <td><strong>{{ a.full_name or a.username }}</strong></td>
+          <td>{% if a.auth_type == 'web' %}<span class="badge badge-vlan"><i class="fa-solid fa-globe"></i> Web Hesabı</span>{% else %}<span class="badge badge-rate"><i class="fa-brands fa-linux"></i> AlmaLinux OS</span>{% endif %}</td>
+          <td><span class="badge" style="{{ a.role_style }}">{{ a.role_icon }} {{ a.role_name }}</span></td>
+          <td>{% if a.status == 'active' %}<span class="badge badge-active"><i class="fa-solid fa-check"></i> Aktif</span>{% elif a.status == 'disabled' %}<span class="badge badge-disabled"><i class="fa-solid fa-ban"></i> Devre Dışı</span>{% else %}<span class="badge badge-voucher"><i class="fa-solid fa-lock"></i> Kilitli</span>{% endif %}</td>
+          <td style="font-size:0.85rem; color:#64748b;">
+            <div>{{ a.last_login or 'Giriş Yok' }}</div>
+            <div style="font-family:monospace; font-size:0.75rem; color:#94a3b8;">{{ a.last_login_ip or '' }}</div>
+          </td>
+          <td style="text-align:right;">
+            <div style="display:inline-flex; gap:0.4rem;">
+              <button class="btn btn-secondary btn-sm" data-edit-admin="{{ a.username }}">
+                <i class="fa-solid fa-pen-to-square"></i> Düzenle
+              </button>
+            {% if not is_protected(a.username) %}
+              <a href="/admin/toggle-status/{{ a.username | url_seg }}" class="btn {{ 'btn-secondary' if a.status == 'active' else 'btn-success' }} btn-sm" data-on-click="return confirm('{{ a.username | js }} yöneticisinin durumu değiştirilsin mi?');">
+                <i class="fa-solid fa-{{ 'ban' if a.status == 'active' else 'check' }}"></i> {{ 'Dondur' if a.status == 'active' else 'Aktif Et' }}
+              </a>
+              <a href="/admin/delete/{{ a.username | url_seg }}" class="btn btn-danger btn-sm" data-on-click="return confirm('{{ a.username | js }} yöneticisini silmek istediğinize emin misiniz?');">
+                <i class="fa-solid fa-trash"></i> Sil
+              </a>
+            {% endif %}
+            </div>
+          </td>
+        </tr>
+            {% else %}<tr><td colspan="8" style="text-align:center; padding:3rem; color:#94a3b8;">Yönetici kaydı bulunamadı.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Rol & Sayfa Yetki Matrisi -->
+    <div class="card" id="roleMatrixCard">
+      <div class="card-header">
+        <div>
+          <h3><i class="fa-solid fa-shield-halved"></i> Rol & Sayfa Yetki Matrisi (Dinamik RBAC)</h3>
+          <p style="font-size:0.82rem; color:#64748b; margin:0.25rem 0 0 0;">Her bir rolün web yönetim panelinde hangi sayfalara erişebileceğini belirleyin veya yeni roller üretin.</p>
+        </div>
+        <button class="btn btn-primary btn-sm" data-on-click="openModal('modalAddRole')">
+          <i class="fa-solid fa-plus"></i> <span data-i18n="Yeni Rol Ekle">Yeni Rol Ekle</span>
+        </button>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:200px;">Rol Adı & Kod</th>
+              <th>Açıklama</th>
+              <th style="width:100px;">Tür</th>
+              <th>Erişilebilir Sayfalar & İzinler</th>
+              <th style="text-align:right; width:170px;">İşlemler</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in roles %}
+        <tr>
+          <td>
+            <div style="font-weight:700; color:#0f172a; font-size:0.95rem; display:flex; align-items:center; gap:0.4rem;">
+              <span style="font-size:1.25rem;">{{ r.icon or '🛡️' }}</span>
+              <span>{{ r.role_name or r.role_key }}</span>
+            </div>
+            <code style="color:#64748b; font-size:0.8rem;">({{ r.role_key }})</code>
+          </td>
+          <td style="font-size:0.85rem; color:#475569;">{{ r.description or '-' }}</td>
+          <td>{% if r.is_system %}<span class="badge badge-rate">Sistem</span>{% else %}<span class="badge badge-active">Özel</span>{% endif %}</td>
+          <td><div style="display:flex; flex-wrap:wrap; max-width:550px;">{% if r.all_pages %}<span class="badge" style="background:#f3e8ff; color:#7e22ce;"><i class="fa-solid fa-crown"></i> Tüm Sayfalara Tam Erişim (*)</span>{% else %}{% for p in r.pages %}<span class="badge badge-vlan" style="margin:2px 3px;">{{ p }}</span> {% endfor %}{% endif %}</div></td>
+          <td style="text-align:right;">
+            <div style="display:inline-flex; gap:0.35rem;">
+              {% if r.role_key != 'superadmin' %}<button class="btn btn-secondary btn-sm" data-edit-role="{{ r.role_key }}"><i class="fa-solid fa-pen-to-square"></i> Yetki Düzenle</button>{% endif %}
+              {% if r.deletable %}<a href="/role/delete/{{ r.role_key | url_seg }}" class="btn btn-danger btn-sm" data-on-click="return confirm('{{ (r.role_name or r.role_key) | js }} rolünü silmek istediğinize emin misiniz?');"><i class="fa-solid fa-trash"></i></a>{% endif %}
+            </div>
+          </td>
+        </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Admin Audit Trail -->
+    <div class="card">
+      <div class="card-header">
+        <h3><i class="fa-solid fa-list-check"></i> Yönetici Denetim İzi (Son İşlemler)</h3>
+        <a href="/admin/audit/export.csv" class="btn btn-secondary btn-sm">
+          <i class="fa-solid fa-file-csv"></i> CSV Olarak İndir
+        </a>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table>
+          <thead>
+            <tr>
+              <th>Zaman</th>
+              <th>Yönetici</th>
+              <th>Eylem</th>
+              <th>Hedef</th>
+              <th>Detaylar</th>
+              <th>IP Adresi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for e in audit_logs %}
+        <tr>
+          <td style="font-size:0.82rem; color:#64748b; font-family:monospace;">{{ e.created_at }}</td>
+          <td><strong>{{ e.admin_username }}</strong></td>
+          <td><span class="badge {{ e.badge }}">{{ e.action }}</span></td>
+          <td><code>{{ e.target or '-' }}</code></td>
+          <td style="font-size:0.85rem; color:#475569;">{{ e.details or '-' }}</td>
+          <td style="font-family:monospace; font-size:0.8rem; color:#64748b;">{{ e.ip_address }}</td>
+        </tr>
+            {% else %}<tr><td colspan="6" style="text-align:center; padding:3rem; color:#94a3b8;">Henüz denetim kaydı oluşmadı.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+        <!-- Modal: Unified Add Admin (Web vs Linux PAM) -->
+    <div class="modal-backdrop" id="modalAddAdminUnified">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-user-plus"></i> <span data-i18n="Yeni Yönetici Tanımla">Yeni Yönetici Tanımla</span></h3>
+          <button class="btn btn-secondary btn-sm" data-on-click="closeModal('modalAddAdminUnified');">&times;</button>
+        </div>
+        <form method="POST" action="/admin/add-unified">
+          <div class="modal-body">
+            <!-- Auth Type Selector (Alternative to messy /etc/passwd list) -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:0.85rem; margin-bottom:1.25rem;">
+              <label style="font-weight:700; margin-bottom:0.5rem; display:block; color:#1e293b;">Doğrulama Kaynağı & Hesap Türü</label>
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.75rem;">
+                <label style="display:flex; align-items:center; gap:0.5rem; background:white; border:1.5px solid #cbd5e1; border-radius:8px; padding:0.6rem 0.8rem; cursor:pointer;">
+                  <input type="radio" name="auth_type" value="web" checked data-on-change="toggleAdminAuthType('web')" style="width:auto;">
+                  <div>
+                    <div style="font-weight:600; font-size:0.88rem; color:var(--text-primary);"><i class="fa-solid fa-globe" style="color:#2563eb;"></i> Web Hesabı</div>
+                    <div style="font-size:0.78rem; color:var(--text-muted);">Panel DB şifresi</div>
+                  </div>
+                </label>
+                <label style="display:flex; align-items:center; gap:0.5rem; background:white; border:1.5px solid #cbd5e1; border-radius:8px; padding:0.6rem 0.8rem; cursor:pointer;">
+                  <input type="radio" name="auth_type" value="system" data-on-change="toggleAdminAuthType('system')" style="width:auto;">
+                  <div>
+                    <div style="font-weight:600; font-size:0.88rem; color:var(--text-primary);"><i class="fa-brands fa-linux" style="color:#ea580c;"></i> Linux PAM</div>
+                    <div style="font-size:0.78rem; color:var(--text-muted);">AlmaLinux OS girişi</div>
+                  </div>
+                </label>
+              </div>
+              <p id="authTypeDesc" style="font-size:0.78rem; color:var(--text-muted); margin:0.6rem 0 0 0;">Bağımsız web hesabı oluşturulur; şifre veritabanında güvenli hash olarak saklanır.</p>
+            </div>
+
+            <div class="form-group">
+              <label id="lblAdminUsername">Kullanıcı Adı</label>
+              <input type="text" name="username" id="inpAdminUsername" placeholder="Örn: ahmet.yilmaz" required maxlength="64" pattern="[a-zA-Z0-9._\-]{1,64}" autocomplete="off">
+              <datalist id="linuxUserList">{% for u in linux_users %}<option value="{{ u }}">{{ u }} (Linux OS)</option>{% endfor %}</datalist>
+              <small style="color:#64748b; font-size:0.75rem;" id="hintAdminUsername">Kullanıcı adı sadece harf, rakam, nokta ve tire içerebilir.</small>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Ad Soyad</label>
+                <input type="text" name="full_name" placeholder="Ahmet Yılmaz" required maxlength="128">
+              </div>
+              <div class="form-group">
+                <label>E-posta Adresi</label>
+                <input type="email" name="email" placeholder="ahmet@sirket.com" maxlength="128">
+              </div>
+            </div>
+            <div class="form-group" id="groupAdminPassword">
+              <label>Giriş Şifresi</label>
+              <input type="password" name="password" id="inpAdminPassword" placeholder="En az {{ min_pw }} karakterli güçlü şifre" minlength="{{ min_pw }}" required autocomplete="new-password">
+            </div>
+            <div class="form-group">
+              <label>Erişim Rolü</label>
+              <select name="role" required>
+                {% for k, label in role_options %}<option value="{{ k }}">{{ label }}</option>{% endfor %}
+              </select>
+              <small style="color:#64748b; font-size:0.75rem;">Seçilen rolün sayfa yetkileri aşağıdaki Rol Matrisinden denetlenir.</small>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-on-click="closeModal('modalAddAdminUnified');">İptal</button>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Yöneticiyi Kaydet</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Add Custom Role -->
+    <div class="modal-backdrop" id="modalAddRole">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-shield-plus"></i> Yeni Rol Tanımla</h3>
+          <button class="btn btn-secondary btn-sm" data-on-click="closeModal('modalAddRole');">&times;</button>
+        </div>
+        <form method="POST" action="/role/add">
+          <div class="modal-body">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Rol Görüntüleme Adı</label>
+                <input type="text" name="role_name" placeholder="Örn: Saha Teknisyeni" required maxlength="64">
+              </div>
+              <div class="form-group">
+                <label>Rol Anahtarı (role_key)</label>
+                <input type="text" name="role_key" placeholder="Örn: field_tech" required minlength="2" maxlength="50" pattern="[a-z0-9_]{2,50}">
+                <small style="color:#64748b; font-size:0.75rem;">Küçük harf, rakam ve alt çizgi (2-50 karakter).</small>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:1rem;">
+              <label style="font-weight:700;">Rol Emojisi</label>
+              <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.45rem;">
+                <input type="text" name="icon" id="inpNewRoleIcon" value="🛡️" style="width:64px; text-align:center; font-size:1.5rem; padding:0.25rem; border-radius:8px; border:2px solid #cbd5e1;" required maxlength="8">
+                <span style="font-size:0.8rem; color:#64748b;">Aşağıdaki hazır emojilerden tıklayarak seçebilir veya klavyenizden dilediğinizi yazabilirsiniz:</span>
+              </div>
+              <div style="display:flex; gap:0.4rem; flex-wrap:wrap; background:#f8fafc; padding:0.6rem; border-radius:8px; border:1px solid #e2e8f0; font-size:1.35rem; cursor:pointer;" id="emojiPickerPalette">
+                <span data-on-click="setRoleEmoji('inpNewRoleIcon', '⏰')" title="Saat/NTP">⏰</span>
+                <span data-on-click="setRoleEmoji('inpNewRoleIcon', '⏱️')" title="Kronometre">⏱️</span>
+                <span data-on-click="setRoleEmoji('inpNewRoleIcon', '🛡️')" title="Kalkan/Güvenlik">🛡️</span>
+                <span data-on-click="setRoleEmoji('inpNewRoleIcon', '👑')" title="Taç/Admin">👑</span>
+                <span data-on-click="setRoleEmoji('inpNewRoleIcon', '🌐')" title="Ağ/Network">🌐</span>
+                <span data-on-click="setRoleEmoji('inpNewRoleIcon', '⚙️')" title="Ayar/Sistem">⚙️</span>
+                <span data-on-click="setRoleEmoji('inpNewRoleIcon', '💻')" title="Bilgisayar/IT">💻</span>
+                <span data-on-click="setRoleEmoji('inpNewRoleIcon', '🎟️')" title="Kupon/Bilet">🎟️</span>
+                <span data-on-click="setRoleEmoji('inpNewRoleIcon', '👁️')" title="Denetçi/İzleme">👁️</span>
+                <span data-on-click="setRoleEmoji('inpNewRoleIcon', '📡')" title="Anten/Kablosuz">📡</span>
+                <span data-on-click="setRoleEmoji('inpNewRoleIcon', '🔒')" title="Kilit/Gizlilik">🔒</span>
+                <span data-on-click="setRoleEmoji('inpNewRoleIcon', '📊')" title="Grafik/Rapor">📊</span>
+                <span data-on-click="setRoleEmoji('inpNewRoleIcon', '🛠️')" title="Teknik/Tamir">🛠️</span>
+                <span data-on-click="setRoleEmoji('inpNewRoleIcon', '⚡')" title="Yıldırım/Hızlı">⚡</span>
+                <span data-on-click="setRoleEmoji('inpNewRoleIcon', '🚀')" title="Roket/Operasyon">🚀</span>
+                <span data-on-click="setRoleEmoji('inpNewRoleIcon', '👤')" title="Kullanıcı">👤</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Açıklama</label>
+              <input type="text" name="description" maxlength="255" placeholder="Örn: Sadece cihazları ve canlı oturumları inceleme yetkisi">
+            </div>
+            <div class="form-group">
+              <label style="font-weight:700; margin-bottom:0.6rem; display:block;">Erişebileceği Sayfalar & Menüler</label>
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; max-height:220px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px; padding:0.75rem; background:#f8fafc;">
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="dashboard" checked style="width:auto;"> Genel Bakış</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="tacacs" style="width:auto;"> TACACS+ Yönetimi</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="snmp" style="width:auto;"> SNMP NMS / Ağ İzleme</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="users" style="width:auto;"> FreeRADIUS Kullanıcıları</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="batch_users" style="width:auto;"> Toplu & Misafir Kullanıcılar</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="groups" style="width:auto;"> Gruplar & Profiller</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="nas" style="width:auto;"> Ağ Donanımı (NAS)</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="macs" style="width:auto;"> MAC Whitelist / IoT</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="sessions" style="width:auto;"> Canlı Oturumlar & CoA</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="audit" style="width:auto;"> 5651 Yasal Denetim</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="ntp" style="width:auto;"> <i class="fa-solid fa-clock" style="color:#0284c7;"></i> NTP Zaman Sunucusu</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="logs" style="width:auto;"> <i class="fa-solid fa-terminal" style="color:#10b981;"></i> Canlı Log Ekranı</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="services" style="width:auto;"> <i class="fa-solid fa-arrows-rotate" style="color:#2563eb;"></i> Servis & Sistem Yeniden Başlat</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="test" style="width:auto;"> Doğrulama Testi</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="portscan" style="width:auto;"> <i class="fa-solid fa-satellite-dish" style="color:#7c3aed;"></i> Port Tarama</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="syslog" style="width:auto;"> <i class="fa-solid fa-scroll" style="color:#7c3aed;"></i> Syslog</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="availability" style="width:auto;"> <i class="fa-solid fa-gauge-high" style="color:#7c3aed;"></i> Erişilebilirlik</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="ipscan" style="width:auto;"> <i class="fa-solid fa-network-wired" style="color:#7c3aed;"></i> IP Tarama / Ağ Keşfi</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="inventory" style="width:auto;"> <i class="fa-solid fa-server" style="color:#7c3aed;"></i> Aktif Cihazlar</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="topology" style="width:auto;"> <i class="fa-solid fa-sitemap" style="color:#7c3aed;"></i> Ağ Topolojisi</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="equipment" style="width:auto;"> <i class="fa-solid fa-ethernet" style="color:#7c3aed;"></i> Ekipman &amp; MAC Tabloları</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="macscan" style="width:auto;"> <i class="fa-solid fa-magnifying-glass-location" style="color:#7c3aed;"></i> MAC Tarama</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="machist" style="width:auto;"> <i class="fa-solid fa-clock-rotate-left" style="color:#7c3aed;"></i> MAC Geçmişi</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="macalarm" style="width:auto;"> <i class="fa-solid fa-bell" style="color:#7c3aed;"></i> MAC Alarmları</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="authlog" style="width:auto;"> <i class="fa-solid fa-bell" style="color:#7c3aed;"></i> Kimlik Doğrulama Günlüğü</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="anomalies" style="width:auto;"> <i class="fa-solid fa-bell" style="color:#7c3aed;"></i> Anomaliler</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="correlation" style="width:auto;"> <i class="fa-solid fa-bell" style="color:#7c3aed;"></i> Korelasyon</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="blacklist" style="width:auto;"> <i class="fa-solid fa-bell" style="color:#7c3aed;"></i> Kara Liste</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="quarantine" style="width:auto;"> <i class="fa-solid fa-bell" style="color:#7c3aed;"></i> Karantina</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="enforcement" style="width:auto;"> <i class="fa-solid fa-bell" style="color:#7c3aed;"></i> Uygulama Kayıtları</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="reports" style="width:auto;"> <i class="fa-solid fa-file-lines" style="color:#7c3aed;"></i> Raporlar</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="health" style="width:auto;"> <i class="fa-solid fa-heart-pulse" style="color:#7c3aed;"></i> Ekipman Sağlığı &amp; Trafik</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="watch" style="width:auto;"> <i class="fa-solid fa-eye" style="color:#7c3aed;"></i> İzlenen IP'ler</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="loops" style="width:auto;"> <i class="fa-solid fa-arrows-spin" style="color:#7c3aed;"></i> Döngü Tespiti</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="flows" style="width:auto;"> <i class="fa-solid fa-water" style="color:#7c3aed;"></i> Akış Analizi</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="alarms" style="width:auto;"> <i class="fa-solid fa-bell" style="color:#7c3aed;"></i> Alarmlar</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="boards" style="width:auto;"> <i class="fa-solid fa-table-columns" style="color:#7c3aed;"></i> Özel Panolar</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="ipam" style="width:auto;"> <i class="fa-solid fa-network-wired" style="color:#7c3aed;"></i> IPAM</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="svchealth" style="width:auto;"> <i class="fa-solid fa-heart-pulse" style="color:#dc2626;"></i> Servis Sağlığı</label>
+          <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="ippools" style="width:auto;"> IP Havuzları</label>
+          <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="erasures" style="width:auto;"> Misafir Silme</label>
+          <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="apn" style="width:auto;"> APN Envanteri</label>
+          <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="approvals" style="width:auto;"> Misafir Onayları</label>
+              </div>
+              <small style="color:#64748b; font-size:0.75rem; margin-top:0.35rem; display:block;">Not: Yedekleme, Sistem Ayarları ve Yönetici sayfaları sadece Süper Yönetici için korunmaktadır.</small>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-on-click="closeModal('modalAddRole');">İptal</button>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Rolü Oluştur</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Edit Role Permissions -->
+    <div class="modal-backdrop" id="modalEditRole">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-pen-to-square"></i> Rol Yetkilerini Güncelle: <span id="lblEditRoleName" style="color:#2563eb;"></span></h3>
+          <button class="btn btn-secondary btn-sm" data-on-click="closeModal('modalEditRole');">&times;</button>
+        </div>
+        <form method="POST" action="/role/update">
+          <input type="hidden" name="role_key" id="inpEditRoleKey">
+          <div class="modal-body">
+            <p style="font-size:0.85rem; color:#64748b; margin-bottom:0.75rem;" id="lblEditRoleDesc"></p>
+            <div class="form-group" style="margin-bottom:1rem;">
+              <label style="font-weight:700;">Rol Emojisi</label>
+              <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.45rem;">
+                <input type="text" name="icon" id="inpEditRoleIcon" value="🛡️" style="width:64px; text-align:center; font-size:1.5rem; padding:0.25rem; border-radius:8px; border:2px solid #cbd5e1;" maxlength="8">
+                <span style="font-size:0.8rem; color:#64748b;">Rol emojisini değiştirebilirsiniz:</span>
+              </div>
+              <div style="display:flex; gap:0.4rem; flex-wrap:wrap; background:#f8fafc; padding:0.5rem; border-radius:8px; border:1px solid #e2e8f0; font-size:1.3rem; cursor:pointer;">
+                <span data-on-click="setRoleEmoji('inpEditRoleIcon', '⏰')">⏰</span>
+                <span data-on-click="setRoleEmoji('inpEditRoleIcon', '⏱️')">⏱️</span>
+                <span data-on-click="setRoleEmoji('inpEditRoleIcon', '🛡️')">🛡️</span>
+                <span data-on-click="setRoleEmoji('inpEditRoleIcon', '👑')">👑</span>
+                <span data-on-click="setRoleEmoji('inpEditRoleIcon', '🌐')">🌐</span>
+                <span data-on-click="setRoleEmoji('inpEditRoleIcon', '⚙️')">⚙️</span>
+                <span data-on-click="setRoleEmoji('inpEditRoleIcon', '💻')">💻</span>
+                <span data-on-click="setRoleEmoji('inpEditRoleIcon', '🎟️')">🎟️</span>
+                <span data-on-click="setRoleEmoji('inpEditRoleIcon', '👁️')">👁️</span>
+                <span data-on-click="setRoleEmoji('inpEditRoleIcon', '📡')">📡</span>
+                <span data-on-click="setRoleEmoji('inpEditRoleIcon', '🔒')">🔒</span>
+                <span data-on-click="setRoleEmoji('inpEditRoleIcon', '📊')">📊</span>
+                <span data-on-click="setRoleEmoji('inpEditRoleIcon', '🛠️')">🛠️</span>
+                <span data-on-click="setRoleEmoji('inpEditRoleIcon', '⚡')">⚡</span>
+                <span data-on-click="setRoleEmoji('inpEditRoleIcon', '🚀')">🚀</span>
+                <span data-on-click="setRoleEmoji('inpEditRoleIcon', '👤')">👤</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label style="font-weight:700; margin-bottom:0.6rem; display:block;">İzin Verilen Sayfalar</label>
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; max-height:240px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px; padding:0.75rem; background:#f8fafc;" id="boxEditRolePages">
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="dashboard" style="width:auto;"> Genel Bakış</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="tacacs" style="width:auto;"> TACACS+ Yönetimi</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="snmp" style="width:auto;"> SNMP NMS / Ağ İzleme</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="users" style="width:auto;"> FreeRADIUS Kullanıcıları</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="batch_users" style="width:auto;"> Toplu & Misafir Kullanıcılar</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="groups" style="width:auto;"> Gruplar & Profiller</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="nas" style="width:auto;"> Ağ Donanımı (NAS)</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="macs" style="width:auto;"> MAC Whitelist / IoT</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="sessions" style="width:auto;"> Canlı Oturumlar & CoA</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="audit" style="width:auto;"> 5651 Yasal Denetim</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="ntp" style="width:auto;"> <i class="fa-solid fa-clock" style="color:#0284c7;"></i> NTP Zaman Sunucusu</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="logs" style="width:auto;"> <i class="fa-solid fa-terminal" style="color:#10b981;"></i> Canlı Log Ekranı</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="services" style="width:auto;"> <i class="fa-solid fa-arrows-rotate" style="color:#2563eb;"></i> Servis & Sistem Yeniden Başlat</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="test" style="width:auto;"> Doğrulama Testi</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="portscan" style="width:auto;"> <i class="fa-solid fa-satellite-dish" style="color:#7c3aed;"></i> Port Tarama</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="syslog" style="width:auto;"> <i class="fa-solid fa-scroll" style="color:#7c3aed;"></i> Syslog</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="availability" style="width:auto;"> <i class="fa-solid fa-gauge-high" style="color:#7c3aed;"></i> Erişilebilirlik</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="ipscan" style="width:auto;"> <i class="fa-solid fa-network-wired" style="color:#7c3aed;"></i> IP Tarama / Ağ Keşfi</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="inventory" style="width:auto;"> <i class="fa-solid fa-server" style="color:#7c3aed;"></i> Aktif Cihazlar</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="topology" style="width:auto;"> <i class="fa-solid fa-sitemap" style="color:#7c3aed;"></i> Ağ Topolojisi</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="equipment" style="width:auto;"> <i class="fa-solid fa-ethernet" style="color:#7c3aed;"></i> Ekipman &amp; MAC Tabloları</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="macscan" style="width:auto;"> <i class="fa-solid fa-magnifying-glass-location" style="color:#7c3aed;"></i> MAC Tarama</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="machist" style="width:auto;"> <i class="fa-solid fa-clock-rotate-left" style="color:#7c3aed;"></i> MAC Geçmişi</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="macalarm" style="width:auto;"> <i class="fa-solid fa-bell" style="color:#7c3aed;"></i> MAC Alarmları</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="authlog" style="width:auto;"> <i class="fa-solid fa-bell" style="color:#7c3aed;"></i> Kimlik Doğrulama Günlüğü</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="anomalies" style="width:auto;"> <i class="fa-solid fa-bell" style="color:#7c3aed;"></i> Anomaliler</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="correlation" style="width:auto;"> <i class="fa-solid fa-bell" style="color:#7c3aed;"></i> Korelasyon</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="blacklist" style="width:auto;"> <i class="fa-solid fa-bell" style="color:#7c3aed;"></i> Kara Liste</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="quarantine" style="width:auto;"> <i class="fa-solid fa-bell" style="color:#7c3aed;"></i> Karantina</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="enforcement" style="width:auto;"> <i class="fa-solid fa-bell" style="color:#7c3aed;"></i> Uygulama Kayıtları</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="reports" style="width:auto;"> <i class="fa-solid fa-file-lines" style="color:#7c3aed;"></i> Raporlar</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="health" style="width:auto;"> <i class="fa-solid fa-heart-pulse" style="color:#7c3aed;"></i> Ekipman Sağlığı &amp; Trafik</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="watch" style="width:auto;"> <i class="fa-solid fa-eye" style="color:#7c3aed;"></i> İzlenen IP'ler</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="loops" style="width:auto;"> <i class="fa-solid fa-arrows-spin" style="color:#7c3aed;"></i> Döngü Tespiti</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="flows" style="width:auto;"> <i class="fa-solid fa-water" style="color:#7c3aed;"></i> Akış Analizi</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="alarms" style="width:auto;"> <i class="fa-solid fa-bell" style="color:#7c3aed;"></i> Alarmlar</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="boards" style="width:auto;"> <i class="fa-solid fa-table-columns" style="color:#7c3aed;"></i> Özel Panolar</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="ipam" style="width:auto;"> <i class="fa-solid fa-network-wired" style="color:#7c3aed;"></i> IPAM</label>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="svchealth" style="width:auto;"> <i class="fa-solid fa-heart-pulse" style="color:#dc2626;"></i> Servis Sağlığı</label>
+          <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="ippools" style="width:auto;"> IP Havuzları</label>
+          <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="erasures" style="width:auto;"> Misafir Silme</label>
+          <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="apn" style="width:auto;"> APN Envanteri</label>
+          <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem;"><input type="checkbox" name="pages" value="approvals" style="width:auto;"> Misafir Onayları</label>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-on-click="closeModal('modalEditRole');">İptal</button>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Değişiklikleri Kaydet</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Edit Admin -->
+    <div class="modal-backdrop" id="editAdminModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Yöneticiyi Düzenle: <span id="editAdminTitle" style="color:#2563eb;"></span></h3>
+          <button class="btn btn-secondary btn-sm" data-on-click="closeModal('editAdminModal');">&times;</button>
+        </div>
+        <form method="POST" action="/admin/edit">
+          <input type="hidden" name="username" id="editAdminUsername">
+          <div class="modal-body">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Ad Soyad</label>
+                <input type="text" name="full_name" id="editAdminFullName" required maxlength="128">
+              </div>
+              <div class="form-group">
+                <label>E-posta</label>
+                <input type="email" name="email" id="editAdminEmail" maxlength="128">
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Yetki Rolü</label>
+                <select name="role" id="editAdminRole" required>
+                  {% for k, label in role_options %}<option value="{{ k }}">{{ label }}</option>{% endfor %}
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Hesap Durumu</label>
+                <select name="status" id="editAdminStatus" required>
+                  <option value="active">Aktif</option>
+                  <option value="disabled">Devre Dışı (Askıya Alınmış)</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group" id="editAdminPassGroup">
+              <label>Şifre Sıfırla (Değiştirmek istemiyorsanız boş bırakın)</label>
+              <input type="password" name="new_password" id="editAdminNewPassword" minlength="{{ min_pw }}" autocomplete="new-password" placeholder="Yeni şifre belirleyin (en az {{ min_pw }} karakter)">
+              <small style="color:#64748b;" id="editAdminPassNote"></small>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-on-click="closeModal('editAdminModal');">İptal</button>
+            <button type="submit" class="btn btn-primary">Değişiklikleri Kaydet</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <script type="application/json" id="adminsData">{{ admins_public | tojson }}</script>
+    <script type="application/json" id="rolesData">{{ roles_public | tojson }}</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/admins.js?v={{ asset_version }}"></script>
+{% endblock %}

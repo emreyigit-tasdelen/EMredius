@@ -1,0 +1,23 @@
+/* Copyright (c) 2026 Emre Yiğit Taşdelen | SPDX-License-Identifier: Apache-2.0 */
+.kpi-panel { margin-bottom: 2rem; }
+.kpi-panel[hidden], .kpi-box[hidden] { display: none; }
+.kpi-toolbar { display: flex; justify-content: space-between; align-items: center; gap: .75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.kpi-ranges { display: flex; gap: .4rem; flex-wrap: wrap; }
+.kpi-range, .kpi-refresh { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-primary); border-radius: 8px; padding: .4rem .85rem; font-weight: 600; cursor: pointer; }
+.kpi-range.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+.kpi-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+.kpi-cards .stat-card { padding: 1rem 1.1rem; }
+.kpi-cards .stat-card .info .val { font-size: 1.6rem; }
+.kpi-cards .stat-card .val small { font-size: .9rem; font-weight: 600; color: var(--text-muted); }
+.stat-card.red .icon-box { background: #fef2f2; color: #dc2626; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+.kpi-box .card-body { position: relative; min-height: 220px; }
+.kpi-box canvas { max-height: 260px; }
+.kpi-list { list-style: none; margin: 0; padding: 0; }
+.kpi-list li { display: flex; gap: .6rem; align-items: baseline; padding: .4rem 0; border-bottom: 1px solid var(--border); font-size: .88rem; }
+.kpi-sev { font-size: .7rem; font-weight: 700; border-radius: 6px; padding: .1rem .45rem; background: #fef3c7; color: #b45309; }
+.kpi-sev.CRITICAL { background: #fef2f2; color: #dc2626; }
+.kpi-sev.INFO { background: #eff6ff; color: #2563eb; }
+.kpi-bar-row { display: grid; grid-template-columns: minmax(80px, 30%) 1fr auto; gap: .6rem; align-items: center; margin-bottom: .55rem; font-size: .85rem; }
+.kpi-bar-track { background: var(--border); border-radius: 6px; height: 10px; overflow: hidden; }
+.kpi-bar-fill { height: 100%; background: #2563eb; border-radius: 6px; }

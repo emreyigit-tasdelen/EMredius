@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block content %}
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+      <p style="color:#64748b; font-size:0.95rem;">Canlı Oturumlar & RFC 3576 / RFC 5176 Change of Authorization (CoA) ile Anında Bağlantıyı Kesme.</p>
+      <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+        <label style="font-size:0.85rem; color:#475569; display:flex; align-items:center; gap:0.4rem; cursor:pointer; background:white; padding:0.5rem 0.8rem; border-radius:8px; border:1px solid #e2e8f0;">
+          <input type="checkbox" id="autoRefreshCheck" data-on-change="toggleAutoRefresh(this.checked)">
+          <span>Canlı Otomatik Yenile (10sn)</span>
+        </label>
+        <a href="/sessions/clean-ghosts" class="btn btn-secondary" data-on-click="return confirm('24 saatten uzun süredir güncellenmeyen hayalet oturumlar sonlandırılsın mı?');">
+          <i class="fa-solid fa-ghost"></i> Hayalet Oturumları Temizle
+        </a>
+        <button type="button" class="btn btn-primary" data-on-click="window.location.reload();">
+          <i class="fa-solid fa-rotate"></i> Yenile
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3><i class="fa-solid fa-wifi" style="color:#10b981;"></i> Şu Anda Canlı Bağlı Cihazlar</h3>
+        <span class="badge" style="background:#dcfce7; color:#166534;">{{ active_total }} Aktif Oturum</span>
+      </div>
+      <div class="card-body" style="padding:0; overflow-x:auto;">
+        {% if active_total > active | length %}<div style="padding:0.6rem 1rem; font-size:0.85rem; color:#92400e; background:#fffbeb; border-bottom:1px solid #fde68a;">Toplam {{ active_total }} aktif oturumdan en yeni {{ active | length }} tanesi gösteriliyor. Belirli bir kullanıcı/IP için 5651 Denetim sayfasındaki aramayı kullanın.</div>{% endif %}
+        <table>
+          <thead>
+            <tr>
+              <th style="width:50px;">#</th>
+              <th>Kullanıcı</th>
+              <th>Atanan IP</th>
+              <th>Cihaz MAC</th>
+              <th>Bağlandığı NAS</th>
+              <th>Başlangıç</th>
+              <th>Oturum Süresi</th>
+              <th>Trafik (Up / Down)</th>
+              <th style="text-align:right;">İşlem</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in active %}
+            <tr>
+              <td style="color:#94a3b8; font-weight:600;">{{ loop.index }}</td>
+              <td><strong>{{ s.username or '-' }}</strong></td>
+              <td><code>{{ s.framedipaddress or '-' }}</code></td>
+              <td><span class="badge badge-mac">{{ s.callingstationid or '-' }}</span>{% if s.callingstationid %}<div style="font-size:0.75rem; color:#94a3b8;">{{ s.callingstationid | mac_vendor }}</div>{% endif %}</td>
+              <td>{{ s.nasipaddress or '-' }}</td>
+              <td>{{ s.acctstarttime or '-' }}</td>
+              <td><strong>{{ s.acctsessiontime | format_seconds }}</strong></td>
+              <td><i class="fa-solid fa-arrow-up" style="color:#10b981;"></i> {{ s.acctinputoctets | format_bytes }} / <i class="fa-solid fa-arrow-down" style="color:#3b82f6;"></i> {{ s.acctoutputoctets | format_bytes }}</td>
+              <td style="text-align:right;">
+                <a href="/session/disconnect/{{ s.radacctid | int }}" class="btn btn-danger btn-sm" data-on-click="return confirm('{{ (s.username or '') | js }} kullanıcısını ağdan düşürmek istediğinize emin misiniz?');">
+                  <i class="fa-solid fa-bolt"></i> Ağdan At (CoA)
+                </a>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="9" style="text-align:center; padding:3rem; color:#94a3b8;">Şu an aktif bağlı cihaz bulunmuyor.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3><i class="fa-solid fa-history"></i> Geçmiş Oturum Kayıtları (Son 50)</h3>
+      </div>
+      <div class="card-body" style="padding:0; overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:50px;">#</th>
+              <th>Kullanıcı</th>
+              <th>IP</th>
+              <th>NAS</th>
+              <th>Başlangıç</th>
+              <th>Bitiş</th>
+              <th>Süre</th>
+              <th>Toplam Veri</th>
+              <th>Ayrılma Sebebi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in past %}
+            <tr>
+              <td style="color:#94a3b8; font-weight:600;">{{ loop.index }}</td>
+              <td><strong>{{ s.username or '-' }}</strong></td>
+              <td><code>{{ s.framedipaddress or '-' }}</code></td>
+              <td>{{ s.nasipaddress or '-' }}</td>
+              <td>{{ s.acctstarttime or '-' }}</td>
+              <td>{{ s.acctstoptime or '-' }}</td>
+              <td>{{ s.acctsessiontime | format_seconds }}</td>
+              <td>{{ ((s.acctinputoctets or 0) + (s.acctoutputoctets or 0)) | format_bytes }}</td>
+              <td><span style="font-size:0.8rem; color:#64748b;">{{ s.acctterminatecause or 'Bilinmiyor' }}</span></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="9" style="text-align:center; padding:3rem; color:#94a3b8;">Henüz geçmiş oturum kaydı bulunmuyor.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/sessions.js?v={{ asset_version }}"></script>
+{% endblock %}

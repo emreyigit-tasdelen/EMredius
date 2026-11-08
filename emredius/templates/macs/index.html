@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block content %}
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+      <p style="color:#64748b; font-size:0.95rem;">Yazıcılar, Kameralar ve Akıllı Cihazlar için MAC Yetkilendirmesi (OUI Marka Tanıma ile).</p>
+      <button class="btn btn-primary" data-on-click="openModal('addMacModal');">
+        <i class="fa-solid fa-plus"></i> Yeni MAC Adresi Ekle
+      </button>
+    </div>
+
+    {% if unknown_attempts %}
+    <div class="card" style="border:1.5px solid #fecaca; margin-bottom:1.5rem;">
+      <div class="card-header" style="background:#fff1f2;">
+        <h3 style="color:#991b1b;"><i class="fa-solid fa-triangle-exclamation"></i> Onay Bekleyen / Reddedilen Bilinmeyen Cihazlar</h3>
+        <span class="badge badge-disabled">Otomatik Keşif Havuzu</span>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table>
+          <thead>
+            <tr><th>MAC Adresi</th><th>Tahmini Üretici</th><th>Denediği AP/Switch</th><th>Zaman</th><th style="text-align:right;">İşlem</th></tr>
+          </thead>
+          <tbody>
+          {% for p in unknown_attempts %}
+            <tr>
+              <td><span class="badge badge-mac">{{ p.username }}</span></td>
+              <td><span class="badge badge-vendor">{{ p.vendor }}</span></td>
+              <td>RADIUS (Port 1812)</td>
+              <td>{{ p.authdate }}</td>
+              <td style="text-align:right;">
+                <button type="button" class="btn btn-success btn-sm" data-mac="{{ p.username }}" data-on-click="quickApproveMac(this.getAttribute('data-mac'))">
+                  <i class="fa-solid fa-check"></i> Whitelist'e Al
+                </button>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <div class="card-header">
+        <h3><i class="fa-solid fa-print"></i> İzin Verilen Donanım Adresleri (MAC Whitelist)</h3>
+        <span class="badge" style="background:#e0e7ff; color:#3730a3;">{{ macs | length }} Cihaz</span>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:50px;">#</th>
+              <th>MAC Adresi</th>
+              <th>Cihaz Tanımı</th>
+              <th>Üretici Marka</th>
+              <th>Atanan VLAN</th>
+              <th>Eklenme Tarihi</th>
+              <th style="text-align:right;">İşlem</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in macs %}
+            <tr>
+              <td style="color:#94a3b8; font-weight:600;">{{ loop.index }}</td>
+              <td><span class="badge badge-mac" style="font-size:0.9rem;">{{ m.mac }}</span></td>
+              <td><strong>{{ m.description or 'Cihaz' }}</strong></td>
+              <td><span class="badge badge-vendor"><i class="fa-solid fa-microchip"></i> {{ m.vendor }}</span></td>
+              <td>{% if m.vlan_id %}<span class="badge badge-vlan">VLAN {{ m.vlan_id }}</span>{% else %}Varsayılan{% endif %}</td>
+              <td style="color:#64748b;">{{ m.created_at or '' }}</td>
+              <td style="text-align:right;">
+                <a href="/mac/delete/{{ m.mac | url_seg }}" class="btn btn-danger btn-sm" data-on-click="return confirm('{{ m.mac | js }} cihazını silmek istediğinize emin misiniz?');">
+                  <i class="fa-solid fa-trash"></i> Sil
+                </a>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" style="text-align:center; padding:3rem; color:#94a3b8;">Henüz izinli MAC adresi eklenmedi.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Modal: Add MAC -->
+    <div class="modal-backdrop" id="addMacModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Yeni Cihaz MAC Adresi Ekle</h3>
+          <button class="btn btn-secondary btn-sm" data-on-click="closeModal('addMacModal');">&times;</button>
+        </div>
+        <form method="POST" action="/mac/add">
+          {{ csrf_input() }}
+          <div class="modal-body">
+            <div class="form-group">
+              <label>MAC Adresi</label>
+              <input type="text" name="mac" id="inputMacField" placeholder="Örn: 00:11:22:33:44:55" required data-on-input="detectVendor(this.value)">
+              <div id="detectedVendorText" style="font-size:0.75rem; color:#2563eb; margin-top:0.25rem; font-weight:600;"></div>
+            </div>
+            <div class="form-group">
+              <label>Cihaz Tanımı</label>
+              <input type="text" name="description" placeholder="Örn: Muhasebe HP LaserJet Yazıcı" required maxlength="{{ desc_max_len }}">
+            </div>
+            <div class="form-group">
+              <label>Atanacak VLAN (Opsiyonel)</label>
+              <input type="number" name="vlan_id" min="1" max="4094" placeholder="Örn: 50 (IoT VLAN)">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-on-click="closeModal('addMacModal');">İptal</button>
+            <button type="submit" class="btn btn-primary">Kaydet</button>
+          </div>
+        </form>
+      </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/macs.js?v={{ asset_version }}"></script>
+{% endblock %}

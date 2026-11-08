@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+{% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+<div class="card" style="margin-bottom:1.5rem;"><div class="card-header"><h3><i class="fa-solid fa-gauge-high"></i> Servis erişilebilirliği</h3></div><div class="card-body">
+  <table class="data-table" style="width:100%;"><thead><tr><th>Servis</th>{% for w in (rows[0].windows if rows else []) %}<th>{{ w.label }}</th>{% endfor %}</tr></thead><tbody>
+    {% for r in rows %}<tr><td><b>{{ r.name }}</b></td>
+      {% for w in r.windows %}<td>{% if w.pct is none %}veri yok{% else %}%{{ w.pct }}{% if w.down_min %}<br><small>{{ w.down_min }} dk kesinti</small>{% endif %}{% endif %}</td>{% endfor %}</tr>
+    {% else %}<tr><td colspan="4">Veri yok.</td></tr>{% endfor %}</tbody></table>
+  <p style="color:var(--text-muted); font-size:.85rem;">Yoklamalar Servis Sağlığı tarafından dakikada bir yapılır; yalnızca kayıt başladıktan sonraki süre hesaba katılır.</p>
+</div></div>
+<div class="card"><div class="card-header"><h3>Son kesintiler (30 gün)</h3></div><div class="card-body">
+  <table class="data-table" style="width:100%;"><thead><tr><th>Servis</th><th>Başlangıç</th><th>Süre (dk)</th></tr></thead><tbody>
+    {% set ns = namespace(n=0) %}
+    {% for r in rows %}{% for o in r.outages %}{% set ns.n = ns.n + 1 %}<tr><td>{{ r.name }}</td><td>{{ o.start }}</td><td>{{ o.minutes }}</td></tr>{% endfor %}{% endfor %}
+    {% if ns.n == 0 %}<tr><td colspan="3">Kesinti kaydı yok.</td></tr>{% endif %}</tbody></table>
+</div></div>
+{% endblock %}

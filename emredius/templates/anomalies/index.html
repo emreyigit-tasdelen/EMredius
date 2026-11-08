@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1rem;">
+  RADIUS kayıtlarından türetilen şüpheli davranışlar: çok sayıda ret, tek kullanıcıda çok cihaz, ortak MAC, çok NAS.
+  Yalnız gösterir; hiçbir işlem yapmaz. Eşikler ayar anahtarlarıyla değişir (anomaly_brute_force, anomaly_multi_mac_user, anomaly_shared_mac, anomaly_multi_nas_user).
+</p>
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-triangle-exclamation"></i> Anomaliler</h3>
+    <span class="status-pill online" id="anInfo">-</span></div>
+  <div class="card-body">
+    <div style="display:flex; gap:0.75rem; margin-bottom:1rem; align-items:center;">
+      <select id="anDays" style="width:auto;">
+        {% for d in (1, 3, 7, 30) %}<option value="{{ d }}" {{ 'selected' if d == days else '' }}>Son {{ d }} gün</option>{% endfor %}
+      </select>
+      <button class="btn btn-primary" type="button" id="anGo"><i class="fa-solid fa-rotate"></i> Yenile</button>
+    </div>
+    <div style="overflow-x:auto;"><table>
+      <thead><tr><th>Önem</th><th>Tür</th><th>Konu</th><th>Adet</th><th>Ayrıntı</th><th></th></tr></thead>
+      <tbody id="anRows"></tbody></table></div>
+  </div>
+</div>
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-sliders"></i> Kurallar (eşikler)</h3></div>
+  <div class="card-body">
+    <div style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end;" id="anRules">
+      <label>Ret eşiği <input type="number" min="2" max="1000" data-rule="brute_force"></label>
+      <label>Kullanıcı başına cihaz <input type="number" min="2" max="1000" data-rule="multi_mac_user"></label>
+      <label>MAC başına kullanıcı <input type="number" min="2" max="1000" data-rule="shared_mac"></label>
+      <label>Kullanıcı başına NAS <input type="number" min="2" max="1000" data-rule="multi_nas_user"></label>
+      <label>Eşzamanlı oturum sınırı <input type="number" min="2" max="1000" data-rule="concurrent_sessions"></label>
+      <button class="btn btn-primary" type="button" id="anSave">Kaydet</button>
+      <span id="anRuleMsg" style="color:var(--text-muted);"></span>
+    </div>
+    <small style="color:var(--text-muted);">Kuralları yalnızca süper yönetici değiştirebilir.</small>
+  </div>
+</div>
+<script src="/static/js/anomalies.js?v={{ asset_version }}"></script>
+{% endblock %}

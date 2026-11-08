@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1rem;">
+  MAC / port verisine bağlı alarm kuralları. Olaylar burada ve <a href="/alarms">Alarmlar</a> panelinde görünür.
+  E-posta bildirimi varsayılan KAPALI: kuralda adres yazılsa bile Alarmlar'daki SMTP ayarı kapalıyken gönderilmez{{ ' (şu an kapalı)' if not mail_on else ' (SMTP açık)' }}.
+</p>
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-bell"></i> Kurallar</h3>
+    <button class="btn" type="button" id="maRun"><i class="fa-solid fa-rotate"></i> Şimdi değerlendir</button></div>
+  <div class="card-body" style="overflow-x:auto;"><table>
+    <thead><tr><th>Etkin</th><th>Kural</th><th>Eşik</th><th>Önem</th><th>E-posta (isteğe bağlı)</th><th></th></tr></thead>
+    <tbody id="maRules"></tbody></table></div>
+</div>
+<div class="card">
+  <div class="card-header"><h3><i class="fa-solid fa-triangle-exclamation"></i> Son MAC alarmları</h3></div>
+  <div class="card-body" style="overflow-x:auto;"><table>
+    <thead><tr><th>Önem</th><th>Cihaz</th><th>Mesaj</th><th>İlk</th><th>Son</th><th>Sayı</th><th>Durum</th></tr></thead>
+    <tbody id="maEvents"></tbody></table></div>
+</div>
+<script src="/static/js/macalarm.js?v={{ asset_version }}"></script>
+{% endblock %}

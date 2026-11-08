@@ -1,0 +1,7 @@
+[Unit]
+Description=EMredius panel socket (127.0.0.1:5000)
+[Socket]
+ListenStream=127.0.0.1:5000
+Backlog=512
+[Install]
+WantedBy=sockets.target

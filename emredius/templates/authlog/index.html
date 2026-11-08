@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1rem;">
+  FreeRADIUS kimlik doğrulama sonuçları (radpostauth): kabul / ret, kullanıcı ve zaman. Parolalar hiçbir zaman gösterilmez.
+</p>
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-clipboard-list"></i> Kimlik Doğrulama Günlüğü</h3>
+    <span class="status-pill online" id="alInfo">-</span></div>
+  <div class="card-body">
+    <div style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem; align-items:center;">
+      <input type="text" id="alQ" placeholder="Kullanıcı ara" value="{{ q }}" style="flex:1 1 220px;">
+      <select id="alResult" style="width:auto;">
+        <option value="">Tüm sonuçlar</option>
+        <option value="accept" {{ 'selected' if result == 'accept' else '' }}>Kabul</option>
+        <option value="reject" {{ 'selected' if result == 'reject' else '' }}>Ret</option>
+      </select>
+      <select id="alDays" style="width:auto;">
+        {% for d in (1, 7, 30, 90) %}<option value="{{ d }}" {{ 'selected' if d == days else '' }}>Son {{ d }} gün</option>{% endfor %}
+      </select>
+      <button class="btn btn-primary" type="button" id="alGo"><i class="fa-solid fa-magnifying-glass"></i> Ara</button>
+      <a class="btn" id="alCsv" href="/authlog/export.csv">CSV</a>
+    </div>
+    <div style="overflow-x:auto;"><table>
+      <thead><tr><th>Zaman</th><th>Kullanıcı</th><th>Sonuç</th><th></th></tr></thead>
+      <tbody id="alRows"></tbody></table></div>
+  </div>
+</div>
+<script src="/static/js/authlog.js?v={{ asset_version }}"></script>
+{% endblock %}

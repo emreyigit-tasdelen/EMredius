@@ -1,0 +1,875 @@
+{% extends "base.html" %}
+{% block extra_head %}
+<style>
+    .btn-ntp-tab {
+      background: var(--card-bg, #fff);
+      color: var(--text-primary, #0f172a);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 0.35rem 0.85rem;
+      font-size: 0.78rem !important;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .btn-ntp-tab:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      color: #2563eb;
+    }
+    .btn-ntp-tab.active {
+      background: #2563eb !important;
+      color: white !important;
+      border-color: #2563eb !important;
+      box-shadow: 0 2px 6px rgba(37,99,235,0.25);
+    }
+    .ntp-frow { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.1rem; }
+    .ntp-frow:last-child { margin-bottom: 0; }
+    .ntp-flabel { font-size: 0.72rem; font-weight: 700; color: var(--text-muted, #94a3b8); min-width: 78px; text-align: center; text-transform: uppercase; }
+    .ntp-fpills { display: flex; gap: 0.4rem; flex-wrap: wrap; flex: 1; }
+    .btn-ntp-pick { background: transparent; border: 1px solid var(--border, #334155); color: var(--text-secondary, #64748b); font-weight: 600; border-radius: 999px; padding: 3px 11px; font-size: 0.76rem; cursor: pointer; white-space: nowrap; }
+    .btn-ntp-pick:hover { border-color: #2563eb; color: #2563eb; }
+    .btn-ntp-pick.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+    .btn-ntp-pick .ntp-cnt { opacity: 0.75; margin: 0 2px 0 4px; }
+    .ntp-device-card.ntp-flash { border-color: #38bdf8; box-shadow: 0 0 0 3px rgba(56,189,248,0.35); }
+    @media (max-width: 640px) { .ntp-frow { flex-direction: column; align-items: stretch; gap: 0.25rem; } }
+    .ntp-device-card {
+      background: #0b1120;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 1.15rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+    }
+    .ntp-device-card:hover {
+      border-color: #38bdf8;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(0,0,0,0.28);
+    }
+    .btn-ntp-copy {
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid #334155;
+      border-radius: 7px;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.78rem !important;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .btn-ntp-copy:hover {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: white;
+      box-shadow: 0 2px 8px rgba(37,99,235,0.35);
+    }
+    .ntp-code-terminal {
+      background: #030712;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      margin-top: 0.85rem;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.81rem;
+      line-height: 1.6;
+      color: #cbd5e1;
+      white-space: pre-wrap;
+      word-break: break-all;
+      overflow-x: auto;
+    }
+    .ntp-hi-ip {
+      color: #38bdf8;
+      font-weight: 700;
+    }
+    .ntp-comment {
+      color: #94a3b8;
+      font-style: italic;
+    }
+    .ntp-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 0.65rem;
+      margin-top: 0.75rem;
+      border-top: 1px solid #1e293b;
+      font-size: 0.78rem !important;
+      color: #94a3b8;
+    }
+    .ntp-port-pill {
+      font-family: monospace;
+      background: #1e293b;
+      color: #94a3b8;
+      padding: 1px 7px;
+      border-radius: 4px;
+      font-size: 0.78rem !important;
+    }
+    </style>
+{% endblock %}
+{% block content %}
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+      <div>
+        <h2 style="font-size:1.35rem; font-weight:800; color:var(--text-primary); margin:0; display:flex; align-items:center; gap:0.6rem;">
+          <i class="fa-solid fa-clock" style="color:#0284c7;"></i>
+          <span data-i18n="NTP Zaman Sunucusu (Network Time Protocol)">NTP Zaman Sunucusu (Network Time Protocol)</span>
+        </h2>
+        <p style="color:var(--text-muted); margin:0.35rem 0 0 0; font-size:0.9rem;" data-i18n="AlmaLinux chrony motoru üzerinden yerel ağdaki tüm Cisco, MikroTik, Huawei, Fortinet ve Linux cihazlarına yetkili saat referansı sağlar.">
+          AlmaLinux chrony motoru üzerinden yerel ağdaki tüm Cisco, MikroTik, Huawei, Fortinet ve Linux cihazlarına yetkili saat referansı sağlar.
+        </p>
+      </div>
+      <div style="display:flex; gap:0.5rem; align-items:center;">
+        {% if udp_123 %}<span class="badge" style="background:#dcfce7; color:#15803d; font-weight:700;"><i class="fa-solid fa-check"></i> UDP 123 Dinleniyor (0.0.0.0:123)</span>{% else %}<span class="badge" style="background:#fee2e2; color:#991b1b; font-weight:700;"><i class="fa-solid fa-xmark"></i> Kapalı</span>{% endif %}
+        <button type="button" class="btn btn-primary" data-on-click="syncNtpNow()" id="btnSyncNtp">
+          <i class="fa-solid fa-arrows-rotate"></i> <span data-i18n="Şimdi Eşitle (Makestep)">Şimdi Eşitle (Makestep)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card blue">
+        <div class="info">
+          <div class="lbl">Stratum Seviyesi</div>
+          <div class="val" id="ntpStratum">Stratum {{ tracking.stratum }}</div>
+        </div>
+        <div class="icon-box"><i class="fa-solid fa-layer-group"></i></div>
+      </div>
+      <div class="stat-card green">
+        <div class="info">
+          <div class="lbl">Referans Zaman Kaynağı</div>
+          <div class="val" id="ntpRef" style="font-size:1.05rem; font-weight:700; font-family:monospace;">{{ tracking.ref_id }}</div>
+        </div>
+        <div class="icon-box"><i class="fa-solid fa-satellite"></i></div>
+      </div>
+      <div class="stat-card purple">
+        <div class="info">
+          <div class="lbl">Sistem Saat Kayması (Offset)</div>
+          <div class="val" id="ntpOffset" style="font-size:1rem; font-weight:700; font-family:monospace;">{{ tracking.last_offset }}</div>
+        </div>
+        <div class="icon-box"><i class="fa-solid fa-stopwatch-20"></i></div>
+      </div>
+      <div class="stat-card amber">
+        <div class="info">
+          <div class="lbl">Leap Durumu & RMS</div>
+          <div class="val" id="ntpLeap" style="font-size:1rem; font-weight:700;">{{ tracking.leap_status }}</div>
+        </div>
+        <div class="icon-box"><i class="fa-solid fa-wave-square"></i></div>
+      </div>
+    </div>
+
+    <!-- Upstream Sources Table -->
+    <div class="card" style="margin-bottom:1.5rem;">
+      <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <h3><i class="fa-solid fa-server"></i> <span data-i18n="Yukarı Akış Zaman Sunucuları (Upstream NTP Sources)">Yukarı Akış Zaman Sunucuları (Upstream NTP Sources)</span></h3>
+        <button class="btn btn-secondary btn-sm" data-on-click="restartNtpService()" id="btnRestartNtp">
+          <i class="fa-solid fa-power-off"></i> chronyd Yeniden Başlat
+        </button>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px;">#</th>
+              <th>Sunucu / IP Adresi</th>
+              <th>Stratum</th>
+              <th>Poll Aralığı</th>
+              <th>Reach (Ulaşılabilirlik)</th>
+              <th>Son Alım</th>
+              <th>Kayma (Sample Offset)</th>
+            </tr>
+          </thead>
+          <tbody id="ntpSourcesBody">
+            {% for s in sources %}
+        <tr>
+          <td style="color:#94a3b8; font-weight:600;">{{ loop.index }}</td>
+          <td>{% if '*' in s.state %}<i class="fa-solid fa-circle-check" style="color:#10b981;" title="Seçili Zaman Kaynağı (*)"></i>{% else %}<i class="fa-solid fa-circle-plus" style="color:#0284c7;" title="Aday Kaynak (+)"></i>{% endif %} {% if s.host %}<code style="color:#0f172a; font-weight:700;">{{ s.host }}</code> <code style="font-size:0.78rem; color:#64748b;">{{ s.name }}</code>{% else %}<code style="color:#0f172a; font-weight:700;">{{ s.name }}</code>{% endif %}</td>
+          <td><span class="badge" style="background:#eff6ff; color:#1d4ed8;">Stratum {{ s.stratum }}</span></td>
+          <td>{{ s.poll }}</td>
+          <td><code>{{ s.reach }}</code></td>
+          <td>{{ s.lastrx }}s önce</td>
+          <td><code style="font-size:0.78rem; color:#475569;">{{ s.sample }}</code></td>
+        </tr>
+{% else %}<tr><td colspan="7" style="text-align:center; padding:3rem; color:#94a3b8;">Aktif yukarı akış sunucusu bulunamadı.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Network Devices NTP Config Guide (Redesigned & Polished) -->
+    <div class="card" style="box-shadow: 0 4px 20px -2px rgba(0,0,0,0.08); border-radius: 14px; overflow: hidden; border: 1px solid var(--border); margin-top: 1.5rem;">
+      
+      <!-- Section Header -->
+      <div class="card-header" style="padding: 1.15rem 1.4rem; background: var(--card-bg, #fff); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.85rem;">
+          <div style="width: 44px; height: 44px; border-radius: 10px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+            <i class="fa-solid fa-network-wired"></i>
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+              <span>Ağ Cihazları ve Sistemler için NTP Zaman İstemcisi Yapılandırması</span>
+            </h3>
+            <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.2rem;">
+              Cihazınızın CLI konsoluna doğrudan kopyalayıp yapıştırabileceğiniz hazır zaman senkronizasyonu komutları.
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+          <span class="badge" style="background: #eff6ff; color: #2563eb; font-weight: 700; padding: 0.45rem 0.85rem; border-radius: 20px; font-size: 0.8rem; border: 1px solid #bfdbfe; font-family: monospace; display: inline-flex; align-items: center; gap: 0.4rem;">
+            <i class="fa-solid fa-server"></i> NTP Sunucu: <strong>{{ server_ip }}</strong> (UDP 123)
+          </span>
+        </div>
+      </div>
+
+      <!-- Birbirine bağlı filtre: arama / marka / cihaz tipi / cihazlar -->
+      <div class="ntp-filter" style="padding: 0.85rem 1.4rem; background: var(--bg-body, #f8fafc); border-bottom: 1px solid var(--border);">
+        <div class="ntp-frow">
+          <div style="position: relative; flex: 1; max-width: 520px;">
+            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.8rem;"></i>
+            <input type="search" id="ntpDeviceSearch" data-on-input="searchNtpDevices(this.value)" placeholder="Cihaz, marka veya komut ara (Cisco, w32tm, Linux)..." autocomplete="off" style="width: 100%; padding: 0.45rem 1rem 0.45rem 2.1rem; border: 1.5px solid var(--border); border-radius: 8px; font-size: 0.82rem; background: var(--card-bg, #fff); color: var(--text-primary); outline: none;">
+          </div>
+        </div>
+        <div class="ntp-frow"><span class="ntp-flabel">Markalar</span><div class="ntp-fpills" id="ntpBrandPills"></div></div>
+        <div class="ntp-frow"><span class="ntp-flabel">Cihaz Tipi</span><div class="ntp-fpills" id="ntpTypePills"></div></div>
+        <div class="ntp-frow"><span class="ntp-flabel">Cihazlar</span><div class="ntp-fpills" id="ntpDevicePills"></div></div>
+        <div id="ntpNoResult" style="display:none; padding: 0.4rem 0; font-size: 0.85rem; color: #f59e0b; font-weight: 600;"><i class="fa-solid fa-circle-info"></i> <span>Eşleşen cihaz bulunamadı</span></div>
+      </div>
+
+      <!-- Polished Cards Grid -->
+      <div class="card-body" style="padding: 1.4rem;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.25rem;" id="ntpCardsGrid">
+          
+          <!-- 1. Cisco IOS / IOS-XE -->
+          <div class="ntp-device-card" data-key="cisco" data-category="switch router" data-vendor="cisco">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(56,189,248,0.15); color: #38bdf8; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-solid fa-network-wired"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">Cisco IOS / IOS-XE</div>
+                    <span style="font-size: 0.78rem; color: #38bdf8; background: rgba(56,189,248,0.12); padding: 1px 6px; border-radius: 4px; font-weight: 700;">Router & Switch</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-ntp-copy" data-on-click="copyNtpConfig('cisco', this)">
+                  <i class="fa-solid fa-copy"></i> <span>Kopyala</span>
+                </button>
+              </div>
+              <div class="ntp-code-terminal notranslate" translate="no">ntp server <span class="ntp-hi-ip">{{ server_ip }}</span> prefer
+clock timezone TR 3 0</div>
+            </div>
+            <div class="ntp-card-footer">
+              <span><i class="fa-solid fa-terminal" style="color:#38bdf8;"></i> Global Yapılandırma Kipi (config t)</span>
+              <span class="ntp-port-pill">UDP 123</span>
+            </div>
+          </div>
+
+          <!-- 2. MikroTik RouterOS -->
+          <div class="ntp-device-card" data-key="mikrotik" data-category="router" data-vendor="mikrotik">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(251,146,60,0.15); color: #fb923c; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-solid fa-server"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">MikroTik RouterOS</div>
+                    <span style="font-size: 0.78rem; color: #fb923c; background: rgba(251,146,60,0.12); padding: 1px 6px; border-radius: 4px; font-weight: 700;">RouterOS v6 & v7</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-ntp-copy" data-on-click="copyNtpConfig('mikrotik', this)">
+                  <i class="fa-solid fa-copy"></i> <span>Kopyala</span>
+                </button>
+              </div>
+              <div class="ntp-code-terminal notranslate" translate="no">/system ntp client set enabled=yes servers=<span class="ntp-hi-ip">{{ server_ip }}</span>
+/system clock set time-zone-name=Europe/Istanbul</div>
+            </div>
+            <div class="ntp-card-footer">
+              <span><i class="fa-solid fa-terminal" style="color:#fb923c;"></i> Winbox CLI veya Terminal Konsolu</span>
+              <span class="ntp-port-pill">UDP 123</span>
+            </div>
+          </div>
+
+          <!-- 3. Huawei VRP -->
+          <div class="ntp-device-card" data-key="huawei" data-category="switch router" data-vendor="huawei">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(248,113,113,0.15); color: #f87171; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-solid fa-cube"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">Huawei VRP</div>
+                    <span style="font-size: 0.78rem; color: #f87171; background: rgba(248,113,113,0.12); padding: 1px 6px; border-radius: 4px; font-weight: 700;">Switch & Router</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-ntp-copy" data-on-click="copyNtpConfig('huawei', this)">
+                  <i class="fa-solid fa-copy"></i> <span>Kopyala</span>
+                </button>
+              </div>
+              <div class="ntp-code-terminal notranslate" translate="no">ntp-service unicast-server <span class="ntp-hi-ip">{{ server_ip }}</span></div>
+            </div>
+            <div class="ntp-card-footer">
+              <span><i class="fa-solid fa-terminal" style="color:#f87171;"></i> Sistem Görünümü (system-view)</span>
+              <span class="ntp-port-pill">UDP 123</span>
+            </div>
+          </div>
+
+          <!-- 4. Fortinet FortiGate -->
+          <div class="ntp-device-card" data-key="fortinet" data-category="firewall" data-vendor="fortinet">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(234,88,12,0.15); color: #ea580c; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-solid fa-shield-halved"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">Fortinet FortiGate</div>
+                    <span style="font-size: 0.78rem; color: #ea580c; background: rgba(234,88,12,0.12); padding: 1px 6px; border-radius: 4px; font-weight: 700;">FortiOS Firewall</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-ntp-copy" data-on-click="copyNtpConfig('fortinet', this)">
+                  <i class="fa-solid fa-copy"></i> <span>Kopyala</span>
+                </button>
+              </div>
+              <div class="ntp-code-terminal notranslate" translate="no">config system ntp
+  set type custom
+  set server "<span class="ntp-hi-ip">{{ server_ip }}</span>"
+end</div>
+            </div>
+            <div class="ntp-card-footer">
+              <span><i class="fa-solid fa-terminal" style="color:#ea580c;"></i> FortiOS CLI Console</span>
+              <span class="ntp-port-pill">UDP 123</span>
+            </div>
+          </div>
+
+          <!-- 5. Juniper JunOS -->
+          <div class="ntp-device-card" data-key="juniper" data-category="switch router firewall" data-vendor="juniper">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(52,211,153,0.15); color: #34d399; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-solid fa-route"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">Juniper JunOS</div>
+                    <span style="font-size: 0.78rem; color: #34d399; background: rgba(52,211,153,0.12); padding: 1px 6px; border-radius: 4px; font-weight: 700;">JunOS Router & Switch</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-ntp-copy" data-on-click="copyNtpConfig('juniper', this)">
+                  <i class="fa-solid fa-copy"></i> <span>Kopyala</span>
+                </button>
+              </div>
+              <div class="ntp-code-terminal notranslate" translate="no">set system ntp server <span class="ntp-hi-ip">{{ server_ip }}</span> prefer
+set system time-zone Europe/Istanbul</div>
+            </div>
+            <div class="ntp-card-footer">
+              <span><i class="fa-solid fa-terminal" style="color:#34d399;"></i> Yapılandırma Kipi (configure)</span>
+              <span class="ntp-port-pill">UDP 123</span>
+            </div>
+          </div>
+
+          <!-- 6. HP / Aruba (AOS-CX) -->
+          <div class="ntp-device-card" data-key="aruba" data-category="switch" data-vendor="aruba">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(251,191,36,0.15); color: #fbbf24; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-solid fa-ethernet"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">HP / Aruba (AOS-CX)</div>
+                    <span style="font-size: 0.78rem; color: #fbbf24; background: rgba(251,191,36,0.12); padding: 1px 6px; border-radius: 4px; font-weight: 700;">AOS-S & AOS-CX Switch</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-ntp-copy" data-on-click="copyNtpConfig('aruba', this)">
+                  <i class="fa-solid fa-copy"></i> <span>Kopyala</span>
+                </button>
+              </div>
+              <div class="ntp-code-terminal notranslate" translate="no">sntp server priority 1 <span class="ntp-hi-ip">{{ server_ip }}</span>
+sntp enable
+time timezone 180</div>
+            </div>
+            <div class="ntp-card-footer">
+              <span><i class="fa-solid fa-terminal" style="color:#fbbf24;"></i> Switch Config Konsolu</span>
+              <span class="ntp-port-pill">UDP 123</span>
+            </div>
+          </div>
+
+          <!-- 7. Palo Alto (PAN-OS) -->
+          <div class="ntp-device-card" data-key="paloalto" data-category="firewall" data-vendor="paloalto">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(192,132,252,0.15); color: #c084fc; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-solid fa-shield"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">Palo Alto (PAN-OS)</div>
+                    <span style="font-size: 0.78rem; color: #c084fc; background: rgba(192,132,252,0.12); padding: 1px 6px; border-radius: 4px; font-weight: 700;">PAN-OS NGFW</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-ntp-copy" data-on-click="copyNtpConfig('paloalto', this)">
+                  <i class="fa-solid fa-copy"></i> <span>Kopyala</span>
+                </button>
+              </div>
+              <div class="ntp-code-terminal notranslate" translate="no">set deviceconfig system ntp-servers primary-ntp-server ntp-server-address <span class="ntp-hi-ip">{{ server_ip }}</span>
+set deviceconfig system timezone Europe/Istanbul</div>
+            </div>
+            <div class="ntp-card-footer">
+              <span><i class="fa-solid fa-terminal" style="color:#c084fc;"></i> PAN-OS CLI (configure)</span>
+              <span class="ntp-port-pill">UDP 123</span>
+            </div>
+          </div>
+
+          <!-- 8. Linux (Ubuntu / RHEL / Debian) -->
+          <div class="ntp-device-card" data-key="linux" data-category="server" data-vendor="linux">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(250,204,21,0.15); color: #facc15; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-brands fa-linux"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">Linux (Ubuntu / RHEL)</div>
+                    <span style="font-size: 0.78rem; color: #facc15; background: rgba(250,204,21,0.12); padding: 1px 6px; border-radius: 4px; font-weight: 700;">Linux Sunucular</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-ntp-copy" data-on-click="copyNtpConfig('linux', this)">
+                  <i class="fa-solid fa-copy"></i> <span>Kopyala</span>
+                </button>
+              </div>
+              <div class="ntp-code-terminal notranslate" translate="no"><span class="ntp-comment"># /etc/systemd/timesyncd.conf:</span>
+[Time]
+NTP=<span class="ntp-hi-ip">{{ server_ip }}</span>
+<span class="ntp-comment"># veya /etc/chrony.conf için:</span>
+server <span class="ntp-hi-ip">{{ server_ip }}</span> iburst prefer</div>
+            </div>
+            <div class="ntp-card-footer">
+              <span><i class="fa-solid fa-terminal" style="color:#facc15;"></i> systemd-timesyncd veya chrony</span>
+              <span class="ntp-port-pill">UDP 123</span>
+            </div>
+          </div>
+
+          <!-- 9. Windows Server / Client -->
+          <div class="ntp-device-card" data-key="windows" data-category="server" data-vendor="windows">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(96,165,250,0.15); color: #60a5fa; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-brands fa-windows"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">Windows Server / Client</div>
+                    <span style="font-size: 0.78rem; color: #60a5fa; background: rgba(96,165,250,0.12); padding: 1px 6px; border-radius: 4px; font-weight: 700;">Active Directory & Client</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-ntp-copy" data-on-click="copyNtpConfig('windows', this)">
+                  <i class="fa-solid fa-copy"></i> <span>Kopyala</span>
+                </button>
+              </div>
+              <div class="ntp-code-terminal notranslate" translate="no">w32tm /config /manualpeerlist:"<span class="ntp-hi-ip">{{ server_ip }}</span>,0x8" /syncfromflags:manual /reliable:yes /update
+w32tm /resync</div>
+            </div>
+            <div class="ntp-card-footer">
+              <span><i class="fa-solid fa-terminal" style="color:#60a5fa;"></i> Yönetici PowerShell / CMD</span>
+              <span class="ntp-port-pill">UDP 123</span>
+            </div>
+          </div>
+
+          <!-- 10. pfSense / OPNsense -->
+          <div class="ntp-device-card" data-key="pfsense" data-category="firewall" data-vendor="pfsense">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(251,113,133,0.15); color: #fb7185; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-solid fa-fire"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">pfSense / OPNsense</div>
+                    <span style="font-size: 0.78rem; color: #fb7185; background: rgba(251,113,133,0.12); padding: 1px 6px; border-radius: 4px; font-weight: 700;">Güvenlik Ağ Geçidi</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-ntp-copy" data-on-click="copyNtpConfig('pfsense', this)">
+                  <i class="fa-solid fa-copy"></i> <span>Kopyala</span>
+                </button>
+              </div>
+              <div class="ntp-code-terminal notranslate" translate="no">Services -&gt; NTP -&gt; Timeservers
+NTP Server: <span class="ntp-hi-ip">{{ server_ip }}</span> (Prefer / Active)
+Timezone: Europe/Istanbul</div>
+            </div>
+            <div class="ntp-card-footer">
+              <span><i class="fa-solid fa-globe" style="color:#fb7185;"></i> Web Yönetim GUI / CLI</span>
+              <span class="ntp-port-pill">UDP 123</span>
+            </div>
+          </div>
+
+          <!-- 11. Arista EOS -->
+          <div class="ntp-device-card" data-key="arista" data-category="switch" data-vendor="arista">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(56,189,248,0.15); color: #38bdf8; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-solid fa-network-wired"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">Arista EOS</div>
+                    <span style="font-size: 0.78rem; color: #38bdf8; background: rgba(56,189,248,0.12); padding: 1px 6px; border-radius: 4px; font-weight: 700;">Switch</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-ntp-copy" data-on-click="copyNtpConfig('arista', this)">
+                  <i class="fa-solid fa-copy"></i> <span>Kopyala</span>
+                </button>
+              </div>
+              <div class="ntp-code-terminal notranslate" translate="no">ntp server <span class="ntp-hi-ip">{{ server_ip }}</span> prefer iburst
+clock timezone Europe/Istanbul</div>
+            </div>
+            <div class="ntp-card-footer">
+              <span><i class="fa-solid fa-terminal" style="color:#38bdf8;"></i> Global Yapılandırma Kipi (configure)</span>
+              <span class="ntp-port-pill">UDP 123</span>
+            </div>
+          </div>
+
+          <!-- 12. Cisco NX-OS (Nexus) -->
+          <div class="ntp-device-card" data-key="nxos" data-category="switch" data-vendor="cisco">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(56,189,248,0.15); color: #38bdf8; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-solid fa-network-wired"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">Cisco NX-OS (Nexus)</div>
+                    <span style="font-size: 0.78rem; color: #38bdf8; background: rgba(56,189,248,0.12); padding: 1px 6px; border-radius: 4px; font-weight: 700;">Nexus Switch</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-ntp-copy" data-on-click="copyNtpConfig('nxos', this)">
+                  <i class="fa-solid fa-copy"></i> <span>Kopyala</span>
+                </button>
+              </div>
+              <div class="ntp-code-terminal notranslate" translate="no">ntp server <span class="ntp-hi-ip">{{ server_ip }}</span> prefer use-vrf management
+clock timezone TRT 3 0</div>
+            </div>
+            <div class="ntp-card-footer">
+              <span><i class="fa-solid fa-terminal" style="color:#38bdf8;"></i> Global Yapılandırma Kipi (config t)</span>
+              <span class="ntp-port-pill">UDP 123</span>
+            </div>
+          </div>
+
+          <!-- 13. Cisco IOS-XR -->
+          <div class="ntp-device-card" data-key="iosxr" data-category="router" data-vendor="cisco">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(56,189,248,0.15); color: #38bdf8; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-solid fa-route"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">Cisco IOS-XR</div>
+                    <span style="font-size: 0.78rem; color: #38bdf8; background: rgba(56,189,248,0.12); padding: 1px 6px; border-radius: 4px; font-weight: 700;">Servis Sağlayıcı Router</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-ntp-copy" data-on-click="copyNtpConfig('iosxr', this)">
+                  <i class="fa-solid fa-copy"></i> <span>Kopyala</span>
+                </button>
+              </div>
+              <div class="ntp-code-terminal notranslate" translate="no">ntp
+ server <span class="ntp-hi-ip">{{ server_ip }}</span> prefer
+!
+clock timezone TRT 3
+commit</div>
+            </div>
+            <div class="ntp-card-footer">
+              <span><i class="fa-solid fa-terminal" style="color:#38bdf8;"></i> Global Yapılandırma Kipi (config)</span>
+              <span class="ntp-port-pill">UDP 123</span>
+            </div>
+          </div>
+
+          <!-- 14. Dell SmartFabric OS10 (DNOS) -->
+          <div class="ntp-device-card" data-key="dell" data-category="switch" data-vendor="dell">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(96,165,250,0.15); color: #60a5fa; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-solid fa-server"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">Dell SmartFabric OS10 (DNOS)</div>
+                    <span style="font-size: 0.78rem; color: #60a5fa; background: rgba(96,165,250,0.12); padding: 1px 6px; border-radius: 4px; font-weight: 700;">Switch</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-ntp-copy" data-on-click="copyNtpConfig('dell', this)">
+                  <i class="fa-solid fa-copy"></i> <span>Kopyala</span>
+                </button>
+              </div>
+              <div class="ntp-code-terminal notranslate" translate="no">ntp server <span class="ntp-hi-ip">{{ server_ip }}</span> prefer
+clock timezone Europe/Istanbul</div>
+            </div>
+            <div class="ntp-card-footer">
+              <span><i class="fa-solid fa-terminal" style="color:#60a5fa;"></i> Yapılandırma Kipi (configure terminal)</span>
+              <span class="ntp-port-pill">UDP 123</span>
+            </div>
+          </div>
+
+          <!-- 15. Nokia SR OS -->
+          <div class="ntp-device-card" data-key="nokia" data-category="router" data-vendor="nokia">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(59,130,246,0.15); color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-solid fa-route"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">Nokia SR OS</div>
+                    <span style="font-size: 0.78rem; color: #3b82f6; background: rgba(59,130,246,0.12); padding: 1px 6px; border-radius: 4px; font-weight: 700;">Servis Sağlayıcı Router</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-ntp-copy" data-on-click="copyNtpConfig('nokia', this)">
+                  <i class="fa-solid fa-copy"></i> <span>Kopyala</span>
+                </button>
+              </div>
+              <div class="ntp-code-terminal notranslate" translate="no">/configure system time ntp server <span class="ntp-hi-ip">{{ server_ip }}</span> prefer
+/configure system time ntp no shutdown
+/configure system time zone non-standard TRT hrs-offset 3</div>
+            </div>
+            <div class="ntp-card-footer">
+              <span><i class="fa-solid fa-terminal" style="color:#3b82f6;"></i> Klasik CLI (configure)</span>
+              <span class="ntp-port-pill">UDP 123</span>
+            </div>
+          </div>
+
+          <!-- 16. Extreme ExtremeXOS (EXOS) -->
+          <div class="ntp-device-card" data-key="exos" data-category="switch" data-vendor="extreme">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(167,139,250,0.15); color: #a78bfa; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-solid fa-network-wired"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">Extreme ExtremeXOS (EXOS)</div>
+                    <span style="font-size: 0.78rem; color: #a78bfa; background: rgba(167,139,250,0.12); padding: 1px 6px; border-radius: 4px; font-weight: 700;">Switch</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-ntp-copy" data-on-click="copyNtpConfig('exos', this)">
+                  <i class="fa-solid fa-copy"></i> <span>Kopyala</span>
+                </button>
+              </div>
+              <div class="ntp-code-terminal notranslate" translate="no">configure ntp server add <span class="ntp-hi-ip">{{ server_ip }}</span> iburst
+enable ntp
+configure timezone 180 noautodst</div>
+            </div>
+            <div class="ntp-card-footer">
+              <span><i class="fa-solid fa-terminal" style="color:#a78bfa;"></i> EXOS CLI Konsolu</span>
+              <span class="ntp-port-pill">UDP 123</span>
+            </div>
+          </div>
+
+          <!-- 17. Ruckus / CommScope FastIron (ICX) -->
+          <div class="ntp-device-card" data-key="ruckus" data-category="switch" data-vendor="ruckus">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(251,146,60,0.15); color: #fb923c; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-solid fa-network-wired"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">Ruckus / CommScope FastIron (ICX)</div>
+                    <span style="font-size: 0.78rem; color: #fb923c; background: rgba(251,146,60,0.12); padding: 1px 6px; border-radius: 4px; font-weight: 700;">Switch</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-ntp-copy" data-on-click="copyNtpConfig('ruckus', this)">
+                  <i class="fa-solid fa-copy"></i> <span>Kopyala</span>
+                </button>
+              </div>
+              <div class="ntp-code-terminal notranslate" translate="no">ntp
+ server <span class="ntp-hi-ip">{{ server_ip }}</span>
+exit
+clock timezone gmt GMT+03</div>
+            </div>
+            <div class="ntp-card-footer">
+              <span><i class="fa-solid fa-terminal" style="color:#fb923c;"></i> Global Yapılandırma Kipi (configure terminal)</span>
+              <span class="ntp-port-pill">UDP 123</span>
+            </div>
+          </div>
+
+          <!-- 18. Check Point Gaia OS -->
+          <div class="ntp-device-card" data-key="checkpoint" data-category="firewall" data-vendor="checkpoint">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(244,114,182,0.15); color: #f472b6; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-solid fa-shield-halved"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">Check Point Gaia OS</div>
+                    <span style="font-size: 0.78rem; color: #f472b6; background: rgba(244,114,182,0.12); padding: 1px 6px; border-radius: 4px; font-weight: 700;">Firewall</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-ntp-copy" data-on-click="copyNtpConfig('checkpoint', this)">
+                  <i class="fa-solid fa-copy"></i> <span>Kopyala</span>
+                </button>
+              </div>
+              <div class="ntp-code-terminal notranslate" translate="no">set ntp server primary <span class="ntp-hi-ip">{{ server_ip }}</span> version 4
+set ntp active on
+set timezone Europe / Istanbul
+save config</div>
+            </div>
+            <div class="ntp-card-footer">
+              <span><i class="fa-solid fa-terminal" style="color:#f472b6;"></i> Gaia clish Konsolu</span>
+              <span class="ntp-port-pill">UDP 123</span>
+            </div>
+          </div>
+
+          <!-- 19. Sophos Firewall (SFOS) -->
+          <div class="ntp-device-card" data-key="sophos" data-category="firewall" data-vendor="sophos">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(45,212,191,0.15); color: #2dd4bf; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-solid fa-shield-halved"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">Sophos Firewall (SFOS)</div>
+                    <span style="font-size: 0.78rem; color: #2dd4bf; background: rgba(45,212,191,0.12); padding: 1px 6px; border-radius: 4px; font-weight: 700;">Firewall</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-ntp-copy" data-on-click="copyNtpConfig('sophos', this)">
+                  <i class="fa-solid fa-copy"></i> <span>Kopyala</span>
+                </button>
+              </div>
+              <div class="ntp-code-terminal notranslate" translate="no">Administration -&gt; Time
+NTP server: <span class="ntp-hi-ip">{{ server_ip }}</span>
+Time zone: (GMT+03:00) Istanbul
+Apply</div>
+            </div>
+            <div class="ntp-card-footer">
+              <span><i class="fa-solid fa-terminal" style="color:#2dd4bf;"></i> Web Yönetim GUI (Yönetim &gt; Zaman)</span>
+              <span class="ntp-port-pill">UDP 123</span>
+            </div>
+          </div>
+
+          <!-- 20. Allied Telesis AlliedWare Plus -->
+          <div class="ntp-device-card" data-key="alliedware" data-category="switch" data-vendor="alliedtelesis">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(74,222,128,0.15); color: #4ade80; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-solid fa-network-wired"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">Allied Telesis AlliedWare Plus</div>
+                    <span style="font-size: 0.78rem; color: #4ade80; background: rgba(74,222,128,0.12); padding: 1px 6px; border-radius: 4px; font-weight: 700;">Switch</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-ntp-copy" data-on-click="copyNtpConfig('alliedware', this)">
+                  <i class="fa-solid fa-copy"></i> <span>Kopyala</span>
+                </button>
+              </div>
+              <div class="ntp-code-terminal notranslate" translate="no">ntp server <span class="ntp-hi-ip">{{ server_ip }}</span> prefer
+clock timezone TRT plus 3</div>
+            </div>
+            <div class="ntp-card-footer">
+              <span><i class="fa-solid fa-terminal" style="color:#4ade80;"></i> Global Yapılandırma Kipi (configure terminal)</span>
+              <span class="ntp-port-pill">UDP 123</span>
+            </div>
+          </div>
+
+          <!-- 21. Ruijie / ReyeeOS -->
+          <div class="ntp-device-card" data-key="reyee" data-category="switch router" data-vendor="ruijie">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(248,113,113,0.15); color: #f87171; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-solid fa-cube"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">Ruijie / ReyeeOS</div>
+                    <span style="font-size: 0.78rem; color: #f87171; background: rgba(248,113,113,0.12); padding: 1px 6px; border-radius: 4px; font-weight: 700;">Switch &amp; Router</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-ntp-copy" data-on-click="copyNtpConfig('reyee', this)">
+                  <i class="fa-solid fa-copy"></i> <span>Kopyala</span>
+                </button>
+              </div>
+              <div class="ntp-code-terminal notranslate" translate="no">ntp server <span class="ntp-hi-ip">{{ server_ip }}</span>
+clock timezone TRT 3 0</div>
+            </div>
+            <div class="ntp-card-footer">
+              <span><i class="fa-solid fa-terminal" style="color:#f87171;"></i> Global Yapılandırma Kipi (config)</span>
+              <span class="ntp-port-pill">UDP 123</span>
+            </div>
+          </div>
+
+          <!-- 22. F5 BIG-IP TMOS -->
+          <div class="ntp-device-card" data-key="f5" data-category="loadbalancer" data-vendor="f5">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(239,68,68,0.15); color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">F5 BIG-IP TMOS</div>
+                    <span style="font-size: 0.78rem; color: #ef4444; background: rgba(239,68,68,0.12); padding: 1px 6px; border-radius: 4px; font-weight: 700;">Yük Dengeleyici</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-ntp-copy" data-on-click="copyNtpConfig('f5', this)">
+                  <i class="fa-solid fa-copy"></i> <span>Kopyala</span>
+                </button>
+              </div>
+              <div class="ntp-code-terminal notranslate" translate="no">modify sys ntp servers add { <span class="ntp-hi-ip">{{ server_ip }}</span> }
+modify sys ntp timezone Europe/Istanbul
+save sys config</div>
+            </div>
+            <div class="ntp-card-footer">
+              <span><i class="fa-solid fa-terminal" style="color:#ef4444;"></i> TMOS Shell (tmsh)</span>
+              <span class="ntp-port-pill">UDP 123</span>
+            </div>
+          </div>
+
+          <!-- 23. Alcatel-Lucent Enterprise AOS (OmniSwitch) -->
+          <div class="ntp-device-card" data-key="omniswitch" data-category="switch" data-vendor="ale">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(250,204,21,0.15); color: #facc15; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-solid fa-network-wired"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">Alcatel-Lucent Enterprise AOS (OmniSwitch)</div>
+                    <span style="font-size: 0.78rem; color: #facc15; background: rgba(250,204,21,0.12); padding: 1px 6px; border-radius: 4px; font-weight: 700;">Switch</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-ntp-copy" data-on-click="copyNtpConfig('omniswitch', this)">
+                  <i class="fa-solid fa-copy"></i> <span>Kopyala</span>
+                </button>
+              </div>
+              <div class="ntp-code-terminal notranslate" translate="no">ntp server <span class="ntp-hi-ip">{{ server_ip }}</span> prefer
+ntp client enable
+system timezone +3:00
+write memory</div>
+            </div>
+            <div class="ntp-card-footer">
+              <span><i class="fa-solid fa-terminal" style="color:#facc15;"></i> OmniSwitch CLI</span>
+              <span class="ntp-port-pill">UDP 123</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="application/json" id="ntp-server-ip">{{ server_ip|tojson }}</script>
+<script src="/static/js/ntp.js?v={{ asset_version }}"></script>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <div class="card-header"><h3><i class="fa-solid fa-paper-plane"></i> {{ 'Deneme (hiçbir şey gönderilmedi)' if dry else 'Gönderim sonucu' }}</h3><a class="btn" href="/configs">Geri</a></div>
+  <div class="card-body">
+    {% for r in results %}
+    <div style="border:1px solid var(--border); border-radius:8px; padding:0.75rem; margin-bottom:0.75rem;">
+      <b>{{ r.ip }}</b> — {{ 'tamam' if r.ok else 'hata' }}{% if r.backup %} · yedek v{{ r.backup }}{% endif %}{% if r.after %} · sonrası v{{ r.after }}{% endif %}
+      {% if r.error %}<div style="color:#dc2626;">{{ r.error }}</div>{% endif %}
+      {% if r.commands is iterable and r.commands is not string %}<pre style="margin-top:0.5rem; white-space:pre-wrap;">{{ r.commands | join('\n') }}</pre>{% endif %}
+    </div>
+    {% else %}<div style="color:var(--text-muted);">Cihaz seçilmedi.</div>{% endfor %}
+  </div>
+</div>
+{% endblock %}

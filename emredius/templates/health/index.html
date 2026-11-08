@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1rem;">
+  NMS poller tarafından toplanan CPU, bellek, sıcaklık ve trafik değerleri. Satıra tıklayınca 24 saatlik geçmiş açılır. 10 sn'de bir kendiliğinden yenilenir.
+</p>
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-heart-pulse"></i> Ekipman sağlığı</h3><span class="status-pill online" id="hStats">{{ stats.devices }} cihaz · {{ stats.warn }} uyarı</span></div>
+  <div class="card-body">
+    <div style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem;">
+      <input type="text" id="hQ" placeholder="Ara: ad, IP, üretici…" style="flex:1 1 220px;">
+      <a class="btn" href="/health/export/health.csv">Sağlık CSV</a><a class="btn" href="/health/export/traffic.csv">Trafik CSV</a><a class="btn" href="/health/export/health.json">JSON</a>
+      <a class="btn" href="/equipment">Ekipman</a><a class="btn" href="/topology">Topoloji</a>
+    </div>
+    <div style="overflow-x:auto;"><table><thead><tr><th>Durum</th><th>Cihaz</th><th>IP</th><th>CPU %</th><th>Bellek %</th><th>Sıcaklık °C</th><th>Çalışma süresi</th><th>Güncelleme</th></tr></thead>
+      <tbody id="hBody"></tbody></table></div>
+    <canvas id="hChart" height="140" style="margin-top:1rem; width:100%; display:none;"></canvas>
+    <div id="hChartLbl" style="font-size:0.85rem; color:var(--text-muted);"></div>
+  </div>
+</div>
+<div class="card">
+  <div class="card-header"><h3><i class="fa-solid fa-chart-line"></i> En yoğun arayüzler</h3></div>
+  <div class="card-body"><div style="overflow-x:auto;"><table><thead><tr><th>Cihaz</th><th>IP</th><th>Arayüz</th><th>Giriş</th><th>Çıkış</th><th>Zaman</th></tr></thead>
+    <tbody id="tBody"></tbody></table></div></div>
+</div>
+<div class="card" style="margin-top:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-tower-broadcast"></i> Radyolink / mikrodalga hat kalitesi</h3><span class="status-pill online" id="rStats">-</span></div>
+  <div class="card-body">
+    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:0.75rem;">Ubiquiti, Cambium, MikroTik ve Siklu cihazlarından sinyal (dBm), gürültü, SNR, CCQ ve hız. Otomatik yoklama varsayılan kapalıdır (ayar radiolink_enabled=1); "Şimdi yokla" elle çalışır. Geçmiş 7 gün tutulur.</p>
+    <div style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem;">
+      <input type="text" id="rQ" placeholder="Ara: ad, IP, üretici…" style="flex:1 1 220px;">
+      <button class="btn" id="rPoll" type="button">Şimdi yokla</button>
+      <a class="btn" href="/health/radiolink/export.csv">CSV</a><a class="btn" href="/health/radiolink/export.json">JSON</a>
+    </div>
+    <div style="overflow-x:auto;"><table><thead><tr><th>Durum</th><th>Cihaz</th><th>IP</th><th>Üretici</th><th>Sinyal dBm</th><th>Gürültü</th><th>SNR dB</th><th>CCQ %</th><th>TX / RX Mb/s</th><th>Güncelleme</th></tr></thead>
+      <tbody id="rBody"></tbody></table></div>
+    <canvas id="rChart" height="140" style="margin-top:1rem; width:100%; display:none;"></canvas>
+    <div id="rChartLbl" style="font-size:0.85rem; color:var(--text-muted);"></div>
+  </div>
+</div>
+<script src="/static/js/radiolink.js?v={{ asset_version }}"></script>
+<script src="/static/js/health.js?v={{ asset_version }}"></script>
+{% endblock %}

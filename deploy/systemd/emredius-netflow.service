@@ -1,0 +1,21 @@
+# NetFlow v5/v9/IPFIX collector (UDP 2055, 4739). Open these ports in firewalld for the exporters only.
+[Unit]
+Description=EMredius NetFlow/IPFIX collector
+After=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/emredius
+EnvironmentFile=-/etc/emredius/nms.env
+Environment=NMS_DB_PATH=/opt/emredius/nms/data/enterprise_nms.db
+Environment=NETFLOW_PORTS=2055,4739
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/emredius/.venv/bin/python -m nms.netflow
+Restart=always
+RestartSec=3
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

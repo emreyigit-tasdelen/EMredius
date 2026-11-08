@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card"><div class="card-header"><h3><i class="fa-solid fa-share-nodes"></i> SIEM yönlendirme</h3></div><div class="card-body">
+  <form method="POST" action="/siem/settings">{{ csrf_input() }}
+    <label><input type="checkbox" name="siem_enabled" {{ 'checked' if cfg.siem_enabled == '1' else '' }}> Yönetici işlem günlüğünü SIEM sunucusuna gönder</label>
+    <div class="form-group"><label>SIEM sunucu adresi (IP veya ad)</label><input type="text" name="siem_host" maxlength="253" value="{{ cfg.siem_host }}" placeholder="siem.example.local"></div>
+    <div class="form-group"><label>Port</label><input type="number" name="siem_port" min="1" max="65535" value="{{ cfg.siem_port }}"></div>
+    <div class="form-group"><label>Protokol</label><select name="siem_proto"><option value="udp" {{ 'selected' if cfg.siem_proto == 'udp' }}>UDP</option><option value="tcp" {{ 'selected' if cfg.siem_proto == 'tcp' }}>TCP</option></select></div>
+    <div class="form-group"><label>Biçim</label><select name="siem_format"><option value="syslog" {{ 'selected' if cfg.siem_format == 'syslog' }}>Syslog (RFC 5424)</option><option value="cef" {{ 'selected' if cfg.siem_format == 'cef' }}>CEF</option></select></div>
+    <p style="color:var(--text-muted); font-size:.85rem;">Varsayılan kapalı. Etkinleştirildiğinde her yönetici işlemi (giriş, ayar değişikliği vb.) bu sunucuya gönderilir; hedef erişilemezse panel çalışmaya devam eder.</p>
+    <button class="btn btn-primary" type="submit">Kaydet</button>
+  </form>
+  <form method="POST" action="/siem/test" style="margin-top:1rem;">{{ csrf_input() }}<button class="btn" type="submit">Test iletisi gönder</button></form>
+  <p style="margin-top:1rem;"><b>Son gönderim:</b> {% if last.ok is none %}henüz yok{% else %}{{ last.msg }}{% endif %}</p>
+  <p><b>Örnek ileti:</b></p><pre>{{ sample }}</pre>
+</div></div>
+{% endblock %}

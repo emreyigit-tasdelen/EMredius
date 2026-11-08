@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1rem;">
+  Kara liste ve karantina işlemlerinin kaydı (ekleme, kaldırma, süre dolumu). Kayıtlar cihaza uygulanmaz; yönetici oturum kesme işlemleri
+  ayrıca <a href="/audit">denetim günlüğünde</a> tutulur.
+</p>
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-gavel"></i> Uygulama Kayıtları</h3><span class="status-pill online" id="enInfo">-</span></div>
+  <div class="card-body"><div style="overflow-x:auto;"><table>
+    <thead><tr><th>Zaman</th><th>Tür</th><th>İşlem</th><th>MAC</th><th>Kullanıcı</th><th>Yapan</th><th>Ayrıntı</th></tr></thead>
+    <tbody id="enRows"></tbody></table></div></div>
+</div>
+<script src="/static/js/enforcement.js?v={{ asset_version }}"></script>
+{% endblock %}

@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+{% block content %}
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+      <p style="color:#64748b; font-size:0.95rem;">Kullanıcılar, Dinamik VLAN, Statik IP, Hız Sınırları ve Hesap Durumu.</p>
+      <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+        <a href="/users/export.csv" class="btn btn-secondary"><i class="fa-solid fa-file-csv"></i> CSV Dışa Aktar</a>
+        <button type="button" class="btn btn-secondary" data-on-click="openModal('importCsvModal');"><i class="fa-solid fa-file-import"></i> Toplu CSV Yükle</button>
+        <button type="button" class="btn btn-primary" data-on-click="openModal('addUserModal');">
+          <i class="fa-solid fa-user-plus"></i> Yeni Kullanıcı Ekle
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3><i class="fa-solid fa-users"></i> Kayıtlı Kullanıcılar</h3>
+        <span class="badge" style="background:#e0e7ff; color:#3730a3;">{{ users | length }} Kullanıcı</span>
+      </div>
+      <div class="card-body" style="padding:0; overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:50px;">#</th>
+              <th>Kullanıcı Adı</th>
+              <th>Şifre</th>
+              <th>Grup</th>
+              <th>VLAN</th>
+              <th>Hız Sınırı</th>
+              <th>Statik IP</th>
+              <th>Durum</th>
+              <th>Açıklama</th>
+              <th style="text-align:right;">İşlemler</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in users %}
+            <tr>
+              <td style="color:#94a3b8; font-weight:600;">{{ loop.index }}</td>
+              <td><strong>{{ u.username }}</strong></td>
+              <td style="white-space:nowrap;">
+                <span class="pw-mask" style="font-family:monospace;">••••••••</span>
+                <span class="pw-raw" style="display:none; font-family:monospace; color:#0284c7;"></span>
+                <button type="button" class="btn btn-secondary btn-sm" data-username="{{ u.username }}" data-on-click="revealUserPw(this)" title="Şifreyi Göster / Gizle" style="padding:2px 6px; margin-left:0.5rem;"><i class="fa-regular fa-eye"></i></button>
+              </td>
+              <td>{% if u.groupname %}<span class="badge" style="background:#f3e8ff; color:#7e22ce;">{{ u.groupname }}</span>{% else %}-{% endif %}</td>
+              <td>{% if u.vlan_id %}<span class="badge badge-vlan">VLAN {{ u.vlan_id }}</span>{% else %}Varsayılan{% endif %}</td>
+              <td>{% if u.rate_limit %}<span class="badge badge-rate">{{ u.rate_limit }}</span>{% else %}Limitsiz{% endif %}</td>
+              <td>{% if u.static_ip %}<code>{{ u.static_ip }}</code>{% else %}-{% endif %}</td>
+              <td>{% if u.is_disabled %}<span class="badge badge-disabled"><i class="fa-solid fa-ban"></i> Askıda</span>{% else %}<span class="badge badge-active"><i class="fa-solid fa-check"></i> Aktif</span>{% endif %}</td>
+              <td style="color:#64748b;">{{ u.description or '-' }}</td>
+              <td style="text-align:right; white-space:nowrap;">
+                <button type="button" class="btn btn-secondary btn-sm" data-user="{{ edit_payload(u) | tojson | forceescape }}" data-on-click="openUserEditModal(this)" title="Düzenle">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                {% set act = 'enable' if u.is_disabled else 'disable' %}
+                <a href="/user/{{ act }}/{{ u.username | url_seg }}" class="btn btn-secondary btn-sm" title="{{ 'Aktif Et' if u.is_disabled else 'Askıya Al' }}">
+                  <i class="fa-solid {{ 'fa-play' if u.is_disabled else 'fa-pause' }}"></i>
+                </a>
+                <a href="/user/delete/{{ u.username | url_seg }}" class="btn btn-danger btn-sm" data-on-click="return confirm('{{ u.username | js }} kullanıcısını silmek istediğinize emin misiniz?');" title="Sil">
+                  <i class="fa-solid fa-trash"></i>
+                </a>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="10" style="text-align:center; padding:3rem; color:#94a3b8;">Henüz kayıtlı kullanıcı bulunmuyor.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Modal: Add User -->
+    <div class="modal-backdrop" id="addUserModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Yeni Kullanıcı Tanımla</h3>
+          <button type="button" class="btn btn-secondary btn-sm" data-on-click="closeModal('addUserModal');">&times;</button>
+        </div>
+        <form method="POST" action="/user/add" autocomplete="off">
+          {{ csrf_input() }}
+          <div class="modal-body">
+            <div class="form-group">
+              <label>Kullanıcı Adı</label>
+              <input type="text" name="username" placeholder="ornek: ahmet.yilmaz" required maxlength="64" pattern="[A-Za-z0-9._@:+\-]{1,64}" title="Harf, rakam ve . _ @ : + - karakterleri (en fazla 64)">
+            </div>
+            <div class="form-group">
+              <label>Şifre</label>
+              <input type="text" name="password" id="newPassInput" placeholder="Şifre belirleyin" required minlength="1" maxlength="{{ password_max_len }}" autocomplete="new-password" data-on-input="checkStrength(this.value)">
+              <div id="strengthMeter" style="font-size:0.75rem; margin-top:0.25rem; font-weight:600;"></div>
+            </div>
+            <div class="form-group">
+              <label>Grup / Profil (Opsiyonel)</label>
+              <select name="groupname">
+                <option value="">-- Özel Yapılandırma (Grup Yok) --</option>
+                {% for g in groups %}<option value="{{ g }}">{{ g }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Dinamik VLAN ID</label>
+                <input type="number" name="vlan_id" min="1" max="4094" placeholder="Örn: 20">
+              </div>
+              <div class="form-group">
+                <label>Statik IP (Opsiyonel)</label>
+                <input type="text" name="static_ip" maxlength="15" placeholder="Örn: 192.168.1.150">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Hız Limiti (Down/Up)</label>
+              <select name="rate_limit">
+                <option value="">Limitsiz</option>
+                <option value="5M/2M">5 Mbps / 2 Mbps</option>
+                <option value="10M/5M">10 Mbps / 5 Mbps</option>
+                <option value="25M/10M">25 Mbps / 10 Mbps</option>
+                <option value="50M/20M">50 Mbps / 20 Mbps</option>
+                <option value="100M/50M">100 Mbps / 50 Mbps</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label style="display:flex; align-items:center; gap:0.5rem; font-weight:normal; cursor:pointer;">
+                <input type="checkbox" name="work_hours_only" value="1" style="width:auto;">
+                <span><strong>Sadece Mesai Saatlerinde İzin Ver</strong> (Hafta içi 08:00 - 18:00)</span>
+              </label>
+            </div>
+            <div class="form-group">
+              <label style="display:flex; align-items:center; gap:0.5rem; font-weight:normal; cursor:pointer;">
+                <input type="checkbox" name="single_device" value="1" style="width:auto;">
+                <span><strong>Tek Cihaz Kuralı</strong> (Aynı anda 2. cihazla girişi engelle)</span>
+              </label>
+            </div>
+            <div class="form-group">
+              <label>Açıklama / Not</label>
+              <input type="text" name="description" maxlength="{{ desc_max_len }}" placeholder="Örn: Muhasebe Müdürü">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-on-click="closeModal('addUserModal');">İptal</button>
+            <button type="submit" class="btn btn-primary">Kaydet</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Edit User -->
+    <div class="modal-backdrop" id="editUserModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Kullanıcıyı Düzenle (<span id="editUserTitle"></span>)</h3>
+          <button type="button" class="btn btn-secondary btn-sm" data-on-click="closeModal('editUserModal');">&times;</button>
+        </div>
+        <form method="POST" action="/user/edit" autocomplete="off">
+          {{ csrf_input() }}
+          <input type="hidden" name="username" id="editUsername">
+          <div class="modal-body">
+            <div class="form-group">
+              <label>Yeni Şifre</label>
+              <input type="text" name="password" id="editPassword" maxlength="{{ password_max_len }}" autocomplete="new-password" placeholder="Boş bırakılırsa mevcut şifre korunur">
+            </div>
+            <div class="form-group">
+              <label>Grup / Profil</label>
+              <select name="groupname" id="editGroupname">
+                <option value="">-- Özel Yapılandırma (Grup Yok) --</option>
+                {% for g in groups %}<option value="{{ g }}">{{ g }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Dinamik VLAN ID</label>
+                <input type="number" name="vlan_id" id="editVlan" min="1" max="4094">
+              </div>
+              <div class="form-group">
+                <label>Statik IP</label>
+                <input type="text" name="static_ip" id="editStaticIp" maxlength="15">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Hız Limiti</label>
+              <select name="rate_limit" id="editRate">
+                <option value="">Limitsiz</option>
+                <option value="5M/2M">5 Mbps / 2 Mbps</option>
+                <option value="10M/5M">10 Mbps / 5 Mbps</option>
+                <option value="25M/10M">25 Mbps / 10 Mbps</option>
+                <option value="50M/20M">50 Mbps / 20 Mbps</option>
+                <option value="100M/50M">100 Mbps / 50 Mbps</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label style="display:flex; align-items:center; gap:0.5rem; font-weight:normal; cursor:pointer;">
+                <input type="checkbox" name="work_hours_only" id="editWorkHours" value="1" style="width:auto;">
+                <span><strong>Sadece Mesai Saatlerinde İzin Ver</strong></span>
+              </label>
+            </div>
+            <div class="form-group">
+              <label style="display:flex; align-items:center; gap:0.5rem; font-weight:normal; cursor:pointer;">
+                <input type="checkbox" name="single_device" id="editSingleDevice" value="1" style="width:auto;">
+                <span><strong>Tek Cihaz Kuralı</strong></span>
+              </label>
+            </div>
+            <div class="form-group">
+              <label>Açıklama</label>
+              <input type="text" name="description" id="editDesc" maxlength="{{ desc_max_len }}">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-on-click="closeModal('editUserModal');">İptal</button>
+            <button type="submit" class="btn btn-primary">Değişiklikleri Kaydet</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: CSV Import -->
+    <div class="modal-backdrop" id="importCsvModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Toplu Kullanıcı İçe Aktarma (CSV)</h3>
+          <button type="button" class="btn btn-secondary btn-sm" data-on-click="closeModal('importCsvModal');">&times;</button>
+        </div>
+        <form method="POST" action="/users/import.csv" enctype="multipart/form-data">
+          {{ csrf_input() }}
+          <div class="modal-body">
+            <p style="color:#64748b; font-size:0.85rem; margin-bottom:1rem;">CSV dosyasının sütunları: <code>username,password,vlan_id,rate_limit,description</code> şeklinde olmalıdır.
+            Başlık satırı varsa sütunlar isimle eşleştirilir (<code>static_ip</code> ve <code>groupname</code> da desteklenir; "CSV Dışa Aktar" çıktısı doğrudan geri yüklenebilir).
+            Mevcut kullanıcılar atlanır, en fazla {{ import_max_rows }} satır işlenir.</p>
+            <div class="form-group">
+              <label>CSV Dosyası Seç</label>
+              <input type="file" name="csv_file" accept=".csv,.txt" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-on-click="closeModal('importCsvModal');">İptal</button>
+            <button type="submit" class="btn btn-primary">Yükle ve İçe Aktar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/users.js?v={{ asset_version }}"></script>
+{% endblock %}

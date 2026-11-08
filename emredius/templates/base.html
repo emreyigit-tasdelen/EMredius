@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ title }} - EMredius</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💻</text></svg>">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<link href="/static/vendor/fontawesome/css/all.min.css" rel="stylesheet">
+<script src="/static/js/csp-actions.js?v={{ asset_version }}"></script>
+<script src="/static/js/security.js?v={{ asset_version }}"></script>
+<script src="/static/js/ajax-forms.js?v={{ asset_version }}"></script>
+
+<script src="/static/js/theme.js?v={{ asset_version }}"></script>
+<script src="/static/js/i18n_extra.js?v={{ asset_version }}"></script>
+<script src="/static/js/app.js?v={{ asset_version }}"></script>
+<link href="/static/css/base.css?v={{ asset_version }}" rel="stylesheet">
+<link href="/static/css/ui-system.css?v={{ asset_version }}" rel="stylesheet">
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+<div id="sidebarBackdrop" class="sidebar-backdrop" data-on-click="closeSidebarMobile()"></div>
+<div class="sidebar">
+  <div class="sidebar-header" style="position:relative; display:flex; align-items:center; justify-content:space-between; padding:1.25rem 1rem;">
+    <div style="display:flex; align-items:center; gap:0.65rem; min-width:0;">
+      <i class="fa-solid fa-tower-broadcast icon" style="font-size:1.5rem; color:#60a5fa; flex-shrink:0;"></i>
+      <div style="display:flex; align-items:center;">
+        <h2 style="font-size:1.25rem; font-weight:800; margin:0; letter-spacing:-0.02em; color:#f8fafc;">EMredius</h2>
+      </div>
+    </div>
+    <button type="button" id="sidebarHeaderCollapseBtn" data-on-click="toggleSidebar()" class="sidebar-header-close-btn" title="Menüyü Kapat / Daralt" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); color:#cbd5e1; border-radius:8px; width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.15s ease; flex-shrink:0;">
+      <i class="fa-solid fa-chevron-left" style="font-size:0.95rem;"></i>
+    </button>
+  </div>
+  <nav class="sidebar-nav" id="sidebarNav">
+    {% set u_role = session.get('role', 'superadmin') %}
+    <a href="https://github.com/sponsors/emreyigit-tasdelen" class="nav-item" target="_blank" rel="noopener noreferrer" title="GitHub Sponsors">
+      <i class="fa-solid fa-heart" style="color:#ec4899;"></i> <span data-i18n="Projeyi Destekle">Projeyi Destekle</span>
+    </a>
+    <a href="https://buymeacoffee.com/emreyigit.tasdelen" class="nav-item" target="_blank" rel="noopener noreferrer" title="Buy Me a Coffee">
+      <i class="fa-solid fa-mug-hot" style="color:#f59e0b;"></i> <span>Buy Me a Coffee</span>
+    </a>
+    <a href="/" class="nav-item {{ 'active' if active_tab == 'dashboard' else '' }}">
+      <i class="fa-solid fa-chart-pie"></i> <span data-i18n="Genel Bakış">Genel Bakış</span>
+      </a>
+    {% if can_access('boards') %}
+    <a href="/boards" class="nav-item {{ 'active' if active_tab == 'boards' else '' }}">
+      <i class="fa-solid fa-table-columns"></i> <span data-i18n="Özel Panolar">Özel Panolar</span>
+      </a>
+    {% endif %}
+    {% if can_access('alarms') %}
+    <a href="/alarms" class="nav-item {{ 'active' if active_tab == 'alarms' else '' }}">
+      <i class="fa-solid fa-bell"></i> <span data-i18n="Alarmlar">Alarmlar</span>
+      </a>
+    {% endif %}
+    <a href="/notifications" class="nav-item {{ 'active' if active_tab == 'notifications' else '' }}">
+      <i class="fa-solid fa-inbox"></i> <span data-i18n="Bildirimler">Bildirimler</span>
+      <span class="nav-badge" id="navNotifBadge" hidden></span>
+      </a>
+
+    {% if (can_access('users')) or (can_access('batch_users')) or (can_access('groups')) or (can_access('nas')) or (can_access('macs')) or (can_access('sessions')) or (can_access('logs')) or (can_access('test')) or (can_access('tacacs')) %}
+    <div class="nav-section-title" data-i18n="Kimlik & RADIUS">Kimlik & RADIUS</div>
+    {% if can_access('users') %}
+    <a href="/users" class="nav-item {{ 'active' if active_tab == 'users' else '' }}">
+      <i class="fa-solid fa-user-lock"></i> <span data-i18n="FreeRADIUS Kullanıcıları">FreeRADIUS Kullanıcıları</span>
+      </a>
+    {% endif %}
+    {% if can_access('batch_users') %}
+    <a href="/batch-users" class="nav-item {{ 'active' if active_tab == 'batch_users' else '' }}">
+      <i class="fa-solid fa-users-rectangle"></i> <span data-i18n="Toplu & Misafir Kullanıcılar">Toplu & Misafir Kullanıcılar</span>
+      </a>
+    {% endif %}
+    {% if can_access('groups') %}
+    <a href="/groups" class="nav-item {{ 'active' if active_tab == 'groups' else '' }}">
+      <i class="fa-solid fa-layer-group"></i> <span data-i18n="Gruplar & Profiller">Gruplar & Profiller</span>
+      </a>
+    {% endif %}
+    {% if can_access('nas') %}
+    <a href="/nas" class="nav-item {{ 'active' if active_tab == 'nas' else '' }}">
+      <i class="fa-solid fa-network-wired"></i> <span data-i18n="Ağ Donanımı (NAS)">Ağ Donanımı (NAS)</span>
+      </a>
+    {% endif %}
+    {% if can_access('macs') %}
+    <a href="/macs" class="nav-item {{ 'active' if active_tab == 'macs' else '' }}">
+      <i class="fa-solid fa-print"></i> <span data-i18n="MAC Whitelist / IoT">MAC Whitelist / IoT</span>
+      </a>
+    {% endif %}
+    {% if can_access('sessions') %}
+    <a href="/sessions" class="nav-item {{ 'active' if active_tab == 'sessions' else '' }}">
+      <i class="fa-solid fa-satellite-dish"></i> <span data-i18n="Canlı Oturumlar & CoA">Canlı Oturumlar & CoA</span>
+      </a>
+    {% endif %}
+    {% if can_access('logs') %}
+    <a href="/logs" class="nav-item {{ 'active' if active_tab == 'logs' else '' }}">
+      <i class="fa-solid fa-scroll"></i> <span data-i18n="Canlı Loglar">Canlı Loglar</span>
+      </a>
+    {% endif %}
+    {% if can_access('test') %}
+    <a href="/test" class="nav-item {{ 'active' if active_tab == 'test' else '' }}">
+      <i class="fa-solid fa-flask"></i> <span data-i18n="Doğrulama Testi">Doğrulama Testi</span>
+      </a>
+    {% endif %}
+    {% if can_access('tacacs') %}
+    <a href="/tacacs" class="nav-item {{ 'active' if active_tab == 'tacacs' else '' }}">
+      <i class="fa-solid fa-key"></i> <span data-i18n="TACACS+ Yönetimi">TACACS+ Yönetimi</span>
+      </a>
+    {% endif %}
+    {% endif %}
+
+    {% if (can_access('snmp')) or (can_access('inventory')) or (can_access('topology')) or (can_access('equipment')) or (can_access('macscan')) or (can_access('macalarm')) or (can_access('machist')) or (can_access('health')) or (can_access('watch')) or (can_access('loops')) or (can_access('flows')) or (can_access('syslog')) or (can_access('reports')) or (can_access('ntp')) or (can_access('configs')) or (can_access('ipam')) %}
+    <div class="nav-section-title" data-i18n="Ağ İzleme">Ağ İzleme</div>
+    {% if can_access('snmp') %}
+    <a href="/snmp" class="nav-item {{ 'active' if active_tab == 'snmp' else '' }}">
+      <i class="fa-solid fa-chart-line"></i> <span data-i18n="SNMP NMS / Ağ İzleme">SNMP NMS / Ağ İzleme</span>
+      </a>
+    {% endif %}
+    {% if can_access('inventory') %}
+    <a href="/inventory" class="nav-item {{ 'active' if active_tab == 'inventory' else '' }}">
+      <i class="fa-solid fa-server"></i> <span data-i18n="Aktif Cihazlar">Aktif Cihazlar</span>
+      </a>
+    {% endif %}
+    {% if can_access('topology') %}
+    <a href="/topology" class="nav-item {{ 'active' if active_tab == 'topology' else '' }}">
+      <i class="fa-solid fa-sitemap"></i> <span data-i18n="Ağ Topolojisi">Ağ Topolojisi</span>
+      </a>
+    {% endif %}
+    {% if can_access('equipment') %}
+    <a href="/equipment" class="nav-item {{ 'active' if active_tab == 'equipment' else '' }}">
+      <i class="fa-solid fa-ethernet"></i> <span data-i18n="Ekipman &amp; MAC Tabloları">Ekipman &amp; MAC Tabloları</span>
+      </a>
+    {% endif %}
+    {% if can_access('macscan') %}
+    <a href="/macscan" class="nav-item {{ 'active' if active_tab == 'macscan' else '' }}">
+      <i class="fa-solid fa-magnifying-glass-location"></i> <span data-i18n="MAC Tarama">MAC Tarama</span>
+      </a>
+    {% endif %}
+    {% if can_access('macalarm') %}
+    <a href="/macalarms" class="nav-item {{ 'active' if active_tab == 'macalarm' else '' }}">
+      <i class="fa-solid fa-bell"></i> <span data-i18n="MAC Alarmları">MAC Alarmları</span>
+      </a>
+    {% endif %}
+    {% if can_access('machist') %}
+    <a href="/machist" class="nav-item {{ 'active' if active_tab == 'machist' else '' }}">
+      <i class="fa-solid fa-clock-rotate-left"></i> <span data-i18n="MAC Geçmişi">MAC Geçmişi</span>
+      </a>
+    {% endif %}
+    {% if can_access('health') %}
+    <a href="/health" class="nav-item {{ 'active' if active_tab == 'health' else '' }}">
+      <i class="fa-solid fa-heart-pulse"></i> <span data-i18n="Ekipman Sağlığı &amp; Trafik">Ekipman Sağlığı &amp; Trafik</span>
+      </a>
+    {% endif %}
+    {% if can_access('watch') %}
+    <a href="/watch" class="nav-item {{ 'active' if active_tab == 'watch' else '' }}">
+      <i class="fa-solid fa-eye"></i> <span data-i18n="İzlenen IP'ler">İzlenen IP'ler</span>
+      </a>
+    {% endif %}
+    {% if can_access('loops') %}
+    <a href="/loops" class="nav-item {{ 'active' if active_tab == 'loops' else '' }}">
+      <i class="fa-solid fa-arrows-spin"></i> <span data-i18n="Döngü Tespiti">Döngü Tespiti</span>
+      </a>
+    {% endif %}
+    {% if can_access('flows') %}
+    <a href="/flows" class="nav-item {{ 'active' if active_tab == 'flows' else '' }}">
+      <i class="fa-solid fa-water"></i> <span data-i18n="Akış Analizi">Akış Analizi</span>
+      </a>
+    {% endif %}
+    {% if can_access('syslog') %}
+    <a href="/syslog" class="nav-item {{ 'active' if active_tab == 'syslog' else '' }}">
+      <i class="fa-solid fa-scroll"></i> <span data-i18n="Syslog">Syslog</span>
+      </a>
+    {% endif %}
+    {% if can_access('reports') %}
+    <a href="/reports" class="nav-item {{ 'active' if active_tab == 'reports' else '' }}">
+      <i class="fa-solid fa-file-lines"></i> <span data-i18n="Raporlar">Raporlar</span>
+      </a>
+    {% endif %}
+    {% if can_access('ntp') %}
+    <a href="/ntp" class="nav-item {{ 'active' if active_tab == 'ntp' else '' }}">
+      <i class="fa-solid fa-clock"></i> <span data-i18n="NTP Zaman Sunucusu">NTP Zaman Sunucusu</span>
+      </a>
+    {% endif %}
+    {% if can_access('configs') %}
+    <a href="/configs" class="nav-item {{ 'active' if active_tab == 'configs' else '' }}">
+      <i class="fa-solid fa-file-shield"></i> <span data-i18n="Konfig Yönetimi">Konfig Yönetimi</span>
+      </a>
+    {% endif %}
+    {% if can_access('ipam') %}
+    <a href="/ipam" class="nav-item {{ 'active' if active_tab == 'ipam' else '' }}">
+      <i class="fa-solid fa-network-wired"></i> <span data-i18n="IPAM">IPAM</span>
+      </a>
+    {% endif %}
+    {% endif %}
+
+    {% if (can_access('ipscan')) or (can_access('portscan')) %}
+    <div class="nav-section-title" data-i18n="Araçlar">Araçlar</div>
+    {% if can_access('ipscan') or can_access('portscan') %}
+    <a href="/ip-scan" class="nav-item {{ 'active' if active_tab == 'ipscan' else '' }}">
+      <i class="fa-solid fa-network-wired"></i> <span data-i18n="IP Tarama">IP Tarama</span>
+      </a>
+    {% endif %}
+    {% endif %}
+
+    {% if (can_access('authlog')) or (can_access('anomalies')) or (can_access('correlation')) or (can_access('blacklist')) or (can_access('quarantine')) or (can_access('enforcement')) %}
+    <div class="nav-section-title" data-i18n="Erişim Kontrolü">Erişim Kontrolü</div>
+    {% if can_access('authlog') %}
+    <a href="/authlog" class="nav-item {{ 'active' if active_tab == 'authlog' else '' }}">
+      <i class="fa-solid fa-clipboard-list"></i> <span data-i18n="Kimlik Doğrulama Günlüğü">Kimlik Doğrulama Günlüğü</span>
+      </a>
+    {% endif %}
+    {% if can_access('anomalies') %}
+    <a href="/anomalies" class="nav-item {{ 'active' if active_tab == 'anomalies' else '' }}">
+      <i class="fa-solid fa-triangle-exclamation"></i> <span data-i18n="Anomaliler">Anomaliler</span>
+      </a>
+    {% endif %}
+    {% if can_access('correlation') %}
+    <a href="/correlation" class="nav-item {{ 'active' if active_tab == 'correlation' else '' }}">
+      <i class="fa-solid fa-diagram-project"></i> <span data-i18n="Korelasyon">Korelasyon</span>
+      </a>
+    {% endif %}
+    {% if can_access('blacklist') %}
+    <a href="/blacklist" class="nav-item {{ 'active' if active_tab == 'blacklist' else '' }}">
+      <i class="fa-solid fa-ban"></i> <span data-i18n="Kara Liste">Kara Liste</span>
+      </a>
+    {% endif %}
+    {% if can_access('quarantine') %}
+    <a href="/quarantine" class="nav-item {{ 'active' if active_tab == 'quarantine' else '' }}">
+      <i class="fa-solid fa-biohazard"></i> <span data-i18n="Karantina">Karantina</span>
+      </a>
+    {% endif %}
+    {% if can_access('enforcement') %}
+    <a href="/enforcement" class="nav-item {{ 'active' if active_tab == 'enforcement' else '' }}">
+      <i class="fa-solid fa-gavel"></i> <span data-i18n="Uygulama Kayıtları">Uygulama Kayıtları</span>
+      </a>
+    {% endif %}
+    {% endif %}
+
+    {% if (can_access('apn')) or (can_access('ippools')) or (can_access('approvals')) or (can_access('erasures')) %}
+    <div class="nav-section-title" data-i18n="APN & Misafir">APN & Misafir</div>
+    {% if can_access('apn') %}
+    <a href="/apn" class="nav-item {{ 'active' if active_tab == 'apn' else '' }}">
+      <i class="fa-solid fa-sim-card"></i> <span data-i18n="APN Envanteri">APN Envanteri</span>
+      </a>
+    {% endif %}
+    {% if can_access('ippools') %}
+    <a href="/ippools" class="nav-item {{ 'active' if active_tab == 'ippools' else '' }}">
+      <i class="fa-solid fa-diagram-project"></i> <span data-i18n="IP Havuzları">IP Havuzları</span>
+      </a>
+    {% endif %}
+    {% if can_access('approvals') %}
+    <a href="/approvals" class="nav-item {{ 'active' if active_tab == 'approvals' else '' }}">
+      <i class="fa-solid fa-user-check"></i> <span data-i18n="Misafir Onayları">Misafir Onayları</span>
+      </a>
+    {% endif %}
+    {% if can_access('erasures') %}
+    <a href="/erasures" class="nav-item {{ 'active' if active_tab == 'erasures' else '' }}">
+      <i class="fa-solid fa-user-slash"></i> <span data-i18n="Misafir Silme">Misafir Silme</span>
+      </a>
+    {% endif %}
+    {% endif %}
+
+    <div class="nav-section-title" data-i18n="Sistem">Sistem</div>
+    {% if can_access('admins') %}
+    <a href="/admins" class="nav-item {{ 'active' if active_tab == 'admins' else '' }}">
+      <i class="fa-solid fa-user-shield"></i> <span data-i18n="Yöneticiler & Yetkiler">Yöneticiler & Yetkiler</span>
+      </a>
+    {% endif %}
+    {% if can_access('permissions') %}
+    <a href="/permissions" class="nav-item {{ 'active' if active_tab == 'permissions' else '' }}">
+      <i class="fa-solid fa-user-shield"></i> <span data-i18n="Yetki Matrisi">Yetki Matrisi</span>
+      </a>
+    {% endif %}
+    {% if can_access('tenants') %}
+    <a href="/tenants" class="nav-item {{ 'active' if active_tab == 'tenants' else '' }}">
+      <i class="fa-solid fa-building"></i> <span data-i18n="Kiracılar">Kiracılar</span>
+      </a>
+    {% endif %}
+    {% if can_access('settings') %}
+    <a href="/settings" class="nav-item {{ 'active' if active_tab == 'settings' else '' }}">
+      <i class="fa-solid fa-gears"></i> <span data-i18n="Sistem Ayarları">Sistem Ayarları</span>
+      </a>
+    {% endif %}
+    {% if session.get('role') == 'superadmin' %}
+    <a href="/security" class="nav-item {{ 'active' if active_tab == 'security' else '' }}">
+      <i class="fa-solid fa-user-lock"></i> <span data-i18n="Oturum Güvenliği">Oturum Güvenliği</span>
+      </a>
+    {% endif %}
+    {% if can_access('svchealth') %}
+    <a href="/svchealth" class="nav-item {{ 'active' if active_tab == 'svchealth' else '' }}">
+      <i class="fa-solid fa-heart-pulse"></i> <span data-i18n="Servis Sağlığı">Servis Sağlığı</span>
+      </a>
+    {% endif %}
+    {% if can_access('services') %}
+    <a href="/services" class="nav-item {{ 'active' if active_tab == 'services' else '' }}">
+      <i class="fa-solid fa-arrows-rotate"></i> <span data-i18n="Yeniden Başlat">Yeniden Başlat</span>
+      </a>
+    {% endif %}
+    {% if can_access('hardening') %}
+    <a href="/hardening" class="nav-item {{ 'active' if active_tab == 'hardening' else '' }}">
+      <i class="fa-solid fa-shield-halved"></i> <span data-i18n="Sertleştirme">Sertleştirme</span>
+      </a>
+    {% endif %}
+    {% if can_access('availability') %}
+    <a href="/availability" class="nav-item {{ 'active' if active_tab == 'availability' else '' }}">
+      <i class="fa-solid fa-chart-line"></i> <span data-i18n="Erişilebilirlik">Erişilebilirlik</span>
+      </a>
+    {% endif %}
+    {% if can_access('certs') %}
+    <a href="/certs" class="nav-item {{ 'active' if active_tab == 'certs' else '' }}">
+      <i class="fa-solid fa-certificate"></i> <span data-i18n="Sertifikalar">Sertifikalar</span>
+      </a>
+    {% endif %}
+    {% if can_access('siem') %}
+    <a href="/siem" class="nav-item {{ 'active' if active_tab == 'siem' else '' }}">
+      <i class="fa-solid fa-share-nodes"></i> <span data-i18n="SIEM Yönlendirme">SIEM Yönlendirme</span>
+      </a>
+    {% endif %}
+    {% if can_access('integrations') %}
+    <a href="/integrations" class="nav-item {{ 'active' if active_tab == 'integrations' else '' }}">
+      <i class="fa-solid fa-plug"></i> <span data-i18n="Entegrasyonlar">Entegrasyonlar</span>
+      </a>
+    {% endif %}
+    {% if can_access('audit') %}
+    <a href="/audit" class="nav-item {{ 'active' if active_tab == 'audit' else '' }}">
+      <i class="fa-solid fa-shield-halved"></i> <span data-i18n="5651 Yasal Denetim">5651 Yasal Denetim</span>
+      </a>
+    {% endif %}
+    {% if can_access('backups') %}
+    <a href="/backups" class="nav-item {{ 'active' if active_tab == 'backups' else '' }}">
+      <i class="fa-solid fa-database"></i> <span data-i18n="Yedekleme & Kurtarma">Yedekleme & Kurtarma</span>
+      </a>
+    {% endif %}
+    {% if can_access('cli') %}
+    <a href="/cli" class="nav-item {{ 'active' if active_tab == 'cli' else '' }}">
+      <i class="fa-solid fa-terminal"></i> <span data-i18n="Web Terminal & CLI">Web Terminal & CLI</span>
+      </a>
+    {% endif %}
+    <a href="/api/docs" target="_blank" class="nav-item">
+      <i class="fa-solid fa-code"></i> <span data-i18n="Swagger API">Swagger API</span>
+      </a>
+  </nav>
+  <div class="sidebar-footer" style="flex-direction:column; align-items:stretch; gap:0.5rem; padding:0.9rem 1rem;">
+    <!-- Time-out Sayacı (Kullanıcı bilgilerinin üstünde) -->
+    <div id="sessionTimeoutNotice" style="display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.06); padding:5px 9px; border-radius:6px; font-size:0.75rem; color:#f59e0b; font-weight:600; border:1px solid rgba(245,158,11,0.25);">
+      <span style="display:inline-flex; align-items:center; gap:5px;">
+        <i class="fa-regular fa-clock" id="sessionTimerIcon" style="color:#f59e0b;"></i>
+        <span id="sessionTimerText">Time-out: 5 dakika</span>
+      </span>
+      <span id="sessionPulse" style="width:7px; height:7px; border-radius:50%; background:#10b981; display:inline-block;" title="Oturum Aktif"></span>
+    </div>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+      <a href="/profile" class="user-info" style="text-decoration:none;" title="Profilimi Görüntüle">
+        <i class="fa-solid fa-circle-user" style="font-size:1.5rem; color:#60a5fa;"></i>
+        <div style="display:flex; flex-direction:column; min-width:0;">
+          <span style="font-weight:600; font-size:0.85rem; color:white; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ session.get('user', 'root') }}</span>
+          <span style="font-size:0.78rem; color:#94a3b8;">{{ session.get('role_label', 'Süper Yönetici') }}</span>
+        </div>
+      </a>
+      <div style="display:flex; align-items:center; gap:0.4rem;">
+        <button type="button" id="themeToggleBtn" data-on-click="toggleTheme()" class="btn-theme-toggle" title="Koyu / Açık Tema Değiştir" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#cbd5e1; font-size:0.9rem; padding:4px 8px; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; transition:all 0.15s ease;">
+          <i id="themeToggleIcon" class="fa-solid fa-moon"></i>
+        </button>
+        <a href="/logout" class="btn-logout" title="Çıkış Yap">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/static/js/i18n-now.js?v={{ asset_version }}"></script>
+<script src="/static/js/sidebar-scroll.js?v={{ asset_version }}"></script>
+<div class="main-content">
+  <header class="topbar">
+    <div style="display:flex; align-items:center; gap:0.9rem;">
+      <button type="button" id="sidebarToggleBtn" class="sidebar-toggle-btn" title="Menüyü Göster / Gizle" data-on-click="toggleSidebar()">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <div class="topbar-brand-badge" title="EMredius Core" style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; background:linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); color:#2563eb; border-radius:10px; border:1px solid #bfdbfe; font-size:1.05rem; box-shadow:0 2px 6px rgba(37,99,235,0.12);">
+        <i class="fa-solid fa-laptop-code"></i>
+      </div>
+      <h1 id="pageTitleText">{{ page_title or title }}</h1>
+      {% if tenant_label %}<span class="status-pill online" title="Çalışılan kiracı" style="margin-left:0.5rem;"><i class="fa-solid fa-building"></i> {{ tenant_label }}</span>{% endif %}
+    </div>
+    <div class="topbar-actions">
+      <div class="notif-wrap" id="notifWrap">
+        <button type="button" class="btn btn-secondary btn-sm notif-btn" id="notifBtn" aria-haspopup="true" aria-expanded="false" title="Bildirimler"><i class="fa-solid fa-bell"></i><span class="notif-badge" id="notifBadge">0</span></button>
+        <div class="notif-panel" id="notifPanel" role="dialog" aria-label="Bildirimler">
+          <div class="notif-head"><a href="/notifications" class="notif-title-link" title="Tüm bildirimleri gör">Bildirimler <i class="fa-solid fa-arrow-up-right-from-square"></i></a><button type="button" class="btn btn-secondary btn-sm" id="notifReadAll">Tümünü okundu yap</button></div>
+          <div class="notif-list" id="notifList"></div>
+          <a href="/notifications" class="notif-foot">Tüm bildirimleri gör</a>
+        </div>
+      </div>
+      <!-- Dil Seçici (6 Dil & Bayraklar) -->
+      <div class="lang-dropdown">
+        <button type="button" id="langDropdownBtn" data-on-click="toggleLangDropdown(event)" class="btn btn-secondary btn-sm" style="display:flex; align-items:center; gap:0.45rem; cursor:pointer;">
+          <span id="currentLangFlag" style="font-size:1.15rem;">🇹🇷</span>
+          <span id="currentLangName" style="font-size:0.85rem; font-weight:600;">Türkçe</span>
+          <i class="fa-solid fa-chevron-down" style="font-size:0.78rem; margin-left:2px; color:#94a3b8;"></i>
+        </button>
+        <div id="langDropdownMenu" class="lang-menu">
+          <div data-on-click="setAppLanguage('tr'); if(window.event) window.event.stopPropagation();" class="lang-item active" id="lang-opt-tr">
+            <span style="font-size:1.2rem;">🇹🇷</span> <span>Türkçe</span>
+          </div>
+          <div data-on-click="setAppLanguage('en'); if(window.event) window.event.stopPropagation();" class="lang-item" id="lang-opt-en">
+            <span style="font-size:1.2rem;">🇬🇧</span> <span>English</span>
+          </div>
+          <div data-on-click="setAppLanguage('zh'); if(window.event) window.event.stopPropagation();" class="lang-item" id="lang-opt-zh">
+            <span style="font-size:1.2rem;">🇨🇳</span> <span>简体中文</span>
+          </div>
+          <div data-on-click="setAppLanguage('ru'); if(window.event) window.event.stopPropagation();" class="lang-item" id="lang-opt-ru">
+            <span style="font-size:1.2rem;">🇷🇺</span> <span>Русский</span>
+          </div>
+          <div data-on-click="setAppLanguage('es'); if(window.event) window.event.stopPropagation();" class="lang-item" id="lang-opt-es">
+            <span style="font-size:1.2rem;">🇪🇸</span> <span>Español</span>
+          </div>
+          <div data-on-click="setAppLanguage('fr'); if(window.event) window.event.stopPropagation();" class="lang-item" id="lang-opt-fr">
+            <span style="font-size:1.2rem;">🇫🇷</span> <span>Français</span>
+          </div>
+        </div>
+      </div>
+
+      <span class="status-pill {{ 'online' if radius_status == 'active' else 'offline' }}">
+        <span class="status-dot"></span>
+        <span id="radiusStatusLabel">radiusd: {{ 'Çalışıyor' if radius_status == 'active' else 'Durduruldu' }}</span>
+      </span>
+      <a href="/restart-radius" class="btn btn-secondary btn-sm" title="FreeRADIUS servisini yeniden başlat">
+        <i class="fa-solid fa-rotate"></i> <span id="lblRestart">Yeniden Başlat</span>
+      </a>
+      <div id="topbarNtpClock" class="topbar-ntp-badge" title="NTP Senkronize Canlı Sistem Saati" style="display:inline-flex; align-items:center; gap:0.45rem; background:rgba(37,99,235,0.08); color:#1d4ed8; border:1px solid #bfdbfe; padding:0.32rem 0.75rem; border-radius:8px; font-size:0.83rem; font-weight:700; font-family:monospace; letter-spacing:0.2px;">
+        <i class="fa-solid fa-clock" style="color:#2563eb;"></i>
+        <span id="topbarNtpTime">--.--.---- --:--:--</span>
+        <span style="font-size:0.78rem; background:#dbeafe; color:#1e40af; padding:0.1rem 0.35rem; border-radius:4px; font-weight:800; font-family:sans-serif;">NTP</span>
+      </div>
+    </div>
+  </header>
+  <script src="/static/js/i18n-now.js?v={{ asset_version }}"></script>
+  <div class="content-body">
+    {% if timesync and timesync.level != 'ok' %}
+    <div class="alert alert-danger" id="timesyncBanner">
+      <i class="fa-solid fa-clock"></i>
+      <span>{{ timesync.message }} <a href="/ntp">NTP ayarları</a></span>
+    </div>
+    {% endif %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+    <div class="alert alert-{{ cat }}">
+      <i class="fa-solid fa-circle-info"></i>
+      <span>{{ msg }}</span>
+    </div>
+    {% endfor %}
+    {% endwith %}
+    {% block content %}{{ body_content | safe }}{% endblock %}
+  </div>
+</div>
+<script src="/static/js/ui-helpers.js?v={{ asset_version }}"></script>
+<script src="/static/js/responsive-tables.js?v={{ asset_version }}"></script>
+<script src="/static/js/notifications.js?v={{ asset_version }}"></script>
+<script src="/static/js/i18n-now.js?v={{ asset_version }}"></script>
+{% block extra_js %}{% endblock %}
+
+<!-- Oturum Zaman Aşımı GUI İçi Uyarı Modalı -->
+<div id="sessionWarningModal" class="modal-backdrop" style="z-index:999999; background:rgba(15,23,42,0.75);">
+  <div class="modal-card" style="max-width:440px; text-align:center; padding:2rem; border-radius:18px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); background:#ffffff;">
+    <div style="width:70px; height:70px; border-radius:50%; background:#fef2f2; color:#ef4444; display:flex; align-items:center; justify-content:center; font-size:2.2rem; margin:0 auto 1.25rem;">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+    </div>
+    <h3 style="font-size:1.35rem; font-weight:800; color:#0f172a; margin-bottom:0.5rem;" data-i18n="Oturumunuz Kapanmak Üzere!">Oturumunuz Kapanmak Üzere!</h3>
+    <p style="color:#64748b; font-size:0.95rem; line-height:1.5; margin-bottom:1.5rem;">
+      <span data-i18n="Hareketsizlik nedeniyle oturumunuz">Hareketsizlik nedeniyle oturumunuz</span>
+      <strong id="modalRemainingSec" style="color:#ef4444; font-size:1.4rem; display:inline-block; min-width:32px; font-weight:800;">59</strong>
+      <span data-i18n="saniye içinde otomatik sonlandırılacaktır.">saniye içinde otomatik sonlandırılacaktır.</span>
+    </p>
+    <div style="display:flex; gap:0.75rem; justify-content:center;">
+      <button type="button" class="btn btn-primary" data-on-click="extendSession()" style="padding:0.75rem 1.6rem; font-size:0.95rem; cursor:pointer;">
+        <i class="fa-solid fa-rotate-right"></i> <span data-i18n="Oturumu Uzat">Oturumu Uzat</span>
+      </button>
+      <a href="/logout" class="btn btn-secondary" style="padding:0.75rem 1.25rem; font-size:0.95rem;">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i> <span data-i18n="Oturumu Sonlandır">Oturumu Sonlandır</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+{% if support_popup %}
+<div id="supportPopup" class="modal-backdrop show" role="dialog" aria-modal="true" aria-labelledby="supportPopupTitle">
+  <div class="modal-card" style="max-width:440px; text-align:center; padding:2rem;">
+    <div style="font-size:2rem; color:#ec4899; margin-bottom:.5rem;"><i class="fa-solid fa-heart"></i></div>
+    <h3 id="supportPopupTitle" style="margin:0 0 .5rem;" data-i18n="Projeyi Destekle">Projeyi Destekle</h3>
+    <p style="color:#64748b; margin:0 0 1.25rem; font-size:.9rem;" data-i18n="EMREDIUS açık kaynaklıdır. Beğendiyseniz geliştirmesine destek olabilirsiniz.">EMREDIUS açık kaynaklıdır. Beğendiyseniz geliştirmesine destek olabilirsiniz.</p>
+    <div style="display:flex; gap:.6rem; justify-content:center; flex-wrap:wrap; margin-bottom:1rem;">
+      <a class="btn btn-secondary" href="https://github.com/sponsors/emreyigit-tasdelen" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-heart" style="color:#ec4899;"></i> GitHub Sponsors</a>
+      <a class="btn btn-secondary" href="https://buymeacoffee.com/emreyigit.tasdelen" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-mug-hot" style="color:#f59e0b;"></i> Buy Me a Coffee</a>
+    </div>
+    <button type="button" id="supportPopupClose" class="btn btn-primary" data-i18n="Kapat">Kapat</button>
+    <div style="margin-top:1rem; font-size:.78rem; color:#94a3b8;"><span data-i18n="Geliştirici">Geliştirici</span>: <a href="https://github.com/emreyigit-tasdelen" target="_blank" rel="noopener noreferrer">Emre Yiğit Taşdelen</a></div>
+  </div>
+</div>
+<script src="/static/js/support-popup.js?v={{ asset_version }}"></script>
+{% endif %}
+
+</body>
+</html>

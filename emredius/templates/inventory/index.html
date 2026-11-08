@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+<p style="color:#64748b; font-size:0.95rem; margin-bottom:1.5rem;">
+  Kayıtlı IP aralıklarını tarar; yanıt veren her cihaz SNMP (üretici/model/sürüm) ve SSH banner ile tanınır, burada listelenir.
+  Aralıklara zamanlanmış tarama tanımlanabilir. Liste 10 sn'de bir kendiliğinden yenilenir.
+</p>
+
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-diagram-project"></i> IP Aralıkları</h3></div>
+  <div class="card-body">
+    <form method="POST" action="/inventory/range/add" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end;">
+      {{ csrf_input() }}
+      <div class="form-group" style="flex:1 1 200px; margin-bottom:0;"><label>Aralık (CIDR)</label>
+        <input type="text" name="cidr" maxlength="64" placeholder="10.0.0.0/24" required></div>
+      <div class="form-group" style="flex:1 1 140px; margin-bottom:0;"><label>Ad</label>
+        <input type="text" name="name" maxlength="64" placeholder="Merkez ofis"></div>
+      <div class="form-group" style="flex:1 1 160px; margin-bottom:0;"><label>SNMP community (virgülle)</label>
+        <input type="text" name="communities" maxlength="200" value="public"></div>
+      <div class="form-group" style="flex:0 1 150px; margin-bottom:0;"><label>Otomatik tarama (dk, 0=kapalı)</label>
+        <input type="number" name="interval_min" min="0" max="10080" value="0"></div>
+      <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Ekle</button>
+    </form>
+    <table style="margin-top:1rem;">
+      <thead><tr><th>Ad</th><th>Aralık</th><th>Otomatik</th><th>Son tarama</th><th>Sonuç</th><th></th></tr></thead>
+      <tbody id="rangeBody">
+      {% for r in ranges %}
+        <tr><td>{{ r.name or '-' }}</td><td>{{ r.cidr }}</td><td>{{ (r.interval_min ~ ' dk') if r.interval_min else 'kapalı' }}</td>
+          <td>{{ r.last_run or '-' }}</td><td>{{ 'taranıyor…' if r.running else (r.last_result or '-') }}</td>
+          <td style="white-space:nowrap;">
+            <button type="button" class="btn btn-primary inv-scan" style="padding:0.3rem 0.7rem;" data-scan="{{ r.id }}"><i class="fa-solid fa-magnifying-glass"></i> Tara</button>
+            <form method="POST" action="/inventory/range/{{ r.id }}/delete" style="display:inline;" class="inv-del">
+              {{ csrf_input() }}<button class="btn btn-danger" style="padding:0.3rem 0.7rem;"><i class="fa-solid fa-trash"></i></button></form>
+          </td></tr>
+      {% else %}<tr><td colspan="6" style="color:#64748b;">Henüz aralık yok.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fa-solid fa-server"></i> Aktif Cihazlar</h3>
+    <span class="status-pill online" id="stats">{{ stats.online }} aktif / {{ stats.total }} cihaz · {{ stats.snmp }} SNMP · {{ stats.ssh }} SSH</span>
+  </div>
+  <div class="card-body">
+    <form id="fform" method="GET" action="/inventory" style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem;">
+      <input type="text" name="q" value="{{ f.get('q','') }}" placeholder="Ara: IP, MAC, ad, model…" style="flex:1 1 220px;">
+      <select name="vendor"><option value="">Tüm üreticiler</option>{% for v in filters.vendor %}<option {{ 'selected' if f.get('vendor')==v }}>{{ v }}</option>{% endfor %}</select>
+      <select name="type"><option value="">Tüm türler</option>{% for v in filters.device_type %}<option {{ 'selected' if f.get('type')==v }}>{{ v }}</option>{% endfor %}</select>
+      <select name="status"><option value="">Tüm durumlar</option><option value="ONLINE" {{ 'selected' if f.get('status')=='ONLINE' }}>Aktif</option><option value="OFFLINE" {{ 'selected' if f.get('status')=='OFFLINE' }}>Pasif</option></select>
+      <button class="btn btn-primary" type="submit"><i class="fa-solid fa-filter"></i> Filtrele</button>
+      <a class="btn" href="/inventory/export.csv?{{ request.query_string.decode() }}">CSV</a>
+      <a class="btn" href="/inventory/export.json?{{ request.query_string.decode() }}">JSON</a>
+    </form>
+    <div style="overflow-x:auto;">
+    <table>
+      <thead><tr><th>Durum</th><th>IP</th><th>Ad</th><th>MAC / Üretici</th><th>Üretici</th><th>Model</th><th>Sürüm</th><th>Tür</th><th>SNMP</th><th>SSH</th><th>Son görülme</th></tr></thead>
+      <tbody id="devBody">
+      {% for d in devices %}
+        <tr><td><span class="status-pill {{ 'online' if d.status=='ONLINE' else 'offline' }}">{{ 'Aktif' if d.status=='ONLINE' else 'Pasif' }}</span></td>
+          <td>{{ d.ip }}</td><td>{{ d.sys_name or d.hostname or '-' }}</td><td>{{ d.mac or '-' }}{% if d.mac_vendor %}<br><small>{{ d.mac_vendor }}</small>{% endif %}</td>
+          <td>{{ d.vendor or '-' }}</td><td>{{ d.model or '-' }}</td><td>{{ d.os_version or '-' }}</td><td>{{ d.device_type }}</td>
+          <td>{{ '✔' if d.snmp_ok else '–' }}</td><td>{{ '✔' if d.ssh_ok else '–' }}</td><td>{{ d.last_seen }}</td></tr>
+      {% else %}<tr><td colspan="11" style="color:#64748b;">Kayıt yok. Bir aralık ekleyip "Tara"ya basın.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/inventory.js?v={{ asset_version }}"></script>
+{% endblock %}

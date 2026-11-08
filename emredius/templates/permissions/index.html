@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1rem;">
+  <span>Hangi rolün hangi menüyü açabileceğini tek tabloda görün ve satır satır değiştirin. Süper yönetici her şeyi açar ve kısıtlanamaz;</span>
+  {{ superadmin_only | join(', ') }} <span>menüleri yalnızca süper yöneticiye aittir. Her kayıt işlem günlüğüne yazılır.</span>
+</p>
+<div class="card">
+  <div class="card-header"><h3><i class="fa-solid fa-user-shield"></i> Rol x menü</h3><a class="btn" href="/permissions/export.json">JSON</a></div>
+  <div class="card-body"><div style="overflow-x:auto;">
+    <table><thead><tr><th>Rol</th>{% for k, label in pages %}<th style="font-size:0.72rem; writing-mode:vertical-rl; transform:rotate(180deg); white-space:nowrap;">{{ label }}</th>{% endfor %}<th></th></tr></thead><tbody>
+    {% for r in roles %}<tr>
+      <td><b>{{ r.role_name }}</b><br><small>{{ r.role_key }}</small></td>
+      {% for k, label in pages %}<td style="text-align:center;">
+        {% if r.role_key == 'superadmin' or r.all %}✔{% else %}<input form="pf-{{ r.role_key }}" type="checkbox" name="pages" value="{{ k }}" style="width:auto;" {{ 'checked' if k in r.pages }}>{% endif %}</td>{% endfor %}
+      <td>{% if r.role_key != 'superadmin' and not r.all %}<form id="pf-{{ r.role_key }}" method="POST" action="/permissions/save">{{ csrf_input() }}<input type="hidden" name="role_key" value="{{ r.role_key }}"><button class="btn btn-primary">Kaydet</button></form>{% endif %}</td>
+    </tr>{% endfor %}
+    </tbody></table>
+  </div></div>
+</div>
+{% endblock %}

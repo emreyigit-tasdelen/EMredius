@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1rem;">
+  Switch MAC tabloları (Q-BRIDGE/BRIDGE), ARP, LLDP komşuluğu, RADIUS oturumu ve PoE (POWER-ETHERNET-MIB) tek tabloda birleşir:
+  cihaz → port → MAC → üretici / IP / kullanıcı → PoE. PoE desteklemeyen cihazlarda PoE sütunu boş kalır. Sayfa 15 sn'de bir yenilenir.
+</p>
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-magnifying-glass-location"></i> MAC Tarama</h3>
+    <span class="status-pill online" id="msStats">{{ stats.macs }} MAC · {{ stats.arp }} ARP · PoE {{ stats.poe_on }}/{{ stats.poe_ports }} port</span></div>
+  <div class="card-body">
+    <div style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem;">
+      <button class="btn btn-primary" type="button" id="msScan"><i class="fa-solid fa-rotate"></i> Tara (port / MAC / PoE / ARP)</button>
+      <a class="btn" href="/macscan/export.csv">CSV</a><a class="btn" href="/macscan/export.json">JSON</a>
+      <a class="btn" href="/equipment">Ekipman</a><a class="btn" href="/topology">Topoloji</a>
+    </div>
+    <div style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem; align-items:center;">
+      <input type="text" id="msQ" placeholder="Ara: MAC, port, cihaz IP…" value="{{ f.get('q','') }}" style="flex:1 1 220px;">
+      <input type="number" id="msVlan" placeholder="VLAN" min="0" max="4094" style="width:100px;">
+      <label style="font-size:0.85rem;"><input type="checkbox" id="msAccess" checked style="width:auto;"> Sadece erişim portları (uplink hariç)</label>
+      <label style="font-size:0.85rem;"><input type="checkbox" id="msPoe" style="width:auto;"> Sadece PoE verenler</label>
+      <span class="status-pill online" id="msCount">-</span>
+    </div>
+    <div id="msPoeMain" style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.75rem;"></div>
+    <div style="overflow-x:auto;"><table>
+      <thead><tr><th>Cihaz</th><th>Port</th><th>VLAN</th><th>MAC</th><th>Üretici</th><th>Tür</th><th>IP</th><th>Kullanıcı</th><th>Komşu</th><th>PoE</th><th>Son görülme</th></tr></thead>
+      <tbody id="msRows"></tbody></table></div>
+  </div>
+</div>
+<script src="/static/js/macscan.js?v={{ asset_version }}"></script>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1rem;">
+  Bir kullanıcı adı, MAC veya cihaz IP'si yazın: son N günde hangi cihaz/portlardan bağlandığı ve RADIUS oturumları listelenir.
+  Geçmiş, MAC tablosundan 5 dk'da bir birikir (uplink portları hariç).
+</p>
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-clock-rotate-left"></i> MAC / Kullanıcı Geçmişi</h3>
+    <span class="status-pill online" id="mhInfo">-</span></div>
+  <div class="card-body">
+    <div style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem; align-items:center;">
+      <input type="text" id="mhQ" placeholder="Kullanıcı, MAC veya cihaz IP" value="{{ q }}" style="flex:1 1 240px;">
+      <select id="mhDays" style="width:auto;">
+        {% for d in (1, 7, 30, 90, 365) %}<option value="{{ d }}" {{ 'selected' if d == days else '' }}>Son {{ d }} gün</option>{% endfor %}
+      </select>
+      <button class="btn btn-primary" type="button" id="mhGo"><i class="fa-solid fa-magnifying-glass"></i> Ara</button>
+      <a class="btn" id="mhCsv" href="/machist/export.csv">CSV</a><a class="btn" href="/macscan">MAC Tarama</a>
+    </div>
+    <h4 style="margin:0.5rem 0;">Bağlanılan portlar</h4>
+    <div style="overflow-x:auto;"><table>
+      <thead><tr><th>MAC</th><th>Kullanıcı</th><th>Cihaz</th><th>Port</th><th>VLAN</th><th>İlk</th><th>Son</th><th>Gözlem</th></tr></thead>
+      <tbody id="mhPorts"></tbody></table></div>
+    <h4 style="margin:1rem 0 0.5rem;">RADIUS oturumları</h4>
+    <div style="overflow-x:auto;"><table>
+      <thead><tr><th>Kullanıcı</th><th>MAC</th><th>NAS</th><th>NAS portu</th><th>IP</th><th>Başlangıç</th><th>Bitiş</th></tr></thead>
+      <tbody id="mhSess"></tbody></table></div>
+  </div>
+</div>
+<script src="/static/js/machist.js?v={{ asset_version }}"></script>
+{% endblock %}

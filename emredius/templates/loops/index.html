@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1rem;">
+  İki kaynaktan döngü şüphesi çıkarılır: topolojide (LLDP/CDP) kapalı halkalar ve aynı MAC'in birden çok uplink olmayan portta görülmesi (MAC taşınması).
+  Halka tek başına hata değildir; STP/ring koruması yoksa yayın fırtınası riski taşır. 15 sn'de bir kendiliğinden yenilenir.
+</p>
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-arrows-spin"></i> Topoloji halkaları</h3>
+    <span class="status-pill online" id="lStats">{{ stats.rings }} halka · {{ stats.macs }} taşınan MAC</span></div>
+  <div class="card-body">
+    <div style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem;">
+      <a class="btn" href="/loops/export/rings.csv">Halka CSV</a><a class="btn" href="/loops/export/macs.csv">MAC CSV</a>
+      <a class="btn" href="/loops/export/rings.json">JSON</a><a class="btn" href="/topology">Topoloji</a><a class="btn" href="/equipment">Ekipman</a>
+    </div>
+    <div style="overflow-x:auto;"><table><thead><tr><th>Önem</th><th>#</th><th>Uzunluk</th><th>Düğümler</th></tr></thead><tbody id="lRings"></tbody></table></div>
+  </div>
+</div>
+<div class="card">
+  <div class="card-header"><h3><i class="fa-solid fa-shuffle"></i> MAC taşınması</h3></div>
+  <div class="card-body"><div style="overflow-x:auto;"><table><thead><tr><th>Önem</th><th>MAC</th><th>Üretici</th><th>RADIUS</th><th>Konumlar (cihaz:port)</th></tr></thead>
+    <tbody id="lMacs"></tbody></table></div></div>
+</div>
+<script src="/static/js/loops.js?v={{ asset_version }}"></script>
+{% endblock %}

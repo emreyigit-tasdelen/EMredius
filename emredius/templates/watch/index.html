@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1rem;">
+  Eklediğiniz IP'ler dakikada bir ping ile denetlenir; durum, gecikme ve kayıp izlenir. Satıra tıklayınca gecikme geçmişi açılır. 10 sn'de bir kendiliğinden yenilenir.
+</p>
+<div class="card">
+  <div class="card-header"><h3><i class="fa-solid fa-eye"></i> İzlenen IP'ler</h3>
+    <span class="status-pill online" id="wStats">{{ stats.up }} açık / {{ stats.total }} hedef · {{ stats.down }} kapalı</span></div>
+  <div class="card-body">
+    <form method="POST" action="/watch/add" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end; margin-bottom:1rem;">
+      {{ csrf_input() }}
+      <div class="form-group" style="flex:1 1 180px; margin-bottom:0;"><label>IP adresi</label><input type="text" name="ip" maxlength="45" required placeholder="10.0.0.1"></div>
+      <div class="form-group" style="flex:1 1 180px; margin-bottom:0;"><label>Ad</label><input type="text" name="name" maxlength="64"></div>
+      <button class="btn btn-primary" type="submit"><i class="fa-solid fa-plus"></i> Ekle</button>
+      <button class="btn" type="button" id="wCheck"><i class="fa-solid fa-rotate"></i> Şimdi denetle</button>
+    </form>
+    <div style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem;">
+      <input type="text" id="wQ" placeholder="Ara: IP, ad…" style="flex:1 1 220px;">
+      <a class="btn" href="/watch/export.csv">CSV</a><a class="btn" href="/watch/export.json">JSON</a><a class="btn" href="/inventory">Aktif Cihazlar</a>
+    </div>
+    <div style="overflow-x:auto;"><table><thead><tr><th>Durum</th><th>IP</th><th>Ad</th><th>Envanter</th><th>Gecikme</th><th>Kayıp</th><th>Son denetim</th><th>Son değişim</th><th></th></tr></thead>
+      <tbody id="wBody">
+      {% for t in targets %}<tr data-id="{{ t.id }}"><td>{{ t.status }}</td><td>{{ t.ip }}</td><td>{{ t.name }}</td><td>{{ t.inv_name or '-' }}</td>
+        <td>{{ t.rtt_ms if t.rtt_ms is not none else '-' }}</td><td>{{ t.loss_pct }}%</td><td>{{ t.last_check }}</td><td>{{ t.last_change }}</td><td></td></tr>
+      {% else %}<tr><td colspan="9" style="color:var(--text-muted);">Henüz hedef yok.</td></tr>{% endfor %}
+      </tbody></table></div>
+    <canvas id="wChart" height="120" style="margin-top:1rem; width:100%; display:none;"></canvas>
+    <div id="wChartLbl" style="font-size:0.85rem; color:var(--text-muted);"></div>
+  </div>
+</div>
+<script src="/static/js/watch.js?v={{ asset_version }}"></script>
+{% endblock %}

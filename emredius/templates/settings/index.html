@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block content %}
+{% if dry_run %}
+    <div class="alert alert-warning" style="margin-bottom:1.5rem;"><i class="fa-solid fa-flask"></i> Staging (SYSTEM_DRY_RUN): DNS, SSH, güvenlik duvarı, saat ve zaman dilimi işlemleri engellenir.</div>
+{% endif %}
+    <div class="card" style="margin-bottom:1.5rem;">
+      <div class="card-header">
+        <h3><i class="fa-solid fa-heart" style="color:#ec4899;"></i> <span data-i18n="Projeyi Destekle">Projeyi Destekle</span></h3>
+      </div>
+      <div class="card-body" style="display:flex; flex-wrap:wrap; align-items:center; gap:0.75rem 1.25rem;">
+        <span data-i18n="EMREDIUS açık kaynaklıdır. Beğendiyseniz geliştirmesine destek olabilirsiniz." style="flex:1 1 280px;">EMREDIUS açık kaynaklıdır. Beğendiyseniz geliştirmesine destek olabilirsiniz.</span>
+        <a href="https://github.com/sponsors/emreyigit-tasdelen" class="btn btn-secondary" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-heart" style="color:#ec4899;"></i> GitHub Sponsors</a>
+        <a href="https://buymeacoffee.com/emreyigit.tasdelen" class="btn btn-secondary" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-mug-hot" style="color:#f59e0b;"></i> Buy Me a Coffee</a>
+        <div style="flex-basis:100%; font-size:0.85rem; color:#94a3b8;">
+          <span data-i18n="Geliştirici">Geliştirici</span>:
+          <a href="https://github.com/emreyigit-tasdelen" target="_blank" rel="noopener noreferrer" style="font-weight:600;"><i class="fa-brands fa-github"></i> Emre Yiğit Taşdelen</a>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+      <div class="card">
+        <div class="card-header">
+          <h3><i class="fa-solid fa-bell" style="color:#0284c7;"></i> Bildirim Kanalları (Telegram & Slack)</h3>
+        </div>
+        <div class="card-body">
+          <form method="POST" action="/settings">
+            {{ csrf_input() }}
+            <input type="hidden" name="form" value="notify">
+            <div class="form-group">
+              <label>Telegram Bot Token</label>
+              <input type="text" name="telegram_bot_token" value="{{ v.bot_token }}" placeholder="123456789:ABCdefGHI..." autocomplete="off" maxlength="100">
+            </div>
+            <div class="form-group">
+              <label>Telegram Chat ID</label>
+              <input type="text" name="telegram_chat_id" value="{{ v.chat_id }}" placeholder="987654321" maxlength="70">
+            </div>
+            <div class="form-group">
+              <label>Slack / Discord Webhook URL</label>
+              <input type="text" name="slack_webhook_url" value="{{ v.slack_wh }}" placeholder="https://hooks.slack.com/services/..." autocomplete="off" maxlength="520">
+            </div>
+            <div style="display:flex; gap:0.75rem;">
+              <button type="submit" class="btn btn-primary">Ayarları Kaydet</button>
+              <button type="submit" name="send_test_alert" value="1" class="btn btn-secondary">
+                <i class="fa-solid fa-paper-plane"></i> Test Bildirimi Gönder
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3><i class="fa-solid fa-sliders" style="color:#a855f7;"></i> Wi-Fi Kupon Marka & API Ayarları</h3>
+        </div>
+        <div class="card-body">
+          <form method="POST" action="/settings">
+            {{ csrf_input() }}
+            <input type="hidden" name="form" value="brand">
+            <div class="form-group">
+              <label>Kurum / Şirket Başlığı</label>
+              <input type="text" name="company_brand_name" value="{{ v.brand }}" maxlength="64" required>
+            </div>
+            <div class="form-group">
+              <label>Yayınlanan Wi-Fi SSID Adı (QR Kod İçin)</label>
+              <input type="text" name="company_ssid_name" value="{{ v.ssid }}" maxlength="32" required>
+            </div>
+            <div class="form-group">
+              <label>Sistem REST API Anahtarı (X-API-Key)</label>
+              <input type="text" name="api_token" value="{{ v.api_token }}" autocomplete="off" minlength="16" maxlength="128">
+              <small style="color:#64748b; font-size:0.75rem;">Boş bırakılırsa mevcut anahtar korunur.</small>
+            </div>
+            <button type="submit" class="btn btn-primary">Kaydet</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 1.5rem;">
+      <!-- NTP Zaman Eşitleme Kartı -->
+      <div class="card">
+        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <h3><i class="fa-solid fa-clock" style="color:#0284c7;"></i> <span data-i18n="Tarih, Saat & NTP Zaman Eşitleme">Tarih, Saat & NTP Zaman Eşitleme</span></h3>
+          <a href="/ntp" class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-up-right-from-square"></i> NTP Sunucu Sayfası</a>
+        </div>
+        <div class="card-body">
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:1rem; margin-bottom:1.25rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+              <span style="font-size:0.85rem; color:#64748b;">Mevcut Sistem Saati:</span>
+              <strong id="setNtpNow" style="font-family:monospace; font-size:1.05rem; color:#0f172a;">{{ now }}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+              <span style="font-size:0.85rem; color:#64748b;">NTP Senkronizasyon Durumu:</span>
+            <span id="setNtpStatus">{% if ntp.is_synced %}
+              <span class="badge" style="background:#dcfce7; color:#15803d; font-weight:700;"><i class="fa-solid fa-check"></i> Stratum {{ ntp.stratum }} ({{ ntp.ref_id }})</span>
+            {% else %}
+              <span class="badge" style="background:#fee2e2; color:#991b1b; font-weight:700;"><i class="fa-solid fa-xmark"></i> chrony yanıt vermiyor</span>
+            {% endif %}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:0.85rem; color:#64748b;">Zaman Kayması (Offset):</span>
+              <code id="setNtpOffset" style="font-size:0.85rem; color:#2563eb;">{{ ntp.last_offset }}</code>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary" id="btnSyncNtpSet">
+              <i class="fa-solid fa-arrows-rotate"></i> <span data-i18n="Zamanı Şimdi Eşitle (chronyc makestep)">Zamanı Şimdi Eşitle (chronyc makestep)</span>
+            </button>
+            <form method="POST" action="/api/settings/timezone" style="display:inline-flex; gap:0.5rem; align-items:center;">
+              {{ csrf_input() }}
+              <select name="timezone" class="form-control" style="padding:0.45rem 0.75rem; border-radius:8px; border:1.5px solid #cbd5e1; font-size:0.85rem;">
+              {% for tz, label in timezones %}
+                <option value="{{ tz }}"{% if tz == current_tz %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+              </select>
+              <button type="submit" class="btn btn-secondary btn-sm" title="Zaman Dilimini Kaydet"><i class="fa-solid fa-floppy-disk"></i></button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sistem ve Ağ Servisleri Yönetimi Kartı -->
+      <div class="card">
+        <div class="card-header">
+          <h3><i class="fa-solid fa-server" style="color:#10b981;"></i> <span data-i18n="Sistem & Ağ Servisleri Yönetimi">Sistem & Ağ Servisleri Yönetimi</span></h3>
+          <span class="badge" style="background:#dcfce7; color:#15803d;">Aktif Servisler</span>
+        </div>
+        <div class="card-body">
+          <!-- DNS Resolv.conf Form -->
+          <form method="POST" action="/api/settings/dns" style="margin-bottom:1.25rem; padding-bottom:1.25rem; border-bottom:1px solid #f1f5f9;">
+            {{ csrf_input() }}
+            <label style="font-size:0.88rem; font-weight:700; color:#0f172a; margin-bottom:0.5rem; display:block;">
+              <i class="fa-solid fa-network-wired" style="color:#2563eb;"></i> DNS İsim Sunucuları (/etc/resolv.conf)
+            </label>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.75rem; margin-bottom:0.6rem;">
+              <input type="text" name="dns1" value="{{ dns1 }}" placeholder="Birincil DNS (Örn: 8.8.8.8)" required maxlength="45" style="padding:0.5rem; font-family:monospace; font-size:0.88rem;">
+              <input type="text" name="dns2" value="{{ dns2 }}" placeholder="İkincil DNS (Örn: 1.1.1.1)" maxlength="45" style="padding:0.5rem; font-family:monospace; font-size:0.88rem;">
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-floppy-disk"></i> DNS Ayarlarını Kaydet</button>
+          </form>
+
+          <!-- System Daemons Actions -->
+          <div style="display:flex; flex-direction:column; gap:0.75rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:0.65rem 0.9rem; border-radius:8px; border:1px solid #e2e8f0;">
+              <div>
+                <strong style="font-size:0.88rem; color:#0f172a;"><i class="fa-solid fa-terminal"></i> SSH Daemon (sshd)</strong>
+                <div style="font-size:0.78rem; color:#64748b;">Port 22 • Güvenli Uzak Bağlantı</div>
+              </div>
+              <form method="POST" action="/api/settings/ssh/reload" style="margin:0;">
+                {{ csrf_input() }}
+                <button type="submit" class="btn btn-secondary btn-sm" data-on-click="return confirm('SSH servisini kesintisiz yeniden yüklemek istediğinize emin misiniz?');">
+                  <i class="fa-solid fa-arrows-rotate"></i> Yeniden Yükle
+                </button>
+              </form>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:0.65rem 0.9rem; border-radius:8px; border:1px solid #e2e8f0;">
+              <div>
+                <strong style="font-size:0.88rem; color:#0f172a;"><i class="fa-solid fa-shield-halved"></i> FirewallD Güvenlik Duvarı</strong>
+                <div style="font-size:0.78rem; color:#64748b;">RADIUS (1812/1813), TACACS+ (49), SNMP (161), NTP (123)</div>
+              </div>
+              <form method="POST" action="/api/settings/firewall/reload" style="margin:0;">
+                {{ csrf_input() }}
+                <button type="submit" class="btn btn-secondary btn-sm" data-on-click="return confirm('Güvenlik duvarı kuralları yeniden yüklensin mi?');">
+                  <i class="fa-solid fa-shield-virus"></i> Kuralları Yenile
+                </button>
+              </form>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#f0fdf4; padding:0.75rem 0.9rem; border-radius:8px; border:1px solid #bbf7d0;">
+              <div>
+                <strong style="font-size:0.88rem; color:#15803d;"><i class="fa-solid fa-certificate"></i> SSL Kök Sertifikası (Güvenli Yeşil Kilit)</strong>
+                <div style="font-size:0.78rem; color:#166534;">Tarayıcıdaki "Güvenli Değil" uyarısını kaldırmak için Windows'a yükleyin</div>
+              </div>
+              <a href="/download/ca.crt" class="btn btn-primary btn-sm" style="background:#16a34a; border-color:#15803d; text-decoration:none;">
+                <i class="fa-solid fa-download"></i> Kök Sertifikayı İndir (.crt)
+              </a>
+            </div>
+
+            <details style="background:#f8fafc; padding:0.75rem 0.9rem; border-radius:8px; border:1px solid #e2e8f0; font-size:0.8rem; color:#334155;">
+              <summary style="cursor:pointer; font-weight:600;"><i class="fa-solid fa-circle-info"></i> CA kurulum yönergesi</summary>
+              <p style="margin:0.6rem 0 0.4rem;"><a href="/download/ca-install.bat" class="btn btn-secondary btn-sm" style="text-decoration:none;"><i class="fa-brands fa-windows"></i> Kurulum Betiğini İndir (.bat)</a></p>
+              <ul style="margin:0.4rem 0 0 1.1rem; padding:0; line-height:1.5;">
+                <li>Windows: .bat dosyasını indirip çift tıklayın; sertifika kullanıcı güvenilir kök deposuna eklenir. Alternatif: .crt dosyasına çift tıklayın &gt; Sertifika Yükle &gt; Güvenilen Kök Sertifika Yetkilileri.</li>
+                <li>macOS: .crt dosyasına çift tıklayın, Anahtar Zinciri'nde sertifikayı açıp Güven &gt; Her Zaman Güven seçin.</li>
+                <li>Firefox: Ayarlar &gt; Gizlilik ve Güvenlik &gt; Sertifikalar &gt; Sertifikaları Görüntüle &gt; Yetkililer &gt; İçe Aktar; web siteleri için güven kutusunu işaretleyin.</li>
+                <li>Telefon: iPhone'da dosyayı açıp Ayarlar &gt; Genel &gt; VPN ve Aygıt Yönetimi'nden yükleyin, sonra Genel &gt; Hakkında &gt; Sertifika Güven Ayarları'nı açın. Android'de Ayarlar &gt; Güvenlik &gt; Sertifika yükle &gt; CA sertifikası.</li>
+                <li>Kaspersky: HTTPS taraması kendi sertifikasını araya koyuyorsa uyarı sürebilir; Kaspersky &gt; Ayarlar &gt; Ağ &gt; Güvenli bağlantıları tara bölümünden bu paneli hariç tutun veya Kaspersky kök sertifikasını da güvenilir yapın.</li>
+              </ul>
+            </details>
+
+          </div>
+        </div>
+      </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/settings.js?v={{ asset_version }}"></script>
+{% endblock %}

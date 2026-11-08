@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <div class="card-header"><h3><i class="fa-solid fa-user-slash"></i> Süresi Dolan Misafir Hesapları</h3><span class="badge">{{ data.total }} hesap</span></div>
+  <div class="card-body">
+    <p style="color:#64748b;">Silme otomatik çalışmaz; yalnızca aşağıdaki düğmeyle elle yapılır. Kapsam: süresi geçen veya kotası dolan kupon/misafir (GUEST-, VOUCHER-) hesapları.</p>
+    {% if data.total %}
+    <form method="post" action="/erasures/run">{{ csrf_input() }}
+      <button class="btn btn-danger" type="submit" data-on-click="return confirm('{{ data.total }} hesap kalıcı olarak silinecek. Emin misiniz?');"><i class="fa-solid fa-trash"></i> Süresi dolanları sil</button>
+    </form>
+    {% endif %}
+  </div>
+  <div class="card-body" style="padding:0;">
+    <table>
+      <thead><tr><th>Hesap</th><th>Açıklama</th><th>Grup</th><th>Süre / Kota</th></tr></thead>
+      <tbody>
+      {% for r in data.rows %}<tr><td><strong>{{ r.code }}</strong></td><td>{{ r.description or '' }}</td><td>{{ r.group or '' }}</td><td>{{ r.quota }}</td></tr>
+      {% else %}<tr><td colspan="4" style="text-align:center; color:#94a3b8;">Silinecek hesap yok.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+# Syslog collector (UDP 514). Open the port in firewalld for the sending devices only.
+[Unit]
+Description=EMredius syslog collector
+After=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/emredius
+EnvironmentFile=-/etc/emredius/nms.env
+Environment=NMS_DB_PATH=/opt/emredius/nms/data/enterprise_nms.db
+Environment=SYSLOG_PORTS=514
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/emredius/.venv/bin/python -m nms.syslogd
+Restart=always
+RestartSec=3
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

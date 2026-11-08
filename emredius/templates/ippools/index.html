@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <div class="card-header"><h3><i class="fa-solid fa-network-wired"></i> IP Havuzları</h3><span class="badge">{{ pools|length }} havuz</span></div>
+  <div class="card-body">
+    <p style="color:#64748b;">Havuz adresleri RADIUS <code>radippool</code> tablosuna yazılır; kullanıcıya veya gruba <code>Framed-Pool</code> atanır. Adres dağıtımı için FreeRADIUS <code>sqlippool</code> modülünün etkin olması gerekir; etkin değilse yalnızca öznitelik gönderilir.</p>
+    <form method="post" action="/ippools/add" style="display:flex; gap:.5rem; flex-wrap:wrap; align-items:end;">
+      {{ csrf_input() }}
+      <input class="form-control" name="name" placeholder="Havuz adı" required>
+      <input class="form-control" name="cidr" placeholder="CIDR (10.10.0.0/24)">
+      <span style="align-self:center;">veya</span>
+      <input class="form-control" name="start" placeholder="Başlangıç IP">
+      <input class="form-control" name="end" placeholder="Bitiş IP">
+      <input class="form-control" name="note" placeholder="Not">
+      <button class="btn btn-primary" type="submit"><i class="fa-solid fa-plus"></i> Havuz Ekle</button>
+    </form>
+  </div>
+  <div class="card-body" style="padding:0;">
+    <table>
+      <thead><tr><th>Havuz</th><th>Aralık</th><th>Doluluk</th><th>Atamalar</th><th>Not</th><th style="text-align:right;">İşlem</th></tr></thead>
+      <tbody>
+      {% for p in pools %}
+        <tr>
+          <td><strong>{{ p.name }}</strong></td>
+          <td>{{ p.start_ip }} – {{ p.end_ip }}</td>
+          <td>{{ p.used }} / {{ p.total }} <span class="badge">%{{ p.pct }}</span></td>
+          <td>{{ p.users }} kullanıcı, {{ p.groups }} grup</td>
+          <td>{{ p.note }}</td>
+          <td style="text-align:right;">
+            <form method="post" action="/ippools/assign" style="display:inline-flex; gap:.25rem;">
+              {{ csrf_input() }}<input type="hidden" name="name" value="{{ p.name }}">
+              <select class="form-control" name="kind"><option value="user">Kullanıcı</option><option value="group">Grup</option></select>
+              <input class="form-control" name="target" placeholder="ad" required style="width:110px;">
+              <button class="btn btn-primary btn-sm" type="submit">Ata</button>
+            </form>
+            <form method="post" action="/ippools/unassign" style="display:inline-flex; gap:.25rem;">
+              {{ csrf_input() }}<input type="hidden" name="name" value="{{ p.name }}">
+              <select class="form-control" name="kind"><option value="user">Kullanıcı</option><option value="group">Grup</option></select>
+              <input class="form-control" name="target" placeholder="ad" required style="width:110px;">
+              <button class="btn btn-sm" type="submit">Kaldır</button>
+            </form>
+            <form method="post" action="/ippools/delete" style="display:inline;">
+              {{ csrf_input() }}<input type="hidden" name="name" value="{{ p.name }}">
+              <button class="btn btn-danger btn-sm" type="submit" data-on-click="return confirm('{{ p.name | js }} havuzu silinsin mi?');"><i class="fa-solid fa-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6" style="text-align:center; color:#94a3b8;">Henüz havuz yok.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+

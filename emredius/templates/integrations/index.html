@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="margin-bottom:1.5rem;"><div class="card-header"><h3><i class="fa-solid fa-plug"></i> Bildirim kanalları</h3></div><div class="card-body">
+  <table class="data-table" style="width:100%;"><thead><tr><th>Kanal</th><th>Tanım</th><th>Durum</th><th></th></tr></thead><tbody>
+    {% for c in channels %}<tr><td>{{ c.name }}</td>
+      <td>{% if c.configured %}<span class="status-pill online">Tanımlı</span>{% else %}<span class="status-pill offline">Tanımsız</span>{% endif %}</td>
+      <td>{% if c.enabled is none %}tanımlıysa kullanılır{% elif c.enabled %}Açık{% else %}Kapalı{% endif %}</td>
+      <td><a href="{{ c.link }}">Ayarlar</a></td></tr>{% endfor %}</tbody></table>
+  <form method="POST" action="/integrations/test" style="margin-top:1rem;">{{ csrf_input() }}<button class="btn" type="submit">Tanımlı kanallara test bildirimi gönder</button></form>
+</div></div>
+<div class="card"><div class="card-header"><h3><i class="fa-solid fa-link"></i> Genel webhook</h3></div><div class="card-body">
+  <form method="POST" action="/integrations/webhook">{{ csrf_input() }}
+    <label><input type="checkbox" name="int_webhook_enabled" {{ 'checked' if cfg.int_webhook_enabled == '1' else '' }}> Uyarıları webhook adresine JSON olarak gönder</label>
+    <div class="form-group"><label>Webhook URL</label><input type="text" name="int_webhook_url" maxlength="600" value="{{ cfg.int_webhook_url }}" placeholder="https://hooks.example.com/emredius"></div>
+    <div class="form-group"><label>İmza anahtarı (isteğe bağlı, HMAC-SHA256 → X-Emredius-Signature){% if cfg.secret_set %} — kayıtlı, boş bırakırsanız korunur{% endif %}</label><input type="password" name="int_webhook_secret" autocomplete="new-password" maxlength="200"></div>
+    {% if cfg.secret_set %}<label><input type="checkbox" name="int_webhook_secret_clear"> İmza anahtarını sil</label>{% endif %}
+    <p style="color:var(--text-muted); font-size:.85rem;">Varsayılan kapalı. Servis düşme, sertifika gibi tüm panel uyarıları buraya da gider.</p>
+    <button class="btn btn-primary" type="submit">Kaydet</button>
+  </form>
+  <form method="POST" action="/integrations/webhook-test" style="margin-top:1rem;">{{ csrf_input() }}<button class="btn" type="submit">Webhook'u dene</button></form>
+</div></div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:1.5rem; margin-bottom:1.5rem;">
+  <div class="card"><div class="card-header"><h3><i class="fa-solid fa-user-lock"></i> Giriş politikası</h3></div>
+    <div class="card-body">
+      <form method="POST" action="/hardening/policy">{{ csrf_input() }}
+        <div class="form-group"><label>Hatalı deneme sınırı (3–20)</label><input type="number" name="login_lock_threshold" min="3" max="20" value="{{ policy.login_lock_threshold }}"></div>
+        <div class="form-group"><label>Kilit süresi, dakika (1–1440)</label><input type="number" name="login_lock_minutes" min="1" max="1440" value="{{ policy.login_lock_minutes }}"></div>
+        <label><input type="checkbox" name="require_2fa" {{ 'checked' if policy.require_2fa else '' }}> 2FA (TOTP) zorunlu: kurulumu yapmamış yönetici yalnızca 2FA kurulum sayfasına erişir</label>
+        <p style="color:var(--text-muted); font-size:.85rem;">Sınır hem IP hem hesap için geçerlidir. 2FA zorunluluğu varsayılan kapalıdır; açmadan önce kendi hesabınızda 2FA kurun.</p>
+        <button class="btn btn-primary" type="submit">Kaydet</button>
+      </form></div></div>
+  <div class="card"><div class="card-header"><h3><i class="fa-solid fa-network-wired"></i> NetFlow kaynak IP kısıtı</h3></div>
+    <div class="card-body">
+      <form method="POST" action="/hardening/netflow-sources">{{ csrf_input() }}
+        <div class="form-group"><label>İzinli gönderici IP/CIDR (virgül, boşluk veya satır ile)</label>
+          <textarea name="sources" rows="4" maxlength="4000" placeholder="10.0.0.0/24, 192.168.1.5">{{ flow_sources }}</textarea></div>
+        <p style="color:var(--text-muted); font-size:.85rem;">UDP 2055 / 4739 (ve sFlow) paketleri yalnız bu kaynaklardan kabul edilir. Boş bırakırsanız herkes kabul edilir. Toplayıcı listeyi ~10 sn içinde yeniden okur.</p>
+        <button class="btn btn-primary" type="submit">Kaydet</button>
+      </form></div></div>
+</div>
+<div class="card" style="margin-bottom:1.5rem;"><div class="card-header"><h3><i class="fa-solid fa-triangle-exclamation"></i> Hesap durumu ({{ review.admin_count }} aktif yönetici)</h3></div>
+  <div class="card-body">
+    <p><b>2FA'sı olmayan:</b> {% if review.no_2fa %}{% for a in review.no_2fa %}<span class="status-pill offline">{{ a.username }}</span> {% endfor %}{% else %}yok{% endif %}</p>
+    <p><b>Şu an kilitli hesap:</b> {% if review.locked %}{% for a in review.locked %}<span class="status-pill offline">{{ a.username }}</span> {% endfor %}{% else %}yok{% endif %}</p>
+  </div></div>
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:1.5rem;">
+  <div class="card"><div class="card-header"><h3>Son {{ review.days }} gün hatalı giriş/2FA</h3></div>
+    <div class="card-body"><table class="data-table" style="width:100%;"><thead><tr><th>Zaman</th><th>Kullanıcı</th><th>Tür</th><th>IP</th></tr></thead><tbody>
+      {% for f in review.failures %}<tr><td>{{ f.created_at }}</td><td>{{ f.admin_username }}</td><td>{{ f.action }}</td><td>{{ f.ip_address }}</td></tr>
+      {% else %}<tr><td colspan="4">Kayıt yok.</td></tr>{% endfor %}</tbody></table>
+      {% if review.top_ips %}<p style="margin-top:1rem;"><b>En çok hata veren IP'ler:</b> {% for t in review.top_ips %}{{ t.ip_address }} ({{ t.n }}){{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}</div></div>
+  <div class="card"><div class="card-header"><h3>Son başarılı girişler</h3></div>
+    <div class="card-body"><table class="data-table" style="width:100%;"><thead><tr><th>Zaman</th><th>Kullanıcı</th><th>IP</th></tr></thead><tbody>
+      {% for l in review.logins %}<tr><td>{{ l.created_at }}</td><td>{{ l.admin_username }}</td><td>{{ l.ip_address }}</td></tr>
+      {% else %}<tr><td colspan="3">Kayıt yok.</td></tr>{% endfor %}</tbody></table></div></div>
+</div>
+{% endblock %}

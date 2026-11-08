@@ -1,0 +1,10 @@
+[Unit]
+Description=EMredius 5651 signed daily accounting archive (yesterday)
+After=mariadb.service
+
+[Service]
+Type=oneshot
+Environment=EMREDIUS_ENV_FILE=/etc/emredius/emredius.env
+ExecStart=/opt/emredius/.venv/bin/python /opt/emredius/scripts/maintenance.py archive5651
+# 75 = deferred (clock not NTP-synced, logged as ARCHIVE_DEFERRED; the missed day is caught up on the next run)
+SuccessExitStatus=75

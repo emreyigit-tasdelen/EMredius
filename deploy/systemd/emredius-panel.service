@@ -1,0 +1,23 @@
+# Production unit (replaces radius-admin.service at cut-over; same bind address behind nginx).
+# The panel runs as root because it manages radiusd/systemd, reads /etc/shadow and runs the web CLI.
+[Unit]
+Description=EMredius management panel (gunicorn 127.0.0.1:5000)
+After=network-online.target mariadb.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/emredius
+Environment=EMREDIUS_ENV_FILE=/etc/emredius/emredius.env
+Environment=EMREDIUS_BIND=127.0.0.1:5000
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/emredius/.venv/bin/python -m gunicorn -c /opt/emredius/gunicorn.conf.py wsgi:app
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=3
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

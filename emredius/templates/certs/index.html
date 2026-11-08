@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="margin-bottom:1.5rem;"><div class="card-header"><h3><i class="fa-solid fa-certificate"></i> Sertifika geçerliliği</h3></div>
+  <div class="card-body"><table class="data-table" style="width:100%;"><thead><tr><th>Sertifika</th><th>Durum</th><th>Bitiş</th><th>Kalan gün</th><th>Konu</th><th>Veren</th><th>Seri</th></tr></thead><tbody>
+    {% for r in rows %}<tr>
+      <td><b>{{ r.name }}</b><br><small>{{ r.path }}</small></td>
+      <td>{% if r.status == 'ok' %}<span class="status-pill online">Geçerli</span>
+          {% elif r.status == 'warn' %}<span class="status-pill offline">Yakında bitiyor</span>
+          {% elif r.status == 'expired' %}<span class="status-pill offline">Süresi doldu</span>
+          {% else %}<span class="status-pill offline">{{ 'Dosya yok' if r.status == 'missing' else 'Okunamadı' }}</span>{% endif %}</td>
+      {% if r.not_after %}<td>{{ r.not_after }}</td><td>{{ r.days_left }}</td><td>{{ r.subject }}{% if r.sans %}<br><small>SAN: {{ r.sans|join(', ') }}</small>{% endif %}</td><td>{{ r.issuer }}</td><td><small>{{ r.serial }}</small></td>
+      {% else %}<td colspan="5">{{ r.error }}</td>{% endif %}
+    </tr>{% endfor %}</tbody></table></div></div>
+<div class="card"><div class="card-header"><h3>Süre sonu uyarısı</h3></div><div class="card-body">
+  <form method="POST" action="/certs/settings">{{ csrf_input() }}
+    <div class="form-group"><label>Uyarı eşiği (gün, 1–365)</label><input type="number" name="cert_warn_days" min="1" max="365" value="{{ cfg.cert_warn_days }}"></div>
+    <label><input type="checkbox" name="cert_alert_enabled" {{ 'checked' if cfg.cert_alert_enabled == '1' else '' }}> Süresi yaklaşan/dolan sertifikaları bildirim kanallarına gönder (günde en çok bir kez)</label>
+    <p style="color:var(--text-muted); font-size:.85rem;">Varsayılan kapalı. Bildirimler Telegram/Slack ve açıksa genel webhook ile gider. Tablodaki uyarı rozeti bu ayardan bağımsız görünür.</p>
+    <button class="btn btn-primary" type="submit">Kaydet</button>
+  </form>
+  <form method="POST" action="/certs/check" style="margin-top:1rem;">{{ csrf_input() }}<button class="btn" type="submit">Şimdi kontrol et ve uyar</button></form>
+</div></div>
+{% endblock %}

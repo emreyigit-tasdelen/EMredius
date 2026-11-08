@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+{% set s = rep.summary %}
+<p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1rem;">Yedeklenen yapılandırma sürümleri arasındaki fark ve uyumluluk kurallarına göre denetim raporu. Salt okunur; cihaza hiçbir şey gönderilmez. Kurallar <a href="/configs">Konfig Yönetimi</a>'nde tanımlanır.</p>
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-clipboard-check"></i> Uyum raporu</h3>
+    <span class="status-pill {{ 'online' if s.failing == 0 else 'offline' }}">{{ 'Ortalama %' ~ s.avg if s.avg is not none else 'Veri yok' }} · {{ s.full }}/{{ s.scored }} tam uyumlu</span></div>
+  <div class="card-body">
+    <div style="margin-bottom:1rem;"><a class="btn" href="/configs/audit/report.csv">CSV</a> <a class="btn" href="/configs/audit/report.json">JSON</a> <button class="btn" type="button" id="caPrint">Yazdır</button>
+      <span style="color:var(--text-muted);">{{ s.devices }} cihaz · {{ s.no_backup }} yedeksiz · {{ s.rules }} etkin kural</span></div>
+    {% if not s.rules %}<p style="color:var(--text-muted);">Etkin uyumluluk kuralı yok. Konfig Yönetimi sayfasından kural ekleyin.</p>{% endif %}
+    <div style="overflow-x:auto;"><table><thead><tr><th>Kural</th><th>Tür</th><th>Desen</th><th>Üretici</th><th>Uyum</th><th>İhlal eden cihazlar</th></tr></thead><tbody>
+      {% for r in rep.rules %}<tr><td>{{ r.name }}</td><td>{{ r.kind }}</td><td><code>{{ r.pattern }}</code></td><td>{{ r.vendor or 'Tümü' }}</td>
+        <td><span class="status-pill {{ 'online' if r.pct == 100 else 'offline' }}">%{{ r.pct }} ({{ r.checked - r.failed|length }}/{{ r.checked }})</span></td><td>{{ r.failed | join(', ') or '-' }}</td></tr>
+      {% else %}<tr><td colspan="6" style="color:var(--text-muted);">Kural yok.</td></tr>{% endfor %}
+    </tbody></table></div>
+    <div style="overflow-x:auto; margin-top:1rem;"><table><thead><tr><th>Cihaz</th><th>IP</th><th>Sürüm</th><th>Puan</th><th>Başarısız kurallar</th><th></th></tr></thead><tbody>
+      {% for d in rep.devices %}<tr><td>{{ d.name }}</td><td>{{ d.ip }}</td><td>{{ d.version or '-' }}</td>
+        <td>{% if d.score is none %}-{% else %}<span class="status-pill {{ 'online' if d.score == 100 else 'offline' }}">%{{ d.score }}</span>{% endif %}</td>
+        <td>{% for x in d.results if not x.ok %}{{ x.rule }}{{ ', ' if not loop.last }}{% else %}-{% endfor %}</td>
+        <td><button class="btn" type="button" data-diff="{{ d.ip }}" {{ 'disabled' if d.version < 2 }}>Fark</button></td></tr>
+      {% else %}<tr><td colspan="6" style="color:var(--text-muted);">Envanterde cihaz yok.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </div>
+</div>
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-code-compare"></i> Sürüm karşılaştırma</h3><span id="caTitle" style="color:var(--text-muted);">Bir cihaz için "Fark" seçin.</span></div>
+  <div class="card-body">
+    <div id="caCtl" style="display:none; gap:0.75rem; flex-wrap:wrap; align-items:flex-end; margin-bottom:1rem;">
+      <div class="form-group" style="margin:0;"><label>Eski</label><select id="caA"></select></div>
+      <div class="form-group" style="margin:0;"><label>Yeni</label><select id="caB"></select></div>
+      <label><input type="checkbox" id="caWs" style="width:auto;"> Boşlukları yoksay</label>
+      <label><input type="checkbox" id="caNc" style="width:auto;"> Yorum satırlarını yoksay</label>
+      <button class="btn btn-primary" id="caGo" type="button">Karşılaştır</button></div>
+    <div id="caOut"></div>
+  </div>
+</div>
+<div class="card">
+  <div class="card-header"><h3><i class="fa-solid fa-clock-rotate-left"></i> Son değişiklikler</h3></div>
+  <div class="card-body"><div style="overflow-x:auto;"><table><thead><tr><th>Zaman</th><th>Cihaz</th><th>Sürüm</th><th>Kaynak</th><th>Değişiklik</th><th>Kim</th><th></th></tr></thead><tbody>
+    {% for c in changes %}<tr><td>{{ c.created }}</td><td>{{ c.name }} <small>({{ c.ip }})</small></td><td>v{{ c.version }}</td><td>{{ c.source }}</td>
+      <td>{% if c.first %}ilk sürüm{% else %}<span style="color:#2e7d32;">+{{ c.added }}</span> / <span style="color:#c62828;">-{{ c.removed }}</span>{% endif %}</td><td>{{ c.by or '-' }}</td>
+      <td>{% if not c.first %}<button class="btn" type="button" data-diff="{{ c.ip }}" data-a="{{ c.prev }}" data-b="{{ c.version }}">Fark</button>{% endif %}</td></tr>
+    {% else %}<tr><td colspan="7" style="color:var(--text-muted);">Henüz yedek yok.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+</div>
+<style>.ca-t{width:100%;border-collapse:collapse;font-family:monospace;font-size:0.82rem}.ca-t td{padding:1px 6px;white-space:pre-wrap;word-break:break-all;vertical-align:top;border:0}
+.ca-t .n{width:3em;color:var(--text-muted);text-align:right;user-select:none}.ca-add{background:rgba(46,125,50,.18)}.ca-del{background:rgba(198,40,40,.18)}.ca-chg{background:rgba(237,162,0,.18)}.ca-skip td{text-align:center;color:var(--text-muted)}
+@media print{.btn,button{display:none!important}}</style>
+<script src="/static/js/cfgaudit.js?v={{ asset_version }}"></script>
+{% endblock %}

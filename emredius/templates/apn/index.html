@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% macro line_fields(v) %}
+  <input class="form-control" name="name" placeholder="Hat adı" required value="{{ v.name or '' }}">
+  <input class="form-control" name="iccid" placeholder="ICCID" value="{{ v.iccid or '' }}">
+  <input class="form-control" name="msisdn" placeholder="MSISDN" value="{{ v.msisdn or '' }}">
+  <select class="form-control" name="provider_id"><option value="">Sağlayıcı</option>{% for p in data.providers %}<option value="{{ p.id }}" {{ 'selected' if v.provider_id == p.id }}>{{ p.name }}</option>{% endfor %}</select>
+  <select class="form-control" name="location_id"><option value="">Konum</option>{% for o in data.locations %}<option value="{{ o.id }}" {{ 'selected' if v.location_id == o.id }}>{{ o.name }}</option>{% endfor %}</select>
+  <input class="form-control" name="nas_ip" placeholder="NAS IP" value="{{ v.nas_ip or '' }}">
+  <select class="form-control" name="pool_name"><option value="">IP havuzu</option>{% for p in pools %}<option {{ 'selected' if v.pool_name == p }}>{{ p }}</option>{% endfor %}</select>
+  <select class="form-control" name="profile"><option value="">Profil (grup)</option>{% for g in groups %}<option {{ 'selected' if v.profile == g }}>{{ g }}</option>{% endfor %}</select>
+  <select class="form-control" name="status">{% for k, lab in statuses.items() %}<option value="{{ k }}" {{ 'selected' if (v.status or 'active') == k }}>{{ lab }}</option>{% endfor %}</select>
+  <input class="form-control" name="note" placeholder="Not" value="{{ v.note or '' }}">
+{% endmacro %}
+{% macro simple_fields(v, second, second_label) %}
+  <input class="form-control" name="name" placeholder="Ad" required value="{{ v.name or '' }}">
+  <input class="form-control" name="{{ second }}" placeholder="{{ second_label }}" value="{{ v[second] or '' }}">
+  <input class="form-control" name="note" placeholder="Not" value="{{ v.note or '' }}">
+{% endmacro %}
+{% macro del_btn(kind, r) %}
+  <a class="btn btn-sm" href="/apn/{{ kind }}/{{ r.id }}/edit">Düzenle</a>
+  <form method="post" action="/apn/{{ kind }}/{{ r.id }}/delete" style="display:inline;">{{ csrf_input() }}
+    <button class="btn btn-danger btn-sm" type="submit" data-on-click="return confirm('{{ r.name | js }} silinsin mi?');"><i class="fa-solid fa-trash"></i></button></form>
+{% endmacro %}
+{% block content %}
+<p style="color:#64748b;">Envanter kaydıdır (RADIUS'a yazmaz). Gateway profilleri için <a href="/groups">Gruplar &amp; Profiller</a>, IP havuzları için <a href="/ippools">IP Havuzları</a> sayfalarını kullanın.</p>
+
+{% if edit %}
+<div class="card"><div class="card-header"><h3>Düzenle: {{ edit.name }}</h3></div><div class="card-body">
+  <form method="post" action="/apn/{{ edit_kind }}/{{ edit.id }}/update" style="display:flex; gap:.5rem; flex-wrap:wrap;">{{ csrf_input() }}
+    {% if edit_kind == 'lines' %}{{ line_fields(edit) }}{% elif edit_kind == 'providers' %}{{ simple_fields(edit, 'contact', 'İletişim') }}{% else %}{{ simple_fields(edit, 'address', 'Adres') }}{% endif %}
+    <button class="btn btn-primary" type="submit">Kaydet</button> <a class="btn" href="/apn">İptal</a>
+  </form></div></div>
+{% endif %}
+
+<div class="card"><div class="card-header"><h3><i class="fa-solid fa-sim-card"></i> Hatlar</h3><span class="badge">{{ data.lines|length }}</span></div>
+  <div class="card-body"><form method="post" action="/apn/lines/add" style="display:flex; gap:.5rem; flex-wrap:wrap;">{{ csrf_input() }}{{ line_fields({}) }}<button class="btn btn-primary" type="submit">Hat Ekle</button></form></div>
+  <div class="card-body" style="padding:0;"><table>
+    <thead><tr><th>Ad</th><th>ICCID / MSISDN</th><th>Sağlayıcı</th><th>Konum</th><th>NAS</th><th>Havuz</th><th>Profil</th><th>Durum</th><th></th></tr></thead>
+    <tbody>{% for r in data.lines %}<tr><td><strong>{{ r.name }}</strong></td><td>{{ r.iccid }} {{ r.msisdn }}</td><td>{{ r.provider or '' }}</td><td>{{ r.location or '' }}</td><td>{{ r.nas_ip }}</td><td>{{ r.pool_name }}</td><td>{{ r.profile }}</td><td>{{ statuses.get(r.status, r.status) }}</td><td style="text-align:right;">{{ del_btn('lines', r) }}</td></tr>
+    {% else %}<tr><td colspan="9" style="text-align:center; color:#94a3b8;">Hat yok.</td></tr>{% endfor %}</tbody></table></div></div>
+
+<div class="card"><div class="card-header"><h3><i class="fa-solid fa-tower-cell"></i> Sağlayıcılar</h3><span class="badge">{{ data.providers|length }}</span></div>
+  <div class="card-body"><form method="post" action="/apn/providers/add" style="display:flex; gap:.5rem; flex-wrap:wrap;">{{ csrf_input() }}{{ simple_fields({}, 'contact', 'İletişim') }}<button class="btn btn-primary" type="submit">Ekle</button></form></div>
+  <div class="card-body" style="padding:0;"><table><thead><tr><th>Ad</th><th>İletişim</th><th>Not</th><th></th></tr></thead>
+    <tbody>{% for r in data.providers %}<tr><td><strong>{{ r.name }}</strong></td><td>{{ r.contact }}</td><td>{{ r.note }}</td><td style="text-align:right;">{{ del_btn('providers', r) }}</td></tr>
+    {% else %}<tr><td colspan="4" style="text-align:center; color:#94a3b8;">Sağlayıcı yok.</td></tr>{% endfor %}</tbody></table></div></div>
+
+<div class="card"><div class="card-header"><h3><i class="fa-solid fa-location-dot"></i> Konumlar</h3><span class="badge">{{ data.locations|length }}</span></div>
+  <div class="card-body"><form method="post" action="/apn/locations/add" style="display:flex; gap:.5rem; flex-wrap:wrap;">{{ csrf_input() }}{{ simple_fields({}, 'address', 'Adres') }}<button class="btn btn-primary" type="submit">Ekle</button></form></div>
+  <div class="card-body" style="padding:0;"><table><thead><tr><th>Ad</th><th>Adres</th><th>Not</th><th></th></tr></thead>
+    <tbody>{% for r in data.locations %}<tr><td><strong>{{ r.name }}</strong></td><td>{{ r.address }}</td><td>{{ r.note }}</td><td style="text-align:right;">{{ del_btn('locations', r) }}</td></tr>
+    {% else %}<tr><td colspan="4" style="text-align:center; color:#94a3b8;">Konum yok.</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

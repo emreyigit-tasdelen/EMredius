@@ -1,0 +1,5 @@
+# /etc/emredius/my.cnf — client defaults for mysqldump/mysql run by the panel (root, chmod 600).
+# MariaDB root@localhost authenticates over the unix socket: no password is stored anywhere.
+[client]
+user=root
+socket=/var/lib/mysql/mysql.sock

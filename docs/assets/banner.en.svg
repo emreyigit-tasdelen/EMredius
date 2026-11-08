@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" width="1280" height="320" role="img" aria-labelledby="t d">
+  <title id="t">EMREDIUS</title>
+  <desc id="d">Management panel and NMS for RADIUS, TACACS+ and SNMP</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#818cf8"/>
+    </linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#94a3b8" stroke-opacity="0.07"/>
+    </pattern>
+  </defs>
+
+  <rect width="1280" height="320" rx="16" fill="url(#bg)"/>
+  <rect width="1280" height="320" rx="16" fill="url(#grid)"/>
+
+  <!-- topology motif -->
+  <g stroke="url(#accent)" stroke-width="2" stroke-opacity="0.55" fill="none">
+    <path d="M900 160 L1010 90 L1130 140 L1050 240 L900 160"/>
+    <path d="M1010 90 L1050 240"/>
+    <path d="M1130 140 L1215 70"/>
+    <path d="M1050 240 L1175 270"/>
+    <path d="M900 160 L820 70"/>
+  </g>
+  <g fill="#0f172a" stroke="url(#accent)" stroke-width="3">
+    <circle cx="900" cy="160" r="22"/>
+    <circle cx="1010" cy="90" r="16"/>
+    <circle cx="1130" cy="140" r="18"/>
+    <circle cx="1050" cy="240" r="16"/>
+    <circle cx="1215" cy="70" r="10"/>
+    <circle cx="1175" cy="270" r="10"/>
+    <circle cx="820" cy="70" r="10"/>
+  </g>
+  <circle cx="900" cy="160" r="8" fill="url(#accent)"/>
+
+  <!-- text -->
+  <text x="72" y="148" font-family="'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="84" font-weight="700" letter-spacing="2" fill="#f8fafc">EMREDIUS</text>
+  <rect x="74" y="168" width="150" height="5" rx="2.5" fill="url(#accent)"/>
+  <text x="74" y="214" font-family="'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="26" fill="#cbd5e1">Network access, authentication and monitoring in one panel</text>
+  <g font-family="'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="18" font-weight="600" fill="#e2e8f0">
+    <rect x="74" y="238" width="104" height="34" rx="17" fill="#38bdf8" fill-opacity="0.16" stroke="#38bdf8" stroke-opacity="0.6"/>
+    <text x="126" y="261" text-anchor="middle">RADIUS</text>
+    <rect x="190" y="238" width="104" height="34" rx="17" fill="#818cf8" fill-opacity="0.16" stroke="#818cf8" stroke-opacity="0.6"/>
+    <text x="242" y="261" text-anchor="middle">TACACS+</text>
+    <rect x="306" y="238" width="84" height="34" rx="17" fill="#38bdf8" fill-opacity="0.16" stroke="#38bdf8" stroke-opacity="0.6"/>
+    <text x="348" y="261" text-anchor="middle">SNMP</text>
+    <rect x="402" y="238" width="152" height="34" rx="17" fill="#818cf8" fill-opacity="0.16" stroke="#818cf8" stroke-opacity="0.6"/>
+    <text x="478" y="261" text-anchor="middle">NetFlow · sFlow</text>
+  </g>
+</svg>

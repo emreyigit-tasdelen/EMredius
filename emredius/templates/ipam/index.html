@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1rem;">
+  Alt ağ planınızı tanımlayın, adresleri rezerve/statik olarak kaydedin. Doluluk, planlı adreslerle Aktif Cihazlar keşfinin birleşiminden hesaplanır;
+  "kayıtsız" = keşifte var ama planda yok, "görünmüyor" = planda var ama keşifte yok. Satıra tıklayınca adres karşılaştırması ve ilk boş adresler açılır. 20 sn'de bir yenilenir.
+</p>
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-network-wired"></i> Alt ağlar</h3>
+    <span class="status-pill online" id="iStats">{{ stats.subnets }} alt ağ · {{ stats.unplanned }} kayıtsız · {{ stats.missing }} görünmüyor · {{ stats.full }} dolu</span></div>
+  <div class="card-body">
+    <form method="POST" action="/ipam/subnet/add" style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:flex-end; margin-bottom:1rem;">{{ csrf_input() }}
+      <div class="form-group" style="flex:1 1 170px; margin-bottom:0;"><label>Alt ağ (CIDR)</label><input type="text" name="cidr" maxlength="20" required placeholder="10.0.0.0/24"></div>
+      <div class="form-group" style="flex:1 1 140px; margin-bottom:0;"><label>Ad</label><input type="text" name="name" maxlength="64"></div>
+      <div class="form-group" style="flex:0 1 90px; margin-bottom:0;"><label>VLAN</label><input type="number" name="vlan" min="1" max="4094"></div>
+      <div class="form-group" style="flex:1 1 130px; margin-bottom:0;"><label>Ağ geçidi</label><input type="text" name="gateway" maxlength="15"></div>
+      <div class="form-group" style="flex:1 1 130px; margin-bottom:0;"><label>Site</label><input type="text" name="site" maxlength="64"></div>
+      <button class="btn btn-primary"><i class="fa-solid fa-plus"></i> Ekle</button></form>
+    <div style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem;">
+      <input type="text" id="iQ" placeholder="Ara: alt ağ, ad, site, VLAN…" value="{{ f.get('q','') }}" style="flex:1 1 220px;">
+      <a class="btn" href="/ipam/export.csv">CSV</a><a class="btn" href="/ipam/export.json">JSON</a><a class="btn" href="/inventory">Aktif Cihazlar</a>
+    </div>
+    <div style="overflow-x:auto;"><table><thead><tr><th>Alt ağ</th><th>Ad</th><th>VLAN</th><th>Geçit</th><th>Site</th><th>Doluluk</th><th>Boş</th><th>Kayıtsız</th><th>Görünmüyor</th><th></th></tr></thead>
+      <tbody id="iBody">
+      {% for s in subnets %}<tr data-cidr="{{ s.cidr }}" style="cursor:pointer;"><td>{{ s.cidr }}{% if s.parent %}<br><small>↳ {{ s.parent }}</small>{% endif %}</td><td>{{ s.name }}</td><td>{{ s.vlan or '-' }}</td><td>{{ s.gateway or '-' }}</td><td>{{ s.site }}</td>
+        <td>{{ s.used }}/{{ s.total }} (%{{ s.percent }})</td><td>{{ s.free }}</td><td>{{ s.unplanned }}</td><td>{{ s.missing }}</td>
+        <td><form method="POST" action="/ipam/subnet/{{ s.id }}/delete" class="ip-del">{{ csrf_input() }}<button class="btn btn-danger" style="padding:0.3rem 0.7rem;">✕</button></form></td></tr>
+      {% else %}<tr><td colspan="10" style="color:var(--text-muted);">Henüz alt ağ yok.</td></tr>{% endfor %}
+      </tbody></table></div>
+  </div>
+</div>
+<div class="card" id="iDetailCard" style="display:none;">
+  <div class="card-header"><h3 id="iDetailTitle">Adresler</h3><span id="iDetailInfo" style="font-size:0.85rem;color:var(--text-muted);"></span></div>
+  <div class="card-body">
+    <form method="POST" action="/ipam/addr/add" style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:flex-end; margin-bottom:1rem;">{{ csrf_input() }}
+      <div class="form-group" style="flex:1 1 140px; margin-bottom:0;"><label>IP</label><input type="text" name="ip" id="iAddrIp" maxlength="15" required></div>
+      <div class="form-group" style="flex:1 1 140px; margin-bottom:0;"><label>Ad</label><input type="text" name="name" maxlength="64"></div>
+      <div class="form-group" style="flex:1 1 130px; margin-bottom:0;"><label>Sahip</label><input type="text" name="owner" maxlength="64"></div>
+      <div class="form-group" style="flex:0 1 140px; margin-bottom:0;"><label>Tür</label><select name="kind">{% for k, v in kinds.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div>
+      <button class="btn btn-primary">Adres kaydet</button></form>
+    <div id="iFree" style="margin-bottom:1rem;font-size:0.9rem;"></div>
+    <div style="overflow-x:auto;"><table><thead><tr><th>Durum</th><th>IP</th><th>Ad</th><th>Tür</th><th>Sahip</th><th>MAC</th><th>Üretici</th><th></th></tr></thead><tbody id="iDetail"></tbody></table></div>
+  </div>
+</div>
+<script src="/static/js/ipam.js?v={{ asset_version }}"></script>
+{% endblock %}

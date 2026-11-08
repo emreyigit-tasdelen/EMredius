@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+    <div style="margin-bottom:1.5rem;">
+      <a href="/audit" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> 5651 Denetim Sayfası</a>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3><i class="fa-solid fa-clock-rotate-left"></i> Saklama Süresi</h3></div>
+      <div class="card-body">
+        <p style="margin:0 0 0.6rem;">Geçerli saklama süresi: <strong>{{ retention_days }} gün</strong></p>
+        <details>
+          <summary style="cursor:pointer; color:#b91c1c;">Saklama süresini değiştir (yalnızca süper yönetici)</summary>
+          <form method="POST" action="/audit/purge/retention" style="display:flex; gap:0.5rem; align-items:flex-end; flex-wrap:wrap; margin-top:0.6rem;"
+                data-on-submit="return confirm('Saklama süresi değiştirilecek. Bu, hangi kayıtların silinebileceğini belirler. Emin misiniz?');">
+            {{ csrf_input() }}
+            <input type="hidden" name="confirmed" value="1">
+            <div class="form-group" style="margin:0;">
+              <label>Yeni saklama süresi (gün)</label>
+              <input type="number" name="retention_days" value="{{ retention_days }}" min="{{ min_days }}" max="{{ max_days }}">
+            </div>
+            <button type="submit" class="btn btn-primary">Kaydet</button>
+          </form>
+        </details>
+        <p style="color:#64748b; font-size:0.85rem; margin-top:0.8rem;">Yasal alt sınır {{ min_days }} gündür, altına inilemez. Yalnızca başlangıç tarihi
+        <strong>{{ plan.cutoff if plan else '-' }}</strong> öncesinde olan oturum kayıtları silinebilir. Arşiv dosyaları ve <code>chain.log</code> bu ekrandan asla silinmez.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3><i class="fa-solid fa-eye"></i> Önizleme (kuru çalıştırma, hiçbir şey silinmez)</h3></div>
+      <div class="card-body" style="padding:0;">
+        {% if error %}
+        <div style="padding:1.5rem; color:#b91c1c;">{{ error }}</div>
+        {% elif plan.days %}
+        <p style="padding:0.8rem 1rem 0;">Silinecek: <strong>{{ plan.eligible_rows }}</strong> kayıt / {{ plan.eligible_days }} gün.
+          Atlanacak: {{ plan.blocked_days }} gün (arşivi doğrulanamayan veya arşivden fazla kaydı olan günler silinmez).</p>
+        <div style="max-height:380px; overflow:auto;">
+          <table>
+            <thead><tr><th>Gün</th><th>Veritabanı kaydı</th><th>Arşiv kaydı</th><th>Durum</th></tr></thead>
+            <tbody>
+            {% for d in plan.days %}
+              <tr>
+                <td><strong>{{ d.date }}</strong></td>
+                <td>{{ d.db_rows }}</td>
+                <td>{{ d.archive_rows if d.archive_rows is not none else '-' }}</td>
+                <td>{% if d.eligible %}<span style="color:#166534;">Silinebilir</span>{% else %}<span style="color:#b91c1c;">Atlanır: {{ d.reason }}</span>{% endif %}</td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div style="padding:1.5rem; color:#64748b;">Saklama süresi dolmuş kayıt bulunmuyor.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if plan and plan.eligible_rows %}
+    <div class="card">
+      <div class="card-header"><h3 style="color:#b91c1c;"><i class="fa-solid fa-triangle-exclamation"></i> Silmeyi Onayla</h3></div>
+      <div class="card-body">
+        <p style="color:#64748b; font-size:0.85rem;">İşlemden önce otomatik SQL yedeği alınır (alınamazsa silme yapılmaz). Silinen kayıtlar geri getirilemez; yalnızca arşiv CSV'sinde kalır.</p>
+        <form method="POST" action="/audit/purge/run" style="display:grid; gap:0.6rem; max-width:420px;" autocomplete="off">
+          {{ csrf_input() }}
+          <input type="password" name="password" placeholder="Parolanız" required autocomplete="current-password">
+          {% if totp_on %}<input type="text" name="totp" placeholder="2FA kodu" inputmode="numeric" maxlength="8" required>{% endif %}
+          <input type="text" name="confirm_text" placeholder="Onay için {{ confirm_text }} yazın" required>
+          <button type="submit" class="btn btn-danger" data-on-click="return confirm('{{ plan.eligible_rows }} kayıt kalıcı olarak silinecek. Devam edilsin mi?');"><i class="fa-solid fa-trash"></i> Süresi Dolan Kayıtları Sil</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+{% endblock %}

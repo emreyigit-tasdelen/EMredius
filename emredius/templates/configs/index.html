@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+<p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1rem;">
+  <span>Cihaz yapılandırmaları sürümlenerek saklanır (aynı içerik yeni sürüm açmaz), sürümler arası fark görülür, uyumluluk kuralları son sürüme uygulanır. Gönderim varsayılan olarak kapalıdır ve her zaman önce deneme (hiçbir şey gönderilmez) çalışır; gerçek gönderim ayar cfg_push_enabled=1, SSH ve onay kelimesi ister, her cihazdan önce otomatik yedek alınır.</span>
+  SSH: {{ 'kullanılabilir' if stats.ssh else 'paramiko kurulu değil (elle yükleme kullanılabilir)' }}. Gönderim: {{ 'açık' if stats.push else 'kapalı' }}.
+</p>
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-file-shield"></i> Cihazlar ve uyumluluk</h3>
+    <span class="status-pill online">{{ stats.backed_up }}/{{ stats.devices }} yedekli · {{ stats.violations }} uyumsuz · {{ stats.versions }} sürüm</span></div>
+  <div class="card-body">
+    <div style="margin-bottom:1rem;"><a class="btn" href="/configs/export.csv">CSV</a> <a class="btn" href="/configs/export.json">JSON</a> <a class="btn" href="/configs/audit">Fark ve Uyum Raporu</a> <a class="btn" href="/inventory">Aktif Cihazlar</a></div>
+    <div style="overflow-x:auto;"><table><thead><tr><th>Durum</th><th>Cihaz</th><th>IP</th><th>Üretici</th><th>Sürüm</th><th>Son yedek</th><th>İhlaller</th><th></th></tr></thead><tbody>
+      {% for c in comp %}<tr><td><span class="status-pill {{ 'online' if c.state == 'ok' else 'offline' }}">{{ {'ok': 'Uyumlu', 'bad': 'Uyumsuz', 'nobackup': 'Yedek yok'}[c.state] }}</span></td>
+        <td>{{ c.name }}</td><td>{{ c.ip }}</td><td>{{ c.vendor }}</td><td>{{ c.version or '-' }}</td><td>{{ c.last_backup or '-' }}</td><td>{{ c.violations | join(', ') or '-' }}</td>
+        <td style="white-space:nowrap;"><button class="btn" data-hist="{{ c.ip }}" type="button">Sürümler</button>
+          <form method="POST" action="/configs/{{ c.ip }}/backup" style="display:inline;">{{ csrf_input() }}
+            <select name="cred_id" style="width:auto;">{% for k in creds %}<option value="{{ k.id }}">{{ k.name }}</option>{% endfor %}</select><button class="btn" {{ 'disabled' if not creds }}>SSH yedek</button></form></td></tr>
+      {% else %}<tr><td colspan="8" style="color:var(--text-muted);">Envanterde cihaz yok.</td></tr>{% endfor %}
+    </tbody></table></div>
+    <div id="cfgHist" style="margin-top:1rem;"></div>
+    <pre id="cfgView" style="display:none; margin-top:1rem; max-height:420px; overflow:auto; white-space:pre-wrap; border:1px solid var(--border); padding:0.75rem; border-radius:8px;"></pre>
+    <details style="margin-top:1rem;"><summary>Elle yapılandırma yükle</summary>
+      <form method="POST" action="" id="cfgUp" style="margin-top:0.75rem;">{{ csrf_input() }}
+        <div class="form-group"><label>Cihaz IP</label><input type="text" id="cfgUpIp" maxlength="45" required></div>
+        <div class="form-group"><label>Yapılandırma</label><textarea name="content" rows="8" required></textarea></div>
+        <div class="form-group"><label>Not</label><input type="text" name="note" maxlength="200"></div>
+        <button class="btn btn-primary">Sürüm olarak kaydet</button></form></details>
+  </div>
+</div>
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-key"></i> SSH kimlik bilgileri</h3></div>
+  <div class="card-body">
+    <form method="POST" action="/configs/cred/add" style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:flex-end;">{{ csrf_input() }}
+      <div class="form-group" style="flex:1 1 140px; margin-bottom:0;"><label>Ad</label><input type="text" name="name" maxlength="64" required></div>
+      <div class="form-group" style="flex:1 1 140px; margin-bottom:0;"><label>Kullanıcı</label><input type="text" name="username" maxlength="64" required autocomplete="off"></div>
+      <div class="form-group" style="flex:1 1 140px; margin-bottom:0;"><label>Parola</label><input type="password" name="password" required autocomplete="new-password"></div>
+      <div class="form-group" style="flex:1 1 140px; margin-bottom:0;"><label>Enable (ops.)</label><input type="password" name="enable" autocomplete="new-password"></div>
+      <div class="form-group" style="flex:0 1 90px; margin-bottom:0;"><label>Port</label><input type="number" name="port" value="22" min="1" max="65535"></div>
+      <button class="btn btn-primary">Ekle</button></form>
+    <p style="font-size:0.85rem; color:var(--text-muted);">Parolalar şifreli saklanır ve bir daha gösterilmez.</p>
+    {% for k in creds %}<form method="POST" action="/configs/cred/{{ k.id }}/delete" style="display:inline;" class="cfg-del">{{ csrf_input() }}<button class="btn btn-danger" style="margin:0.2rem;">{{ k.name }} ({{ k.username }}) ✕</button></form>{% endfor %}
+  </div>
+</div>
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-clock-rotate-left"></i> Zamanlanmış yedek</h3><span class="status-pill {{ 'online' if sched.enabled else 'offline' }}">{{ 'açık' if sched.enabled else 'kapalı' }}</span></div>
+  <div class="card-body">
+    <form method="POST" action="/configs/schedule" style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:flex-end;">{{ csrf_input() }}
+      <label><input type="checkbox" name="enabled" value="1" style="width:auto;" {{ 'checked' if sched.enabled }}> Etkin</label>
+      <div class="form-group" style="margin-bottom:0;"><label>SSH kimliği</label><select name="cred_id">{% for k in creds %}<option value="{{ k.id }}" {{ 'selected' if k.id == sched.cred_id }}>{{ k.name }}</option>{% endfor %}</select></div>
+      <div class="form-group" style="margin-bottom:0; flex:0 1 110px;"><label>Saat aralığı</label><input type="number" name="hours" min="1" max="168" value="{{ sched.hours }}"></div>
+      <button class="btn btn-primary">Kaydet</button></form>
+    <p style="font-size:0.85rem; color:var(--text-muted);"><span>SSH'li aktif cihazların hepsinden belirtilen aralıkla yapılandırma çekilir; değişiklik yoksa yeni sürüm açılmaz.</span> Son: {{ sched.last or '-' }} {{ sched.result }}</p>
+  </div>
+</div>
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-list-check"></i> Uyumluluk kuralları</h3></div>
+  <div class="card-body">
+    <form method="POST" action="/configs/rule/add" style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:flex-end;">{{ csrf_input() }}
+      <div class="form-group" style="flex:1 1 160px; margin-bottom:0;"><label>Ad</label><input type="text" name="name" maxlength="64" required></div>
+      <div class="form-group" style="flex:0 1 150px; margin-bottom:0;"><label>Tür</label><select name="kind">{% for k, v in kinds.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div>
+      <div class="form-group" style="flex:2 1 220px; margin-bottom:0;"><label>Desen (düzenli ifade)</label><input type="text" name="pattern" maxlength="200" required placeholder="^service password-encryption"></div>
+      <div class="form-group" style="flex:0 1 130px; margin-bottom:0;"><label>Üretici (ops.)</label><input type="text" name="vendor" maxlength="32"></div>
+      <button class="btn btn-primary">Ekle</button></form>
+    {% for r in rules %}<form method="POST" action="/configs/rule/{{ r.id }}/delete" style="display:inline;" class="cfg-del">{{ csrf_input() }}<button class="btn" style="margin:0.2rem;">{{ r.name }} · {{ r.kind_label }} · {{ r.pattern }} ✕</button></form>{% endfor %}
+  </div>
+</div>
+<div class="card">
+  <div class="card-header"><h3><i class="fa-solid fa-paper-plane"></i> Şablonlar ve gönderim</h3></div>
+  <div class="card-body">
+    <form method="POST" action="/configs/template/add" style="margin-bottom:1rem;">{{ csrf_input() }}
+      <div style="display:flex; flex-wrap:wrap; gap:0.75rem;">
+        <div class="form-group" style="flex:1 1 160px;"><label>Ad</label><input type="text" name="name" maxlength="64" required></div>
+        <div class="form-group" style="flex:0 1 150px;"><label>Üretici (ops.)</label><input type="text" name="vendor" maxlength="32"></div></div>
+      <div class="form-group"><label>Komutlar ({{ '{{degisken}}' }}; yerleşik: ip, hostname)</label><textarea name="body" rows="5" required></textarea></div>
+      <button class="btn btn-primary">Şablon ekle</button></form>
+    {% for t in templates %}<form method="POST" action="/configs/template/{{ t.id }}/delete" style="display:inline;" class="cfg-del">{{ csrf_input() }}<button class="btn" style="margin:0.2rem;">#{{ t.id }} {{ t.name }} ✕</button></form>{% endfor %}
+    <form method="POST" action="/configs/push" style="margin-top:1rem;">{{ csrf_input() }}
+      <div style="display:flex; flex-wrap:wrap; gap:0.75rem;">
+        <div class="form-group" style="flex:0 1 220px;"><label>Şablon</label><select name="template_id">{% for t in templates %}<option value="{{ t.id }}">#{{ t.id }} {{ t.name }}</option>{% endfor %}</select></div>
+        <div class="form-group" style="flex:0 1 200px;"><label>SSH kimliği</label><select name="cred_id">{% for k in creds %}<option value="{{ k.id }}">{{ k.name }}</option>{% endfor %}</select></div>
+        <div class="form-group" style="flex:1 1 260px;"><label>Cihaz IP'leri (boşluk/virgül)</label><input type="text" name="ips" maxlength="2000"></div></div>
+      <div class="form-group"><label>Değişkenler (satır başına ad=değer)</label><textarea name="vars" rows="2"></textarea></div>
+      <div style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:flex-end;">
+        <label><input type="checkbox" name="dry_run" value="0" style="width:auto;"> Gerçekten gönder (işaretlenmezse yalnızca deneme)</label>
+        <div class="form-group" style="margin-bottom:0;"><label>Onay: GONDER yazın</label><input type="text" name="confirm" maxlength="10" autocomplete="off"></div>
+        <button class="btn btn-primary">Çalıştır</button></div></form>
+  </div>
+</div>
+<script src="/static/js/configs.js?v={{ asset_version }}"></script>
+{% endblock %}

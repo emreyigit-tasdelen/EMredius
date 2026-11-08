@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block content %}
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+      <div>
+        <h2 style="font-size:1.35rem; font-weight:800; color:var(--text-primary); margin:0; display:flex; align-items:center; gap:0.6rem;">
+          <i class="fa-solid fa-user-lock" style="color:#2563eb;"></i>
+          <span data-i18n="Oturum Güvenliği & 2FA Yönetim Merkezi">Oturum Güvenliği & 2FA Yönetim Merkezi</span>
+        </h2>
+        <p style="color:var(--text-muted); margin:0.35rem 0 0 0; font-size:0.9rem;" data-i18n="Sistem ve web yöneticilerinin iki aşamalı doğrulama (TOTP) durumlarını denetleyin, kilitlenen veya telefonunu kaybeden yöneticilerin 2FA anahtarlarını sıfırlayın.">
+          Sistem ve web yöneticilerinin iki aşamalı doğrulama (TOTP) durumlarını denetleyin, kilitlenen veya telefonunu kaybeden yöneticilerin 2FA anahtarlarını sıfırlayın.
+        </p>
+      </div>
+      <div>
+        <span class="badge" style="background:#fee2e2; color:#991b1b; font-weight:700; padding:0.5rem 0.9rem; border:1px solid #fecaca;">
+          <i class="fa-solid fa-lock"></i> Süper Yönetici Özel Paneli
+        </span>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card blue">
+        <div class="info">
+          <div class="lbl">Toplam Yönetici</div>
+          <div class="val">{{ total_admins }}</div>
+        </div>
+        <div class="icon-box"><i class="fa-solid fa-users"></i></div>
+      </div>
+      <div class="stat-card green">
+        <div class="info">
+          <div class="lbl">2FA Aktif (Korumalı)</div>
+          <div class="val">{{ totp_enabled_count }}</div>
+        </div>
+        <div class="icon-box"><i class="fa-solid fa-shield-check"></i></div>
+      </div>
+      <div class="stat-card amber">
+        <div class="info">
+          <div class="lbl">2FA Devre Dışı</div>
+          <div class="val">{{ totp_disabled_count }}</div>
+        </div>
+        <div class="icon-box"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      </div>
+      <div class="stat-card purple">
+        <div class="info">
+          <div class="lbl">Oturum Politikası</div>
+          <div class="val" style="font-size:1.1rem; font-weight:700; margin-top:0.2rem;">30 Dk İnaktiflik</div>
+        </div>
+        <div class="icon-box"><i class="fa-solid fa-stopwatch"></i></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3><i class="fa-solid fa-shield-halved"></i> Yönetici Hesap Güvenliği & 2FA Durumları</h3>
+        <span class="badge" style="background:#e0e7ff; color:#3730a3;">{{ total_admins }} Hesap</span>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px;">#</th>
+              <th>Kullanıcı Adı</th>
+              <th>Ad Soyad</th>
+              <th>Yetki Rolü</th>
+              <th>Hesap Türü</th>
+              <th>2FA Durumu</th>
+              <th>Son Giriş</th>
+              <th>Son IP</th>
+              <th style="text-align:right;">Güvenlik İşlemleri</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for a in admins %}
+            <tr>
+              <td style="color:#94a3b8; font-weight:600;">{{ loop.index }}</td>
+              <td><strong>{{ a.username }}</strong></td>
+              <td>{{ a.full_name or a.username }}</td>
+              <td><span class="badge badge-users">{{ a.role_label }}</span></td>
+              <td>{% if a.auth_type == 'web' %}<span class="badge badge-vlan"><i class="fa-solid fa-globe"></i> Web</span>{% else %}<span class="badge badge-rate"><i class="fa-brands fa-linux"></i> OS</span>{% endif %}</td>
+              <td>{% if a.totp_enabled %}<span class="badge" style="background:#dcfce7; color:#15803d; font-weight:700;"><i class="fa-solid fa-shield-check"></i> Aktif (Korumalı)</span>{% else %}<span class="badge" style="background:#fef3c7; color:#92400e; font-weight:700;"><i class="fa-solid fa-shield-slash"></i> Devre Dışı</span>{% endif %}</td>
+              <td><span style="font-size:0.82rem; color:#64748b;">{{ a.last_login or 'İlk Giriş' }}</span></td>
+              <td><code style="font-size:0.8rem; color:#475569;">{{ a.last_login_ip or '-' }}</code></td>
+              <td style="text-align:right;">
+                <div style="display:inline-flex; gap:0.4rem;">
+                {% if a.totp_enabled %}
+                  <form method="POST" action="/api/security/2fa/reset/{{ a.username | url_seg }}" style="display:inline;" data-on-submit="return confirm('{{ a.username | js }} kullanıcısının 2FA korumasını kaldırmak istediğinize emin misiniz?');">
+                    {{ csrf_input() }}
+                    <button type="submit" class="btn btn-danger btn-sm" title="2FA Sıfırla / Kaldır"><i class="fa-solid fa-shield-slash"></i> 2FA Kaldır</button>
+                  </form>
+                {% else %}
+                  <span style="color:#94a3b8; font-size:0.8rem;">2FA Yok</span>
+                {% endif %}
+                  <button type="button" class="btn btn-secondary btn-sm" data-reset-pw="{{ a.username }}" data-auth-type="{{ a.auth_type }}" title="Şifre Sıfırla"><i class="fa-solid fa-key"></i> Şifre Sıfırla</button>
+                </div>
+              </td>
+            </tr>
+          {% else %}
+            <tr><td colspan="9" style="text-align:center; padding:3rem; color:#94a3b8;">Yönetici hesabı bulunamadı.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Modal: Reset Password -->
+    <div class="modal-backdrop" id="modalResetPassword">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-key" style="color:#2563eb;"></i> Şifre Sıfırla: <span id="lblResetUsername" style="color:#2563eb;"></span></h3>
+          <button class="btn btn-secondary btn-sm" data-on-click="closeModal('modalResetPassword');">&times;</button>
+        </div>
+        <form method="POST" id="formResetPassword" action="/api/security/password/reset">
+          {{ csrf_input() }}
+          <input type="hidden" name="username" id="inpResetUsername">
+          <div class="modal-body">
+            <div id="sysUserNotice" style="display:none; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:1rem; margin-bottom:1rem; font-size:0.88rem; color:#1e40af;">
+              <i class="fa-brands fa-linux"></i> <strong>AlmaLinux OS Hesabı:</strong> Bu hesap doğrudan işletim sistemi kullanıcısıdır. Şifreyi terminalde <code>sudo passwd <span id="sysUsernameSpan"></span></code> komutu ile güncelleyebilirsiniz.
+            </div>
+            <div class="form-group" id="webUserPwGroup">
+              <label>Yeni Belirlenecek Şifre</label>
+              <input type="password" name="new_password" id="inpNewPassword" minlength="{{ min_pw }}" autocomplete="new-password" placeholder="En az {{ min_pw }} karakterli yeni şifre">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-on-click="closeModal('modalResetPassword');">İptal</button>
+            <button type="submit" class="btn btn-primary" id="btnSubmitResetPw"><i class="fa-solid fa-check"></i> Şifreyi Güncelle</button>
+          </div>
+        </form>
+      </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/security-page.js?v={{ asset_version }}"></script>
+{% endblock %}

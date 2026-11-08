@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1rem;">
+  Aktif Cihazlar envanterindeki SNMP'li cihazların LLDP/CDP komşulukları haritalanır. Düğümü sürükleyin, tekerlekle yakınlaştırın,
+  tıklayarak odaklanın, çift tıklayarak komşularını açın. Harita 15 sn'de bir kendiliğinden yenilenir.
+</p>
+<div class="card">
+  {{ csrf_input() }}
+  <div class="card-header">
+    <h3><i class="fa-solid fa-sitemap"></i> Topoloji</h3>
+    <span class="status-pill online" id="topoStats">-</span>
+  </div>
+  <div class="card-body">
+    <div style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem;">
+      <input type="text" id="topoQ" placeholder="Ara: ad, IP, MAC, model… (Enter)" style="flex:1 1 220px;">
+      <button class="btn" type="button" id="topoReset"><i class="fa-solid fa-expand"></i> Tümünü göster</button>
+      <button class="btn btn-primary" type="button" id="topoScan"><i class="fa-solid fa-rotate"></i> Komşulukları tara</button>
+      <a class="btn" href="/topology/export.csv">CSV</a>
+      <a class="btn" href="/topology/export.json">JSON</a>
+    </div>
+    <div style="display:flex; flex-wrap:wrap; gap:1rem;">
+      <div id="topoWrap" style="flex:3 1 520px; min-height:520px; border:1px solid var(--border); border-radius:8px; background:var(--bg-subtle); position:relative; overflow:hidden;">
+        <svg id="topoSvg" style="width:100%; height:560px; display:block; touch-action:none;"></svg>
+        <div id="topoEmpty" style="display:none; position:absolute; inset:0; align-items:center; justify-content:center; color:var(--text-muted); text-align:center; padding:1rem;">
+          Henüz komşuluk yok. Önce Aktif Cihazlar'dan tarama yapın, sonra "Komşulukları tara"ya basın.</div>
+      </div>
+      <div id="topoInfo" style="flex:1 1 240px; min-width:220px; font-size:0.9rem; color:var(--text-primary);">
+        <div style="color:var(--text-muted);">Bir düğüm veya bağlantı seçin.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/static/js/topology.js?v={{ asset_version }}"></script>
+{% endblock %}

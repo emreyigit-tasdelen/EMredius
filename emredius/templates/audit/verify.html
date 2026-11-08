@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% from "audit/_status.html" import status_badge %}
+{% block content %}
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+      <a href="/audit" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> 5651 Denetim Sayfası</a>
+      <form method="GET" action="/audit/archive/verify" style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+        <input type="date" name="start" value="{{ s_from }}" title="Başlangıç">
+        <input type="date" name="end" value="{{ s_to }}" title="Bitiş">
+        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-rotate"></i> Doğrula</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-header" style="flex-wrap:wrap; gap:0.5rem;">
+        <h3><i class="fa-solid fa-link"></i> Hash Zinciri (chain.log)</h3>
+        {{ status_badge('OK' if chain_ok else 'FAIL') }}
+      </div>
+      <div class="card-body">
+        <ul style="margin:0 0 0.8rem 1.2rem;">
+          {% if res.chain_err %}<li style="color:#b91c1c;">{{ res.chain_err }}</li>{% endif %}
+          {% for e in res.chain_broken %}<li style="color:#b91c1c;">Satır {{ e.lineno | int }} ({{ e.date }}): {{ 'halka özeti hatalı' if not e.link_ok else 'tarih sırası hatalı' }}</li>{% endfor %}
+          {% for e in res.chain_malformed %}<li style="color:#b91c1c;">Satır {{ e.lineno | int }}: biçim hatalı satır <code>{{ e.raw }}</code></li>{% endfor %}
+          {% if not (res.chain_err or res.chain_broken or res.chain_malformed) %}<li style="color:#166534;">Tüm zincir halkaları ({{ res.chain_total }} satır) doğrulandı.</li>{% endif %}
+        </ul>
+        <div style="font-size:0.82rem; color:#64748b;">Son zincir özeti (harici olarak saklayıp sonraki doğrulamalarda karşılaştırın):
+          <code style="word-break:break-all;">{{ res.chain_head or '-' }}</code></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header" style="flex-wrap:wrap; gap:0.5rem;">
+        <h3><i class="fa-solid fa-clock"></i> Saat Güvenilirlik Zinciri (clock_chain.log)</h3>
+        {{ status_badge(('OK' if clock_chain_ok else 'FAIL') if res.clock_present else 'YOK') }}
+      </div>
+      <div class="card-body">
+        <ul style="margin:0 0 0.8rem 1.2rem;">
+          {% if not res.clock_present %}<li style="color:#64748b;">Henüz saat kaydı yok. Saat kaydı bu özellik eklendikten sonra arşivlenen günler için tutulur; önceki günler "YOK" görünür (hata sayılmaz).</li>{% endif %}
+          {% if res.clock_err %}<li style="color:#b91c1c;">{{ res.clock_err }}</li>{% endif %}
+          {% for e in res.clock_broken %}<li style="color:#b91c1c;">Satır {{ e.lineno | int }} ({{ e.date }}): {{ 'halka özeti hatalı' if not e.link_ok else 'tarih sırası hatalı' }}</li>{% endfor %}
+          {% for e in res.clock_malformed %}<li style="color:#b91c1c;">Satır {{ e.lineno | int }}: biçim hatalı satır <code>{{ e.raw }}</code></li>{% endfor %}
+          {% if res.clock_present and clock_chain_ok %}<li style="color:#166534;">Tüm saat zinciri halkaları ({{ res.clock_total }} satır) doğrulandı.</li>{% endif %}
+        </ul>
+        <div style="font-size:0.82rem; color:#64748b;">Her günün saat kaydı (<code>5651_&lt;gün&gt;.clock.json</code>) arşivleme anındaki chrony durumunu ve o günün CSV + zincir özetini içerir.
+          Son saat zinciri özeti: <code style="word-break:break-all;">{{ res.clock_head or '-' }}</code></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header" style="flex-wrap:wrap; gap:0.5rem;">
+        <h3><i class="fa-solid fa-shield-halved"></i> Günlük Dosya Doğrulaması</h3>
+        <div style="display:flex; gap:0.5rem;">
+          <span class="badge" style="background:#dcfce7; color:#166534;">{{ ok_count }} OK</span>
+          <span class="badge" style="background:#fee2e2; color:#b91c1c;">{{ fail_count }} FAIL</span>
+        </div>
+      </div>
+      <div class="card-body" style="padding:0; overflow-x:auto;">
+        <table>
+          <thead><tr><th>Gün</th><th>Sonuç</th><th>CSV</th><th>.sha256</th><th>Zincir</th><th>Saat</th><th>TSR</th><th>Ayrıntı / Hesaplanan SHA-256</th></tr></thead>
+          <tbody>
+          {% for r in res.rows %}
+            <tr>
+              <td><strong>{{ r.date }}</strong></td>
+              <td>{{ status_badge('OK' if r.ok else 'FAIL') }}</td>
+              <td>{% if r.csv %}<a href="/audit/archive/{{ r.csv | url_seg }}">{{ r.csv }}</a>{% else %}<span style="color:#b91c1c;">Yok</span>{% endif %}<div style="font-size:0.75rem; color:#94a3b8;">{% if r.size is not none %}{{ r.size | format_bytes }}{% endif %}</div></td>
+              <td>{{ status_badge(r.sha_status) }}</td>
+              <td>{{ status_badge(r.chain_status) }}</td>
+              <td>{% if r.clock_status != 'YOK' %}<a href="/audit/archive/{{ ('5651_' ~ r.date ~ '.clock.json') | url_seg }}">{{ status_badge(r.clock_status) }}</a>{% else %}{{ status_badge('YOK') }}{% endif %}
+                {%- if r.clock %}<div style="font-size:0.72rem; color:#64748b; white-space:nowrap;">{{ 'Senkron' if r.clock.synced is sameas true else 'Senkron değil' }}{% if r.clock.forced is sameas true %} (zorla){% endif %}
+                  {%- if r.clock.offset_s is number %}, {{ '%.3f' | format(r.clock.offset_s) }} sn{% endif %}<br>{{ r.clock.source }} / stratum {{ r.clock.stratum }}<br>{{ r.clock.measured_at_utc }}</div>{% endif %}</td>
+              <td>{% if r.tsr %}<i class="fa-solid fa-stamp" style="color:#0284c7;"></i> Var{% else %}<span style="color:#94a3b8;">-</span>{% endif %}</td>
+              <td style="font-size:0.8rem; color:#475569;">{% for p in r.problems %}{{ p }}{% if not loop.last %}<br>{% endif %}{% else %}<span style="color:#94a3b8;">-</span>{% endfor %}<div style="font-family:monospace; font-size:0.7rem; color:#94a3b8; word-break:break-all;">{{ r.actual or '' }}</div></td>
+            </tr>
+          {% else %}
+            <tr><td colspan="8" style="text-align:center; padding:2rem; color:#94a3b8;">Seçilen aralıkta arşiv kaydı bulunamadı.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+{% endblock %}

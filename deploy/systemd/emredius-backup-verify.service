@@ -1,0 +1,12 @@
+# Restore test of the newest DB backup into a scratch database (radius_restore_test); never writes to the live DB.
+[Unit]
+Description=EMredius backup restore test (newest dump into scratch DB, compare, drop)
+After=mariadb.service
+
+[Service]
+Type=oneshot
+Environment=EMREDIUS_ENV_FILE=/etc/emredius/emredius.env
+ExecStart=/opt/emredius/scripts/backup_verify.sh
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=30min

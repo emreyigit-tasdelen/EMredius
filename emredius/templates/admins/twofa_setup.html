@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+    <div style="max-width:600px; margin:0 auto;">
+      <div class="card">
+        <div class="card-header">
+          <h3><i class="fa-solid fa-shield-halved" style="color:#2563eb;"></i> İki Aşamalı Doğrulama (2FA) Kurulumu</h3>
+          <a href="/profile" class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> Profile Dön</a>
+        </div>
+        <div class="card-body" style="text-align:center;">
+          <p style="color:#64748b; font-size:0.95rem; margin-bottom:1.5rem;">
+            Google Authenticator, Microsoft Authenticator veya FreeOTP uygulamanız ile aşağıdaki QR kodu taratın veya gizli anahtarı manuel girin.
+          </p>
+
+          <div style="background:#f8fafc; border:2px dashed #cbd5e1; border-radius:16px; padding:1.5rem; display:inline-block; margin-bottom:1.5rem;">
+            <div id="totpQr" data-uri="{{ otp_uri }}" style="width:200px; height:200px; margin:0 auto; background:#fff; padding:6px; border-radius:8px;"></div>
+          </div>
+
+          <div style="background:#0f172a; border-radius:10px; padding:0.9rem 1.25rem; font-family:monospace; font-size:1.1rem; color:#38bdf8; display:flex; justify-content:space-between; align-items:center; margin-bottom:1.75rem; letter-spacing:2px;">
+            <span>{{ formatted_secret }}</span>
+            <button type="button" class="btn btn-sm btn-secondary" data-copy="{{ secret }}" style="padding:0.25rem 0.6rem; font-size:0.75rem; cursor:pointer;">
+              <i class="fa-solid fa-copy"></i> Kopyala
+            </button>
+          </div>
+
+          <form method="POST" action="/profile/2fa/verify" style="text-align:left;">
+            {{ csrf_input() }}
+            <div class="form-group">
+              <label style="font-weight:700; color:#0f172a; font-size:0.9rem;">Doğrulama Kodu</label>
+              <input type="text" name="token" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code" placeholder="6 Haneli Kod (Örn: 123456)" required autofocus style="font-size:1.4rem; text-align:center; letter-spacing:6px; font-family:monospace;">
+              <small style="color:#64748b; font-size:0.8rem; margin-top:0.35rem; display:block;">Mobil uygulamanızın ürettiği anlık 6 haneli kodu girerek kurulumu onaylayın.</small>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%; padding:0.85rem; font-size:1rem; font-weight:700;">
+              <i class="fa-solid fa-check-double"></i> Kodu Doğrula ve 2FA'yı Aktif Et
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/vendor/qrcode.min.js"></script>
+<script src="/static/js/twofa-setup.js?v={{ asset_version }}"></script>
+{% endblock %}

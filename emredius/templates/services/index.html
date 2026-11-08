@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+{% block extra_head %}
+<style>
+    @keyframes livePulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7); }
+      70% { transform: scale(1.1); box-shadow: 0 0 0 7px rgba(22, 163, 74, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+    }
+    .live-dot-pulse {
+      width: 8px;
+      height: 8px;
+      background: #16a34a;
+      border-radius: 50%;
+      display: inline-block;
+      animation: livePulse 1.8s infinite;
+    }
+    .btn-service-pill {
+      background: #e2e8f0;
+      color: #334155;
+      border: none;
+      transition: all 0.15s ease;
+    }
+    .btn-service-pill:hover {
+      background: #cbd5e1;
+      color: #0f172a;
+    }
+    .btn-service-pill.active {
+      background: #2563eb !important;
+      color: white !important;
+    }
+    </style>
+{% endblock %}
+{% block content %}
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+      <div>
+        <h2 style="font-size:1.35rem; font-weight:800; color:var(--text-primary); margin:0; display:flex; align-items:center; gap:0.6rem;">
+          <i class="fa-solid fa-arrows-rotate" style="color:#2563eb;"></i>
+          <span data-i18n="Servis & Sistem Yeniden Başlat">Servis & Sistem Yeniden Başlat</span>
+        </h2>
+        <p style="color:var(--text-muted); margin:0.35rem 0 0 0; font-size:0.9rem;" data-i18n="Arka plan servislerinin durumunu izleyin, bağımsız olarak yeniden başlatın ve anlık konsol loglarını takip edin.">
+          Arka plan servislerinin durumunu izleyin, bağımsız olarak yeniden başlatın ve anlık konsol loglarını takip edin.
+        </p>
+      </div>
+      <div style="display:flex; gap:0.5rem; align-items:center;">
+        <span class="badge" style="background:#eff6ff; color:#2563eb; font-weight:600; padding:0.5rem 0.9rem; border:1px solid #bfdbfe;">
+          <i class="fa-solid fa-server"></i> AlmaLinux 8.10 Enterprise
+        </span>
+      </div>
+    </div>
+
+    <!-- 2-Column Responsive Layout -->
+    <div class="services-grid-layout">
+      
+      <!-- LEFT COLUMN: Services & Server Reboot Cards -->
+      <div style="display:flex; flex-direction:column; gap:1.25rem;">
+        
+        <div style="font-weight:700; font-size:1.05rem; color:var(--text-primary); display:flex; align-items:center; gap:0.5rem;">
+          <i class="fa-solid fa-sliders" style="color:#2563eb;"></i>
+          <span data-i18n="Yönetilen Arka Plan Servisleri">Yönetilen Arka Plan Servisleri</span>
+        </div>
+
+        {% for s in services %}
+        <div class="card" id="card-service-{{ s.key }}" style="background:var(--card-bg, #fff); border-radius:14px; padding:1.25rem 1.4rem; box-shadow:0 4px 6px -1px rgba(0,0,0,0.06); border:1px solid var(--border); transition:all 0.2s ease;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
+            <div style="display:flex; align-items:center; gap:0.85rem;">
+              <div style="width:44px; height:44px; border-radius:10px; background:{{ s.bg_color }}; color:{{ s.color }}; display:flex; align-items:center; justify-content:center; font-size:1.25rem;">
+                <i class="fa-solid {{ s.icon }}"></i>
+              </div>
+              <div>
+                <h4 style="margin:0; font-size:1.05rem; font-weight:700; color:var(--text-primary);">{{ s.name }}</h4>
+                <div style="display:flex; align-items:center; gap:0.4rem; margin-top:0.25rem;">
+                  <span style="font-family:monospace; font-size:0.75rem; background:#f1f5f9; padding:2px 6px; border-radius:4px; color:#475569;">{{ s.unit }}</span>
+                  <span style="font-size:0.75rem; color:#64748b;">• {{ s.port }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="badge-status-{{ s.key }}">
+            {% if s.is_active %}
+              <span class="badge" style="background:#dcfce7; color:#15803d; font-weight:700; padding:0.35rem 0.75rem; border-radius:6px; display:inline-flex; align-items:center; gap:0.35rem;">
+                <span class="status-dot" style="background:#16a34a; width:8px; height:8px; border-radius:50%; display:inline-block;"></span>
+                <span data-i18n="ÇALIŞIYOR">ÇALIŞIYOR</span>
+              </span>
+            {% else %}
+              <span class="badge" style="background:#fee2e2; color:#b91c1c; font-weight:700; padding:0.35rem 0.75rem; border-radius:6px; display:inline-flex; align-items:center; gap:0.35rem;">
+                <span class="status-dot" style="background:#dc2626; width:8px; height:8px; border-radius:50%; display:inline-block;"></span>
+                <span data-i18n="DURDURULDU">DURDURULDU</span>
+              </span>
+            {% endif %}
+            </div>
+          </div>
+
+          <p style="color:#64748b; font-size:0.85rem; line-height:1.45; margin:0 0 1rem 0;">
+            {{ s.desc }}
+          </p>
+
+          <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.75rem; padding-top:0.85rem; border-top:1px solid #f1f5f9;">
+            <div style="display:flex; gap:0.85rem; font-size:0.8rem; color:#64748b; flex-wrap:wrap;">
+              <span>PID: <strong id="pid-val-{{ s.key }}" style="color:#0f172a;">{{ s.pid }}</strong></span>
+              <span>RAM: <strong id="mem-val-{{ s.key }}" style="color:#0f172a;">{{ s.memory }}</strong></span>
+              <span>Storage: <strong id="storage-val-{{ s.key }}" style="color:#0f172a;" title="Diskte kapladığı alan">{{ s.storage }}</strong></span>
+              <span>Durum: <strong id="sub-val-{{ s.key }}" style="color:#0f172a;">{{ s.substate }}</strong></span>
+            </div>
+
+            <div style="display:flex; gap:0.5rem;">
+              <button class="btn btn-secondary btn-sm" data-on-click="selectServiceForLogs('{{ s.key | js }}')" style="display:inline-flex; align-items:center; gap:0.35rem;">
+                <i class="fa-solid fa-terminal"></i> <span data-i18n="Logları Gör">Logları Gör</span>
+              </button>
+              <button class="btn btn-primary btn-sm" id="btn-restart-{{ s.key }}" data-on-click="openConfirmRestart('{{ s.key | js }}', '{{ s.name | js }}', '{{ s.unit | js }}')" style="display:inline-flex; align-items:center; gap:0.35rem;">
+                <i class="fa-solid fa-arrows-rotate"></i> <span data-i18n="Yeniden Başlat">Yeniden Başlat</span>
+              </button>
+            </div>
+          </div>
+        </div>
+{% endfor %}
+
+        <!-- DANGER ZONE: SERVER REBOOT -->
+        <div class="card" style="background:#fff; border-radius:14px; padding:1.35rem 1.4rem; box-shadow:0 4px 6px -1px rgba(0,0,0,0.06); border:2px solid #ef4444; margin-top:0.5rem;">
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:0.75rem;">
+            <div style="display:flex; align-items:center; gap:0.85rem;">
+              <div style="width:44px; height:44px; border-radius:10px; background:#fee2e2; color:#dc2626; display:flex; align-items:center; justify-content:center; font-size:1.25rem;">
+                <i class="fa-solid fa-power-off"></i>
+              </div>
+              <div>
+                <h4 style="margin:0; font-size:1.05rem; font-weight:800; color:#991b1b;" data-i18n="Sunucuyu Yeniden Başlat (Server Reboot)">
+                  Sunucuyu Yeniden Başlat (Server Reboot)
+                </h4>
+                <div style="font-size:0.75rem; color:#b91c1c; margin-top:0.25rem; font-weight:600;">
+                  İşletim Sistemi Seviyesinde Yeniden Başlatma (AlmaLinux 8.10)
+                </div>
+              </div>
+            </div>
+            
+            <button class="btn btn-danger" data-on-click="openConfirmServerReboot()" style="background:#dc2626; color:white; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem; padding:0.55rem 1.15rem; border-radius:8px; border:none; box-shadow:0 2px 4px rgba(220,38,38,0.25);">
+              <i class="fa-solid fa-power-off"></i> <span data-i18n="Sunucuyu Yeniden Başlat">Sunucuyu Yeniden Başlat</span>
+            </button>
+          </div>
+
+          <p style="color:#7f1d1d; font-size:0.85rem; line-height:1.45; margin:0.85rem 0 0 0; background:#fef2f2; padding:0.75rem 1rem; border-radius:8px; border-left:4px solid #ef4444;">
+            <strong data-i18n="DİKKAT:">DİKKAT:</strong> AlmaLinux işletim sistemi sunucusunu donanımsal seviyede yeniden başlatır (<code>systemctl reboot</code>). Tüm FreeRADIUS, TACACS+ AAA, SNMP NMS motorları ve Web Yönetim Paneli cihaz açılana kadar (yaklaşık 45-60 saniye) geçici olarak hizmet veremez.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN: Side-by-Side Live Status & Journal Logs Terminal ("Hemen Yanda Dursun") -->
+      <div style="position:sticky; top:1.25rem;">
+        
+        <div class="card" style="background:var(--card-bg, #fff); border-radius:14px; box-shadow:0 10px 15px -3px rgba(0,0,0,0.08); border:1px solid var(--border); overflow:hidden;">
+          
+          <!-- Terminal Header -->
+          <div style="padding:1.15rem 1.25rem; background:#fafafa; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem;">
+            <div>
+              <div style="display:flex; align-items:center; gap:0.6rem;">
+                <h3 style="margin:0; font-size:1.05rem; font-weight:800; color:var(--text-primary); display:flex; align-items:center; gap:0.5rem;">
+                  <i class="fa-solid fa-terminal" style="color:#2563eb;"></i>
+                  <span data-i18n="Canlı Servis Durumu ve Log Ekranı">Canlı Servis Durumu ve Log Ekranı</span>
+                </h3>
+                <span class="badge" style="background:#dcfce7; color:#15803d; font-weight:700; padding:0.25rem 0.65rem; border-radius:20px; display:inline-flex; align-items:center; gap:0.4rem; font-size:0.75rem; border:1px solid #bbf7d0;">
+                  <span class="live-dot-pulse"></span>
+                  <span id="liveStatusBadgeText">CANLI AKIŞ (1s)</span>
+                </span>
+              </div>
+              <div style="font-size:0.75rem; color:#64748b; margin-top:0.25rem;">
+                Seçili servisin anlık <code>systemctl</code> ve <code>journalctl</code> çıktıları (Gerçek zamanlı akış)
+              </div>
+            </div>
+
+            <div style="display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap;">
+              <button class="btn btn-secondary btn-sm" id="btnToggleAutoScroll" data-on-click="toggleAutoScroll()" title="Otomatik aşağı kaydırmayı aç/kapat" style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.78rem;">
+                <i class="fa-solid fa-arrow-down-long" style="color:#2563eb;"></i> <span id="autoScrollLabel">Oto-Kaydır: Açık</span>
+              </button>
+              <button class="btn btn-secondary btn-sm" id="btnRefreshLogs" data-on-click="fetchSelectedServiceLogs()" style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.78rem;">
+                <i class="fa-solid fa-arrows-rotate" id="terminalRefreshIcon"></i> <span data-i18n="Yenile">Yenile</span>
+              </button>
+              <button class="btn btn-primary btn-sm" id="btnAutoRefreshLogs" data-on-click="toggleAutoRefreshLogs()" style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.78rem;">
+                <i class="fa-solid fa-pause" id="autoRefreshIcon"></i> <span id="autoRefreshText">Canlı Akış (1s)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Service Selection Pills -->
+          <div style="display:flex; gap:0.4rem; padding:0.6rem 1rem; background:#f8fafc; border-bottom:1px solid var(--border); overflow-x:auto;">
+            <button class="btn btn-sm btn-service-pill active" id="pill-radiusd" data-on-click="selectServiceForLogs('radiusd')" style="font-size:0.8rem; font-weight:600; padding:0.3rem 0.75rem; border-radius:20px;">
+              <i class="fa-solid fa-tower-broadcast"></i> FreeRADIUS
+            </button>
+            <button class="btn btn-sm btn-service-pill" id="pill-enterprise-daemons" data-on-click="selectServiceForLogs('enterprise-daemons')" style="font-size:0.8rem; font-weight:600; padding:0.3rem 0.75rem; border-radius:20px;">
+              <i class="fa-solid fa-shield-halved"></i> TACACS & NMS
+            </button>
+            <button class="btn btn-sm btn-service-pill" id="pill-radius-admin" data-on-click="selectServiceForLogs('radius-admin')" style="font-size:0.8rem; font-weight:600; padding:0.3rem 0.75rem; border-radius:20px;">
+              <i class="fa-solid fa-gauge-high"></i> Web Paneli
+            </button>
+            <button class="btn btn-sm btn-service-pill" id="pill-mariadb" data-on-click="selectServiceForLogs('mariadb')" style="font-size:0.8rem; font-weight:600; padding:0.3rem 0.75rem; border-radius:20px;">
+              <i class="fa-solid fa-database"></i> MariaDB
+            </button>
+            <button class="btn btn-sm btn-service-pill" id="pill-chronyd" data-on-click="selectServiceForLogs('chronyd')" style="font-size:0.8rem; font-weight:600; padding:0.3rem 0.75rem; border-radius:20px;">
+              <i class="fa-solid fa-clock"></i> Chrony NTP
+            </button>
+          </div>
+
+          <!-- Active Target Info Bar -->
+          <div style="padding:0.6rem 1.15rem; background:#0f172a; color:#94a3b8; font-size:0.78rem; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1e293b; font-family:monospace;">
+            <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+              <span>Ünite: <strong id="metaUnitName" style="color:#38bdf8;">radiusd.service</strong></span>
+              <span>PID: <strong id="metaPid" style="color:#e2e8f0;">-</strong></span>
+              <span>RAM: <strong id="metaMem" style="color:#e2e8f0;">-</strong></span>
+              <span>Storage: <strong id="metaStorage" style="color:#e2e8f0;">-</strong></span>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.4rem;">
+              <span id="metaStatusDot" style="width:7px; height:7px; border-radius:50%; background:#10b981; display:inline-block;"></span>
+              <span id="metaStatusText" style="color:#10b981; font-weight:700;">AKTİF</span>
+            </div>
+          </div>
+
+          <!-- Terminal Search & Action Toolbar -->
+          <div style="padding:0.5rem 1rem; background:#111827; border-bottom:1px solid #1f2937; display:flex; justify-content:space-between; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:0.5rem; flex:1; min-width:220px;">
+              <div style="position:relative; width:100%; max-width:340px;">
+                <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.75rem;"></i>
+                <input type="text" id="logSearchInput" data-on-input="applyLogSearchFilter(this.value)" placeholder="Loglarda ara (örn: error, accept, reject, 1812)..." style="width:100%; background:#0b0f19; border:1px solid #374151; color:#f3f4f6; font-size:0.78rem; padding:4px 26px 4px 28px; border-radius:6px; outline:none; font-family:monospace;">
+                <button type="button" id="btnClearLogSearch" data-on-click="clearLogSearch()" title="Aramayı Temizle" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; color:#9ca3af; cursor:pointer; font-size:0.75rem; display:none;">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+              <span id="logSearchCountBadge" style="display:none; font-size:0.78rem; color:#38bdf8; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.3); padding:2px 8px; border-radius:12px; font-weight:600; white-space:nowrap;">
+                0 eşleşme
+              </span>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:0.4rem;">
+              <button type="button" class="btn btn-sm btn-secondary" data-on-click="sendServiceTestPing()" id="btnTestPing" title="Seçili servise anlık canlı test paketi gönderip log üretir" style="font-size:0.78rem; padding:0.25rem 0.65rem; display:inline-flex; align-items:center; gap:0.35rem; background:#1f2937; color:#f97316; border:1px solid #374151;">
+                <i class="fa-solid fa-bolt"></i> <span>Test Paketi Gönder</span>
+              </button>
+              <button type="button" class="btn btn-sm btn-secondary" data-on-click="clearTerminalScreen()" title="Terminal ekranını temizle" style="font-size:0.78rem; padding:0.25rem 0.6rem; background:#1f2937; color:#94a3b8; border:1px solid #374151;">
+                <i class="fa-solid fa-broom"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Terminal Content Screen (with floating scroll-to-bottom button) -->
+          <div style="position:relative;">
+            <div id="serviceLogTerminal" style="background:#090d16; color:#38bdf8; font-family:'Consolas', 'Courier New', monospace; font-size:0.8rem; padding:1.15rem; height:480px; overflow-y:auto; white-space:pre-wrap; word-break:break-all; line-height:1.55;">
+              Yükleniyor... Lütfen bekleyin.
+            </div>
+            <button type="button" id="btnScrollToBottom" data-on-click="scrollToTerminalBottom()" style="display:none; position:absolute; bottom:16px; right:20px; background:#2563eb; color:white; border:none; border-radius:20px; padding:5px 12px; font-size:0.75rem; font-weight:700; box-shadow:0 4px 12px rgba(0,0,0,0.5); cursor:pointer; z-index:20; align-items:center; gap:5px;">
+              <i class="fa-solid fa-arrow-down"></i> En Aşağı İn
+            </button>
+          </div>
+
+          <!-- Terminal Footer -->
+          <div style="padding:0.5rem 1rem; background:#0f172a; border-top:1px solid #1e293b; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#64748b;">
+            <span>Son Güncelleme: <span id="metaLastUpdated" style="color:#94a3b8;">-</span></span>
+            <span style="display:flex; align-items:center; gap:0.4rem;">
+              <span style="color:#10b981;">● OK</span> | <span style="color:#f59e0b;">● UYARI</span> | <span style="color:#ef4444;">● HATA</span>
+            </span>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- CONFIRMATION MODAL ("Emin misin diye sorsun her seferinde") -->
+    <div id="modalConfirmRestart" class="modal-backdrop" data-on-click="if(event.target===this) closeModal('modalConfirmRestart')">
+      <div class="modal-card" style="max-width:480px;">
+        <div class="modal-header" id="confirmModalHeader" style="background:#fffbeb; border-bottom:1px solid #fef3c7;">
+          <h3 id="confirmModalTitle" style="margin:0; font-size:1.15rem; color:#92400e; display:flex; align-items:center; gap:0.5rem;">
+            <i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b;"></i>
+            <span data-i18n="Yeniden Başlatma Onayı">Yeniden Başlatma Onayı</span>
+          </h3>
+          <button class="btn btn-secondary btn-sm" data-on-click="closeModal('modalConfirmRestart')">&times;</button>
+        </div>
+        
+        <div class="modal-body" style="padding:1.5rem;">
+          <div id="confirmTargetTitle" style="font-weight:700; font-size:1.05rem; margin-bottom:0.5rem; color:#0f172a;">
+            FreeRADIUS Servisi (radiusd.service)
+          </div>
+          
+          <p id="confirmTargetPrompt" style="color:#475569; font-size:0.9rem; line-height:1.5; margin:0 0 1rem 0;">
+            Bu servisi yeniden başlatmak istediğinize emin misiniz? Aktif kimlik doğrulama veya telemetri isteklerinde kısa süreli bir kesinti yaşanabilir.
+          </p>
+
+          <div id="confirmDangerAlert" style="background:#fee2e2; border-left:4px solid #ef4444; padding:0.75rem 1rem; border-radius:4px; font-size:0.85rem; color:#991b1b; display:none;">
+            DİKKAT: Sunucu işletim sistemi seviyesinde yeniden başlatılacaktır (reboot). Bu işlem geri alınamaz!
+          </div>
+        </div>
+
+        <div class="modal-footer" style="background:#fafafa; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:0.75rem;">
+          <button type="button" class="btn btn-secondary" data-on-click="closeModal('modalConfirmRestart')" data-i18n="İptal">İptal</button>
+          <button type="button" class="btn btn-primary" id="btnExecuteConfirm" data-on-click="executeConfirmedRestart()" style="background:#2563eb; color:white;">
+            <i class="fa-solid fa-arrows-rotate"></i> <span id="confirmExecuteBtnText" data-i18n="Evet, Yeniden Başlat">Evet, Yeniden Başlat</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECONNECTING OVERLAY FOR WEB RESTART -->
+    <div id="webRestartOverlay" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.94); z-index:999999; flex-direction:column; align-items:center; justify-content:center; color:white; text-align:center; padding:2rem; backdrop-filter:blur(6px);">
+      <div style="font-size:3.5rem; color:#10b981; margin-bottom:1.5rem;">
+        <i class="fa-solid fa-arrows-rotate fa-spin"></i>
+      </div>
+      <h2 style="font-size:1.35rem; font-weight:800; margin:0 0 0.75rem 0;" data-i18n="Web Yönetim Hizmeti Yeniden Başlatılıyor">
+        Web Yönetim Hizmeti Yeniden Başlatılıyor
+      </h2>
+      <p style="color:#cbd5e1; max-width:520px; font-size:1rem; line-height:1.6; margin:0 0 1.5rem 0;" data-i18n="FreeRADIUS Enterprise web servisi arka planda yeniden başlatılıyor. Oturum ve veriler korunarak sayfa otomatik olarak açılacaktır...">
+        FreeRADIUS Enterprise web servisi arka planda yeniden başlatılıyor. Oturum ve veriler korunarak sayfa otomatik olarak açılacaktır...
+      </p>
+      <div style="font-size:1.25rem; font-family:monospace; background:rgba(255,255,255,0.1); padding:0.5rem 1.25rem; border-radius:30px; border:1px solid rgba(255,255,255,0.2);">
+        Kalan Tahmini Süre: <span id="webRestartSecs">5</span>s
+      </div>
+    </div>
+
+    <!-- RECONNECTING OVERLAY FOR SERVER REBOOT -->
+    <div id="serverRebootOverlay" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.92); z-index:999999; flex-direction:column; align-items:center; justify-content:center; color:white; text-align:center; padding:2rem;">
+      <div style="font-size:3.5rem; color:#ef4444; margin-bottom:1.5rem;">
+        <i class="fa-solid fa-power-off fa-spin"></i>
+      </div>
+      <h2 style="font-size:1.35rem; font-weight:800; margin:0 0 0.75rem 0;" data-i18n="AlmaLinux Sunucusu Yeniden Başlatılıyor">
+        AlmaLinux Sunucusu Yeniden Başlatılıyor
+      </h2>
+      <p style="color:#cbd5e1; max-width:500px; font-size:1rem; line-height:1.6; margin:0 0 1.5rem 0;" data-i18n="Sunucu donanımsal seviyede yeniden başlatılıyor. Sistem açılana kadar bağlantı bekleniyor... (Yaklaşık 45-60 saniye)">
+        Sunucu donanımsal seviyede yeniden başlatılıyor. Sistem açılana kadar bağlantı bekleniyor... (Yaklaşık 45-60 saniye)
+      </p>
+      <div id="rebootTimerLabel" style="font-size:1.25rem; font-family:monospace; background:rgba(255,255,255,0.1); padding:0.5rem 1.25rem; border-radius:30px; border:1px solid rgba(255,255,255,0.2);">
+        Kalan Tahmini Süre: <span id="rebootSecs">50</span>s
+      </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/services.js?v={{ asset_version }}"></script>
+{% endblock %}

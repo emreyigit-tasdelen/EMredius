@@ -1,0 +1,12 @@
+# Reviewed false positives: hash constant, setting name, test key, third-party library.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Reviewed false positives"
+paths = [
+  'emredius/core/settings\.py',
+  'emredius/services/audit_purge\.py',
+  'tests/conftest\.py',
+  'emredius/static/vendor/.*',
+]

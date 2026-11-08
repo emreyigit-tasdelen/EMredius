@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1rem;">
+  {% if kind == 'blacklist' %}Kara listeye alınan MAC/kullanıcılar kayıt altına alınır.{% else %}Karantinaya alınan MAC/kullanıcılar kayıt altına alınır.{% endif %}
+  <b>Yalnızca işaretleme ve kayıttır:</b> NAS/cihaza hiçbir şey yazılmaz (CoA, VLAN, ACL yok), veri silinmez. Her işlem Uygulama Kayıtları sayfasına düşer.
+</p>
+<div class="card" style="margin-bottom:1.5rem;" id="nmRoot" data-kind="{{ kind }}">
+  <div class="card-header"><h3><i class="fa-solid fa-{{ 'ban' if kind == 'blacklist' else 'biohazard' }}"></i> {{ title }}</h3>
+    <span class="status-pill online" id="nmInfo">-</span></div>
+  <div class="card-body">
+    <div style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem; align-items:flex-end;">
+      <select id="nmMatch" style="width:auto;"><option value="exact">Tam eşleşme</option><option value="regex">Regex</option></select>
+      <input type="text" id="nmMac" placeholder="MAC (aa:bb:cc:dd:ee:ff)" style="flex:1 1 200px;">
+      <input type="text" id="nmUser" placeholder="Kullanıcı adı" maxlength="64" style="flex:1 1 180px;">
+      <input type="text" id="nmReason" placeholder="Neden" maxlength="200" style="flex:2 1 240px;">
+      <input type="number" id="nmHours" placeholder="Süre (saat, boş=süresiz)" min="0" max="8760" style="flex:1 1 150px;">
+      <button class="btn btn-primary" type="button" id="nmAdd"><i class="fa-solid fa-plus"></i> Ekle</button>
+    </div>
+    <div style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:0.75rem; align-items:center;">
+      <a class="btn" href="/{{ kind }}/export.csv">CSV dışa aktar</a>
+      <a class="btn" href="/{{ kind }}/import-template.csv">İçe aktarma şablonu</a>
+      <input type="file" id="nmFile" accept=".csv" style="width:auto;">
+      <button class="btn" type="button" id="nmImport">İçe aktar</button>
+      <small style="color:var(--text-muted);">Sütunlar: kind (mac/user), match (exact/regex), value, reason, expires_at</small>
+    </div>
+    <div id="nmMsg" style="margin-bottom:0.75rem; color:var(--text-muted);"></div>
+    <div style="overflow-x:auto;"><table>
+      <thead><tr><th>Eşleşme</th><th>MAC</th><th>Kullanıcı</th><th>Neden</th><th>Ekleyen</th><th>Başlangıç</th><th>Bitiş</th><th></th></tr></thead>
+      <tbody id="nmRows"></tbody></table></div>
+  </div>
+</div>
+<script src="/static/js/nacmarks.js?v={{ asset_version }}"></script>
+{% endblock %}

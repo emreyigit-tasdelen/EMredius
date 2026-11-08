@@ -1,0 +1,9 @@
+# Triggered by radius-backup.timer (the panel's backup policy rewrites the timer, not this unit).
+[Unit]
+Description=EMredius automated backup (DB + raddb) with rotation
+After=mariadb.service
+
+[Service]
+Type=oneshot
+Environment=EMREDIUS_ENV_FILE=/etc/emredius/emredius.env
+ExecStart=/opt/emredius/scripts/backup.sh --full

@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="card">
+      <div class="card-header">
+        <h3><i class="fa-solid fa-shield-halved"></i> 5651 Yasal IP & MAC Denetim Sorgulama</h3>
+      </div>
+      <div class="card-body">
+        <form method="GET" action="/audit">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>İstemci IP Adresi</label>
+              <input type="text" name="ip" value="{{ f.ip }}" maxlength="64" placeholder="Örn: 192.168.1.105 (tam IP = birebir eşleşme)">
+            </div>
+            <div class="form-group">
+              <label>Cihaz MAC Adresi</label>
+              <input type="text" name="mac" value="{{ f.mac }}" maxlength="64" placeholder="Örn: 00:11:22:33:44:55 (ayraç fark etmez)">
+            </div>
+            <div class="form-group">
+              <label>Kullanıcı Adı</label>
+              <input type="text" name="username" value="{{ f.username }}" maxlength="128" placeholder="Örn: ahmet">
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Başlangıç Tarihi</label>
+              <input type="date" name="start" value="{{ f.start }}">
+            </div>
+            <div class="form-group">
+              <label>Bitiş Tarihi</label>
+              <input type="date" name="end" value="{{ f.end }}">
+            </div>
+          </div>
+          <p style="color:#64748b; font-size:0.82rem; margin:0 0 0.8rem;">Tarih aralığı verildiğinde, bu aralıkta herhangi bir anda aktif olan oturumlar listelenir. Sonuçlar sayfa başına <span>{{ page_size }}</span> kayıttır; tamamı için CSV dışa aktarımını kullanın.</p>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Kayıtları Ara</button>
+            <a href="/audit" class="btn btn-secondary"><i class="fa-solid fa-eraser"></i> Temizle</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    {% if searched %}
+    <div class="card">
+      <div class="card-header" style="flex-wrap:wrap; gap:0.5rem;">
+        <h3>Sorgulama Sonuçları ({{ total }} Kayıt Bulundu{% if total %}, {{ offset + 1 }}-{{ offset + results | length }} arası gösteriliyor{% endif %})</h3>
+        <a href="/audit/export.csv?{{ qs() }}" class="btn btn-secondary btn-sm"><i class="fa-solid fa-file-csv"></i> CSV Olarak Dışa Aktar</a>
+      </div>
+      <div class="card-body" style="padding:0; overflow-x:auto;">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Kullanıcı</th><th>Atanan IP</th><th>MAC Adresi</th><th>NAS</th><th>Başlangıç</th><th>Bitiş</th><th>Süre</th><th>Trafik</th></tr>
+          </thead>
+          <tbody>
+          {% for r in results %}
+            <tr>
+              <td>{{ offset + loop.index }}</td>
+              <td><strong>{{ r.username or '-' }}</strong></td>
+              <td><code>{{ r.framedipaddress or '-' }}</code></td>
+              <td><span class="badge badge-mac">{{ r.callingstationid or '-' }}</span>{% if r.callingstationid %}<div style="font-size:0.75rem; color:#94a3b8;">{{ r.callingstationid | mac_vendor }}</div>{% endif %}</td>
+              <td>{{ r.nasipaddress or '-' }}</td>
+              <td>{{ r.acctstarttime or '-' }}</td>
+              <td title="{{ r.acctterminatecause or '' }}">{% if r.acctstoptime %}{{ r.acctstoptime }}{% else %}<span class="badge badge-active">Canlı</span>{% endif %}</td>
+              <td>{{ r.acctsessiontime | format_seconds }}</td>
+              <td>{{ ((r.acctinputoctets or 0) + (r.acctoutputoctets or 0)) | format_bytes }}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="9" style="text-align:center; padding:2rem; color:#94a3b8;">Filtrelere uyan kayıt bulunamadı.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% if pages > 1 %}
+        {% macro plink(p, label, enabled) -%}
+          {%- if enabled -%}<a class="btn btn-secondary btn-sm" href="/audit?{{ qs(page=p) }}">{{ label | safe }}</a>
+          {%- else -%}<span class="btn btn-secondary btn-sm" style="opacity:0.45; pointer-events:none;">{{ label | safe }}</span>{%- endif -%}
+        {%- endmacro %}
+        <div style="display:flex; gap:0.4rem; align-items:center; justify-content:center; padding:1rem; flex-wrap:wrap;">
+          {{ plink(1, '&laquo; İlk', page > 1) }}
+          {{ plink(page - 1, '&lsaquo; Önceki', page > 1) }}
+          <span style="padding:0 0.8rem; color:#475569; font-size:0.9rem;">Sayfa <strong>{{ page }}</strong> / {{ pages }}</span>
+          {{ plink(page + 1, 'Sonraki &rsaquo;', page < pages) }}
+          {{ plink(pages, 'Son &raquo;', page < pages) }}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <div class="card-header" style="flex-wrap:wrap; gap:0.5rem;">
+        <h3><i class="fa-solid fa-box-archive"></i> 5651 Günlük İmzalı Arşiv</h3>
+        <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+          {% if tsa_url %}<span class="badge" style="background:#dcfce7; color:#166534;">RFC 3161 TSA: {{ tsa_host or tsa_url }}</span>
+          {% else %}<span class="badge" style="background:#f1f5f9; color:#64748b;">RFC 3161 TSA yapılandırılmamış</span>{% endif %}
+          {% if archive and not archive.error %}
+            {% if archive.has_chain %}<a href="/audit/archive/chain.log" class="btn btn-secondary btn-sm"><i class="fa-solid fa-link"></i> chain.log</a>{% endif %}
+            <a href="/audit/archive/verify" class="btn btn-primary btn-sm"><i class="fa-solid fa-shield-halved"></i> Arşivi Doğrula</a>
+          {% endif %}
+          {% if session.get('role') == 'superadmin' %}<a href="/audit/purge" class="btn btn-secondary btn-sm"><i class="fa-solid fa-broom"></i> Süresi Dolanları Temizle</a>{% endif %}
+        </div>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <p style="padding:0.8rem 1rem 0; color:#64748b; font-size:0.85rem;">Her gün için oturum kayıtları CSV olarak dışa aktarılır, SHA-256 özeti alınır ve
+        özetler <code>chain.log</code> içinde birbirine zincirlenir (bir dosyanın sonradan değiştirilmesi veya silinmesi zinciri bozar).</p>
+        {% if archive is none %}
+        <div style="padding:1.5rem; color:#64748b;">Arşiv dizini (<code>{{ archive_dir }}</code>) henüz oluşmamış. Günlük imzalı arşiv, bakım görevi (maintenance.py) ilk kez çalıştığında oluşturulur.</div>
+        {% elif archive.error %}
+        <div style="padding:1.5rem; color:#b91c1c;">{{ archive.error }}</div>
+        {% else %}
+        {% if not archive.has_chain %}<div style="padding:0.6rem 1rem; color:#b91c1c; font-size:0.85rem;">chain.log bulunamadı: hash zinciri doğrulanamaz.</div>{% endif %}
+        <div style="max-height:420px; overflow:auto;">
+          <table>
+            <thead><tr><th>Gün</th><th>Dosya</th><th>Boyut</th><th>Oluşturma</th><th>SHA-256</th><th>Saat Kaydı</th><th>Zaman Damgası</th></tr></thead>
+            <tbody>
+            {% for x in archive.days %}
+              <tr>
+                <td><strong>{{ x.date }}</strong></td>
+                <td><a href="/audit/archive/{{ x.name | url_seg }}"><i class="fa-solid fa-file-csv"></i> {{ x.name }}</a></td>
+                <td>{{ x.size | format_bytes }}</td>
+                <td style="color:#64748b;">{{ x.mtime }}</td>
+                <td>{% if x.has_sha %}<a href="/audit/archive/{{ (x.name ~ '.sha256') | url_seg }}"><i class="fa-solid fa-check" style="color:#10b981;"></i> .sha256</a>{% else %}<span style="color:#b91c1c;">Yok</span>{% endif %}</td>
+                <td>{% if x.has_clock %}<a href="/audit/archive/{{ ('5651_' ~ x.date ~ '.clock.json') | url_seg }}"><i class="fa-solid fa-clock" style="color:#10b981;"></i> .clock.json</a>{% else %}<span style="color:#94a3b8;">Yok</span>{% endif %}</td>
+                <td>{% if x.has_tsr %}<a href="/audit/archive/{{ (x.name ~ '.tsr') | url_seg }}"><i class="fa-solid fa-stamp" style="color:#0284c7;"></i> .tsr</a>{% else %}<span style="color:#94a3b8;">-</span>{% endif %}</td>
+              </tr>
+            {% else %}
+              <tr><td colspan="7" style="text-align:center; padding:2rem; color:#94a3b8;">Arşivde henüz günlük dosya bulunmuyor.</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+{% endblock %}

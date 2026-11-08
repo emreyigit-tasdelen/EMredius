@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-heart-pulse"></i> Servis Durumu</h3>
+    <span class="status-pill {{ 'online' if summary.ok else 'offline' }}" id="shSummary">{{ summary.up }}/{{ summary.total }} çalışıyor{% if summary.down %} · {{ summary.down }} DÜŞÜK{% endif %}</span></div>
+  <div class="card-body">
+    <table class="data-table" style="width:100%;">
+      <thead><tr><th>Servis</th><th>Durum</th><th>Ayrıntı</th><th>Son değişim</th></tr></thead>
+      <tbody id="shBody">
+      {% for r in rows %}
+        <tr><td>{{ r.name }}</td>
+          <td><span class="status-pill {{ 'online' if r.status == 'up' else ('offline' if r.status == 'down' else '') }}">{{ {'up': 'Çalışıyor', 'down': 'Durdu', 'absent': 'Kurulu değil', 'unknown': 'Bilinmiyor'}[r.status] }}</span></td>
+          <td>{{ r.detail }}</td><td>{{ r.since }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <form method="POST" action="/svchealth/check" style="margin-top:1rem;">{{ csrf_input() }}
+      <button class="btn btn-secondary" type="submit"><i class="fa-solid fa-rotate"></i> Şimdi denetle</button></form>
+  </div>
+</div>
+{% if is_super %}
+<div class="card">
+  <div class="card-header"><h3><i class="fa-solid fa-bell"></i> Servis düşünce alarm</h3></div>
+  <div class="card-body">
+    <p style="color:var(--text-muted);">Varsayılan KAPALI. Açıkken servis iki ardışık yoklamada (≈2 dk) düşük görünürse bir kez, düzelince bir kez bildirilir.</p>
+    <form method="POST" action="/svchealth/settings" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1rem;">
+      {{ csrf_input() }}
+      <label><input type="checkbox" name="svchealth_alert_enabled" {{ 'checked' if cfg.svchealth_alert_enabled == '1' else '' }}> Telegram / webhook alarmı (Ayarlar'daki anahtarlarla)</label>
+      <label><input type="checkbox" name="svchealth_email_enabled" {{ 'checked' if cfg.svchealth_email_enabled == '1' else '' }}> E-posta alarmı</label>
+      <div class="form-group"><label>SMTP sunucusu</label><input type="text" name="svchealth_smtp_host" value="{{ cfg.svchealth_smtp_host }}" maxlength="200"></div>
+      <div class="form-group"><label>SMTP port</label><input type="text" name="svchealth_smtp_port" value="{{ cfg.svchealth_smtp_port }}" maxlength="5"></div>
+      <div class="form-group"><label>SMTP kullanıcı</label><input type="text" name="svchealth_smtp_user" value="{{ cfg.svchealth_smtp_user }}" maxlength="200" autocomplete="off"></div>
+      <div class="form-group"><label>SMTP parola {% if cfg.svchealth_smtp_password %}(kayıtlı; boş bırakırsanız korunur){% endif %}</label><input type="password" name="svchealth_smtp_password" maxlength="200" autocomplete="new-password"></div>
+      <label><input type="checkbox" name="svchealth_smtp_tls" {{ 'checked' if cfg.svchealth_smtp_tls == '1' else '' }}> STARTTLS</label>
+      <div class="form-group"><label>Gönderen</label><input type="text" name="svchealth_mail_from" value="{{ cfg.svchealth_mail_from }}" maxlength="200"></div>
+      <div class="form-group"><label>Alıcı(lar) (virgülle)</label><input type="text" name="svchealth_mail_to" value="{{ cfg.svchealth_mail_to }}" maxlength="200"></div>
+      <div style="grid-column:1/-1; display:flex; gap:.5rem;"><button class="btn btn-primary" type="submit">Kaydet</button></div>
+    </form>
+    <form method="POST" action="/svchealth/test" style="margin-top:.75rem;">{{ csrf_input() }}
+      <button class="btn btn-secondary" type="submit">Test e-postası gönder</button></form>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/svchealth.js?v={{ asset_version }}"></script>
+{% endblock %}

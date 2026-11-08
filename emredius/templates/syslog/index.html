@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-body">
+    <form method="GET" action="/syslog" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:end;">
+      <div class="form-group" style="margin:0;"><label>Kaynak IP</label>
+        <input list="slSources" name="src_ip" value="{{ f.src_ip }}" placeholder="Tümü" maxlength="45">
+        <datalist id="slSources">{% if data %}{% for s in data.sources %}<option value="{{ s }}">{% endfor %}{% endif %}</datalist></div>
+      <div class="form-group" style="margin:0;"><label>Önem (en az)</label>
+        <select name="severity"><option value="">Tümü</option>{% for s in severities %}<option value="{{ loop.index0 }}" {{ 'selected' if f.severity == loop.index0 else '' }}>{{ loop.index0 }} - {{ s }}</option>{% endfor %}</select></div>
+      <div class="form-group" style="margin:0;"><label>Facility</label>
+        <select name="facility"><option value="">Tümü</option>{% for s in facilities %}<option value="{{ loop.index0 }}" {{ 'selected' if f.facility == loop.index0 else '' }}>{{ s }}</option>{% endfor %}</select></div>
+      <div class="form-group" style="margin:0;"><label>Başlangıç</label><input type="datetime-local" name="since" value="{{ args.get('since', '') }}"></div>
+      <div class="form-group" style="margin:0;"><label>Bitiş</label><input type="datetime-local" name="until" value="{{ args.get('until', '') }}"></div>
+      <div class="form-group" style="margin:0;"><label>Metin ara</label><input type="text" name="q" value="{{ f.q }}" maxlength="200" placeholder="mesaj, cihaz veya uygulama"></div>
+      <button class="btn btn-primary" type="submit">Ara</button>
+      <a class="btn btn-secondary" href="/syslog/export.csv?{{ request.query_string.decode('utf-8', 'replace') }}"><i class="fa-solid fa-file-csv"></i> CSV</a>
+    </form>
+  </div>
+</div>
+{% if error %}<div class="card"><div class="card-body" style="color:#f59e0b;">{{ error }}</div></div>{% endif %}
+{% if data %}
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3>Kayıtlar ({{ data.total }} eşleşme / {{ data.count_all }} toplam)</h3></div>
+  <div class="card-body" style="overflow-x:auto;">
+    {% if not data.count_all %}<p>Henüz syslog kaydı yok. Toplayıcı UDP <b>514</b> portunu dinler; cihazlarda syslog sunucusu olarak bu sunucunun IP'sini girin.</p>{% endif %}
+    <table class="table">
+      <thead><tr><th>Zaman</th><th>Kaynak</th><th>Facility</th><th>Önem</th><th>Cihaz</th><th>Uygulama</th><th>Mesaj</th></tr></thead>
+      <tbody>{% for r in data.rows %}
+        <tr><td style="white-space:nowrap;">{{ r.time }}</td><td>{{ r.src_ip }}</td><td>{{ r.facility_name }}</td>
+          <td><span class="badge {{ 'badge-danger' if r.severity <= 3 else ('badge-warning' if r.severity == 4 else 'badge-info') }}">{{ r.severity_name }}</span></td>
+          <td>{{ r.host }}</td><td>{{ r.app }}</td><td style="word-break:break-word;">{{ r.msg }}</td></tr>
+      {% endfor %}</tbody>
+    </table>
+    {% set qs = request.args.to_dict() %}{% set _ = qs.pop('page', None) %}
+    <div style="display:flex; gap:1rem; align-items:center; margin-top:1rem;">
+      {% if data.page > 1 %}<a class="btn btn-secondary" href="/syslog?{{ qs | urlencode }}&page={{ data.page - 1 }}">&laquo; Önceki</a>{% endif %}
+      <span>Sayfa {{ data.page }} / {{ data.pages }}</span>
+      {% if data.page < data.pages %}<a class="btn btn-secondary" href="/syslog?{{ qs | urlencode }}&page={{ data.page + 1 }}">Sonraki &raquo;</a>{% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}
+{% if session.get('role') == 'superadmin' %}
+<div class="card"><div class="card-header"><h3>Ayarlar</h3></div><div class="card-body">
+  <form method="POST" action="/syslog/settings" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:end;">
+    {{ csrf_input() }}
+    <div class="form-group" style="margin:0;"><label>Saklama süresi (gün)</label><input type="number" name="retention_days" min="1" max="3650" value="{{ settings.retention_days }}"></div>
+    <div class="form-group" style="margin:0; min-width:320px;"><label>İzin verilen kaynaklar (boş = hepsi)</label><input type="text" name="allowed_sources" value="{{ settings.allowed_sources }}" placeholder="10.0.0.0/24, 192.168.1.5"></div>
+    <button class="btn btn-primary" type="submit">Kaydet</button>
+  </form>
+  <small>Süresi dolan kayıtlar toplayıcı tarafından saatlik otomatik silinir.</small>
+</div></div>
+{% endif %}
+{% endblock %}

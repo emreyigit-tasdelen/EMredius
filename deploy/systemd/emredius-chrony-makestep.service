@@ -1,0 +1,12 @@
+[Unit]
+Description=EMredius NTP step (chronyc makestep, started by the panel)
+After=chronyd.service
+
+[Service]
+Type=oneshot
+# Started by systemd (not by the panel process, which runs with NoNewPrivileges=yes), so chronyc gets its normal
+# SELinux transition to chronyc_t and is authorised over chronyd's unix socket. The panel reads the reply from
+# the journal (_SYSTEMD_INVOCATION_ID).
+# burst + wait first: after a VM pause chronyd only holds stale samples, so a bare makestep steps by ~0.
+ExecStart=/bin/sh -c '/usr/bin/chronyc burst 4/4; sleep 7; /usr/bin/chronyc makestep'
+TimeoutStartSec=18

@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block content %}
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem;">
+      <div class="card">
+        <div class="card-header">
+          <h3><i class="fa-solid fa-satellite-dish"></i> Port Taraması Başlat</h3>
+        </div>
+        <div class="card-body">
+          <form method="POST" action="/portscan">
+            {{ csrf_input() }}
+            <div class="form-group">
+              <label>Hedef (IP veya alan adı)</label>
+              <input type="text" name="target" value="{{ form.target }}" maxlength="253" placeholder="Örn: 10.0.0.1" required autofocus>
+            </div>
+            <div class="form-group">
+              <label>Port, Aralık veya Liste</label>
+              <input type="text" name="ports" value="{{ form.ports }}" maxlength="512" placeholder="Örn: 443 · 8000-8100 · 0-65535 · 22,80,443">
+              <small style="color:#64748b; font-size:0.75rem;">Boş bırakılırsa aşağıdaki hazır şablon taranır. Port 0 TCP'de bağlanılamadığı için atlanır.</small>
+            </div>
+            <div class="form-group">
+              <label>Hazır Şablon</label>
+              <select name="preset">
+                {% for key, label in presets.items() %}<option value="{{ key }}" {{ 'selected' if form.preset == key else '' }}>{{ label }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Port Başına Zaman Aşımı</label>
+              <select name="timeout">
+                {% for t in timeouts %}<option value="{{ t }}" {{ 'selected' if form.timeout == t else '' }}>{{ t }} sn</option>{% endfor %}
+              </select>
+              <small style="color:#64748b; font-size:0.75rem;">Tüm portlar (65535) yanıt vermeyen bir cihazda 0,5 sn ile yaklaşık 2-3 dakika sürer.</small>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; padding:0.8rem;">
+              <i class="fa-solid fa-magnifying-glass"></i> Taramayı Başlat
+            </button>
+          </form>
+          <small style="color:#64748b; font-size:0.75rem; margin-top:0.75rem; display:block;">Genel (public) IP'leri yalnızca Süper Yönetici tarayabilir. Her tarama denetim kaydına yazılır.</small>
+        </div>
+      </div>
+
+      <div class="card" id="portscanResult" {% if job %}data-job-id="{{ job.id }}"{% endif %}>
+        <div class="card-header">
+          <h3><i class="fa-solid fa-list-check"></i> Tarama Sonucu</h3>
+          <span id="psBadge" class="status-pill" {% if not job %}style="display:none;"{% endif %}></span>
+        </div>
+        <div class="card-body">
+          {% if job %}
+          <p id="psSummary" style="font-size:0.85rem; color:#475569;"></p>
+          <div style="background:#e2e8f0; border-radius:6px; height:10px; overflow:hidden; margin-bottom:0.75rem;">
+            <div id="psBar" style="background:#2563eb; height:100%; width:0%; transition:width .3s;"></div>
+          </div>
+          <button type="button" id="psCancel" class="btn btn-danger" style="display:none; margin-bottom:0.75rem;"><i class="fa-solid fa-stop"></i> Durdur</button>
+          <table class="data-table">
+            <thead><tr><th>Port</th><th>Durum</th><th>Servis</th></tr></thead>
+            <tbody id="psRows"></tbody>
+          </table>
+          <div id="psEmpty" style="display:none; text-align:center; padding:2rem 1rem; color:#94a3b8;"><p>Açık port bulunamadı.</p></div>
+          {% else %}<div style="text-align:center; padding:5rem 1rem; color:#94a3b8;"><i class="fa-solid fa-satellite-dish" style="font-size:3rem; margin-bottom:1rem;"></i><p>Hedefi ve port ya da aralığı girip taramayı başlatın.</p></div>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    {% set status_labels = {'running': 'Taranıyor', 'done': 'Tamamlandı', 'cancelled': 'Durduruldu', 'error': 'Hata'} %}
+    <div class="card" style="margin-top:1.5rem;">
+      <div class="card-header">
+        <h3><i class="fa-solid fa-sliders"></i> Eşzamanlı Tarama Sınırı</h3>
+        <span class="status-pill {{ 'online' if running_count < max_concurrent else 'offline' }}">Şu an {{ running_count }} / {{ max_concurrent }} tarama çalışıyor</span>
+      </div>
+      <div class="card-body">
+        {% if is_super %}
+        <form method="POST" action="/portscan/settings" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end;">
+          {{ csrf_input() }}
+          <div class="form-group" style="margin-bottom:0;">
+            <label>Aynı anda en fazla kaç tarama çalışabilir</label>
+            <input type="number" name="max_concurrent" value="{{ max_concurrent }}" min="1" max="{{ max_limit }}" required style="width:140px;">
+          </div>
+          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Kaydet</button>
+        </form>
+        {% if running %}
+        <table style="margin-top:1rem;">
+          <thead><tr><th>Çalışan Tarama</th><th>Portlar</th><th>Başlatan</th><th>İlerleme</th><th></th></tr></thead>
+          <tbody>
+          {% for r in running %}
+            <tr><td>{{ r.label }}{% if r.label != r.target %} ({{ r.target }}){% endif %}</td><td>{{ r.range }}</td><td>{{ r.user }}</td><td>{{ r.done }} / {{ r.total }}</td>
+                <td style="text-align:right;"><a class="btn btn-sm" href="/portscan?job={{ r.id }}">Görüntüle</a></td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
+        {% else %}
+        <div class="form-group" style="margin-bottom:0;">
+          <label>Aynı anda en fazla kaç tarama çalışabilir</label>
+          <input type="number" value="{{ max_concurrent }}" disabled style="width:140px;">
+          <small style="color:#64748b; font-size:0.75rem; display:block; margin-top:0.25rem;">Bu sınır tüm yöneticilerin taramaları için toplamdır. Bu değeri yalnızca Süper Yönetici değiştirebilir.</small>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:1.5rem;">
+      <div class="card-header">
+        <h3><i class="fa-solid fa-clock-rotate-left"></i> Son Taramalar</h3>
+        <span class="status-pill">En fazla 20</span>
+      </div>
+      <div class="card-body">
+        <table class="data-table" id="shTable" {% if not recent %}style="display:none;"{% endif %}>
+          <thead><tr><th>Başlangıç</th><th>Hedef</th><th>Portlar</th>{% if is_super %}<th>Başlatan</th>{% endif %}<th>Durum</th><th>Açık Port</th><th></th></tr></thead>
+          <tbody id="shBody">
+          {% for r in recent %}
+            <tr data-scan-id="{{ r.id }}"><td>{{ r.started }}</td><td>{{ r.label }}{% if r.label != r.target %} ({{ r.target }}){% endif %}</td><td>{{ r.range }}</td>
+                {% if is_super %}<td>{{ r.user }}</td>{% endif %}
+                <td>{{ status_labels.get(r.status, r.status) }}{% if r.status == 'running' %} ({{ r.done }} / {{ r.total }}){% endif %}</td>
+                <td>{{ r.open_count }}</td>
+                <td style="text-align:right; white-space:nowrap;"><button type="button" class="btn btn-sm sh-view" data-url="/portscan/job/{{ r.id }}"><i class="fa-solid fa-eye"></i> Görüntüle</button>
+                  {% if is_super and r.status != 'running' %}<button type="button" class="btn btn-danger btn-sm sh-del" data-url="/portscan/job/{{ r.id }}/delete" title="Sil"><i class="fa-solid fa-trash"></i></button>{% endif %}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        <small id="shNote" style="color:#64748b; font-size:0.75rem; margin-top:0.5rem; display:{{ 'block' if recent else 'none' }};">Her yöneticinin son 20 taraması saklanır ve panel yeniden başlatılınca da kaybolmaz.</small>
+        <p id="shNone" style="color:#94a3b8; margin:0; {% if recent %}display:none;{% endif %}">Henüz tarama yok.</p>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="shModal" data-kind="port">
+      <div class="modal-card" style="max-width:700px; width:100%;">
+        <div class="modal-header"><h3 id="shTitle"><i class="fa-solid fa-list-check"></i> Tarama Sonucu</h3>
+          <button type="button" class="btn btn-secondary btn-sm" id="shClose">&times;</button></div>
+        <div class="modal-body" style="max-height:70vh; overflow:auto;">
+          <div id="shSummary" style="color:#64748b; font-size:0.9rem; margin-bottom:0.75rem;"></div>
+          <table class="data-table"><thead><tr><th>Port</th><th>Durum</th><th>Servis</th></tr></thead><tbody id="shRows"></tbody></table>
+          <div id="shEmpty" style="display:none; text-align:center; padding:2rem 1rem; color:#94a3b8;">Açık port bulunamadı.</div>
+        </div>
+      </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/scan-history.js?v={{ asset_version }}"></script>
+<script src="/static/js/portscan.js?v={{ asset_version }}"></script>
+{% endblock %}

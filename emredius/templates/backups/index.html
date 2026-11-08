@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block content %}
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+      <p style="color:#64748b; font-size:0.95rem;">SHA256 Bütünlük Korumalı Tam Sistem & SQL Yedek Arşivi.</p>
+      <div style="display:flex; gap:0.5rem;">
+        <a href="/backup/create?type=full" class="btn btn-primary">
+          <i class="fa-solid fa-box-archive"></i> Tam Sistem İmajı Al (DB + Config)
+        </a>
+        <a href="/backup/create?type=sql" class="btn btn-secondary">
+          <i class="fa-solid fa-database"></i> Sadece SQL Yedeği Al
+        </a>
+      </div>
+    </div>
+{% if dry_run %}
+    <div class="alert alert-warning" style="margin-bottom:1.5rem;"><i class="fa-solid fa-flask"></i> Staging (SYSTEM_DRY_RUN): zamanlayıcı dosyaları yazılmaz, tam sistem geri yüklemesi kapalıdır.</div>
+{% endif %}
+
+    <!-- Otomatik Yedekleme Politikası & Zamanlama Kartı (Süper Yönetici) -->
+    <div class="card" style="border-left:4px solid #0284c7; margin-bottom:1.5rem; background:#ffffff;">
+      <div class="card-header" style="background:#f0f9ff; display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="color:#0369a1;"><i class="fa-solid fa-clock-rotate-left"></i> <span data-i18n="Otomatik Yedekleme Politikası & Zamanlama Ayarları">Otomatik Yedekleme Politikası & Zamanlama Ayarları</span></h3>
+        <span class="badge" style="background:#e0f2fe; color:#0369a1; font-weight:700;"><i class="fa-solid fa-shield-halved"></i> Süper Yönetici Yetkisi</span>
+      </div>
+      <div class="card-body">
+        <p style="color:#475569; font-size:0.92rem; margin-bottom:1.25rem;">
+          Sistemin otomatik olarak kaç saatte bir yedekleneceğini ve disk doluluğunu önlemek için en fazla kaç adet güncel yedeğin saklanacağını buradan belirleyebilirsiniz. Eski yedekler otomatik olarak temizlenir (SQL ve tam sistem yedekleri ayrı sayılır).
+        </p>
+
+        <!-- Canlı Durum Özeti -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:0.9rem;">
+            <div style="font-size:0.75rem; color:#64748b; font-weight:700; text-transform:uppercase;">Yedekleme Aralığı</div>
+            <div style="font-size:1.15rem; font-weight:800; color:#0284c7; margin-top:0.25rem;">Her {{ interval }} Saatte Bir</div>
+          </div>
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:0.9rem;">
+            <div style="font-size:0.75rem; color:#64748b; font-weight:700; text-transform:uppercase;">Maksimum Yedek Kotası</div>
+            <div style="font-size:1.15rem; font-weight:800; color:#10b981; margin-top:0.25rem;">En Fazla {{ max_count }} Adet</div>
+          </div>
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:0.9rem;">
+            <div style="font-size:0.75rem; color:#64748b; font-weight:700; text-transform:uppercase;">Sonraki Otomatik Yedek</div>
+            <div style="font-size:0.95rem; font-weight:700; color:#6366f1; margin-top:0.35rem;">{{ next_run }}</div>
+          </div>
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:0.9rem;">
+            <div style="font-size:0.75rem; color:#64748b; font-weight:700; text-transform:uppercase;">Rotasyon Durumu</div>
+            <div style="font-size:0.95rem; font-weight:700; color:#15803d; margin-top:0.35rem;"><i class="fa-solid fa-check"></i> Otomatik Temizlik Aktif</div>
+          </div>
+        </div>
+
+        <!-- Politika Güncelleme Formu -->
+        <form method="POST" action="/backup/policy/update" style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:12px; padding:1.25rem;">
+          {{ csrf_input() }}
+          <h4 style="font-size:0.95rem; font-weight:700; color:#0f172a; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
+            <i class="fa-solid fa-sliders" style="color:#0284c7;"></i> Politika Değerlerini Güncelle
+          </h4>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.25rem; margin-bottom:1.25rem;">
+            <div class="form-group" style="margin:0;">
+              <label style="font-weight:700; font-size:0.85rem; color:#334155;">Yedekleme Saat Aralığı</label>
+              {% set custom = interval not in preset_intervals %}
+              <select name="interval_hours" id="selBackupInterval" class="form-control" style="width:100%; padding:0.65rem; border-radius:8px; border:1.5px solid #cbd5e1; font-weight:600;">
+              {% for hours, label in interval_choices %}
+                <option value="{{ hours }}"{% if interval == hours %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+                <option value="custom"{% if custom %} selected{% endif %}>Özel Saat Aralığı Belirle...</option>
+              </select>
+              <div id="customIntervalBox" style="display:{{ 'block' if custom else 'none' }}; margin-top:0.5rem;">
+                <input type="number" name="custom_interval" id="inpCustomInterval" value="{{ interval }}" min="1" max="720" placeholder="Örn: 5 saat" style="width:100%; padding:0.55rem; border:1.5px solid #0284c7; border-radius:8px;">
+                <small style="color:#64748b; font-size:0.75rem;">1 ile 720 saat arasında bir tam sayı giriniz.</small>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin:0;">
+              <label style="font-weight:700; font-size:0.85rem; color:#334155;">En Fazla Kaç Tane Yedek Tutulsun? (Maksimum Yedek Sayısı)</label>
+              <input type="number" name="max_count" id="inpMaxCount" value="{{ max_count }}" min="1" max="50" required style="width:100%; padding:0.65rem; border-radius:8px; border:1.5px solid #cbd5e1; font-weight:700; font-size:1rem;">
+              <div style="display:flex; gap:0.4rem; margin-top:0.5rem; flex-wrap:wrap; align-items:center;">
+                <span style="font-size:0.75rem; color:#64748b;">Hızlı Seçim:</span>
+              {% for n in [2, 3, 5, 10, 20] %}
+                <button type="button" class="btn btn-secondary btn-sm" data-max-count="{{ n }}" style="padding:2px 8px; font-size:0.75rem;">{{ n }}</button>
+              {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end;">
+            <button type="submit" class="btn btn-primary" style="padding:0.65rem 1.4rem; font-weight:700;">
+              <i class="fa-solid fa-floppy-disk"></i> Politikayı Kaydet ve Uygula
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Tek Dosya Paketleme ve SCP Kartı -->
+    <div class="card" style="border-left:4px solid #8b5cf6; margin-bottom:1.5rem; background:#ffffff;">
+      <div class="card-header" style="background:#faf5ff;">
+        <h3 style="color:#6b21a8;"><i class="fa-solid fa-box-open"></i> <span data-i18n="Tek Dosya Kaynak Kod & Veri Paketi (SCP ve Taşınabilirlik)">Tek Dosya Kaynak Kod & Veri Paketi (SCP ve Taşınabilirlik)</span></h3>
+        <span class="badge" style="background:#f3e8ff; color:#7e22ce;">Tek Dosya SCP</span>
+      </div>
+      <div class="card-body">
+        <p style="color:#475569; font-size:0.92rem; margin-bottom:1rem;" data-i18n="Tüm FreeRADIUS yönetim paneli, TACACS+ AAA motoru, SNMP NMS servisi ve veritabanlarını tek bir sıkıştırılmış arşiv (.tar.gz) içinde saklayıp uzaktan SCP ile tek komutla çekebilirsiniz.">
+          Tüm FreeRADIUS yönetim paneli, TACACS+ AAA motoru, SNMP NMS servisi ve veritabanlarını tek bir sıkıştırılmış arşiv (.tar.gz) içinde saklayıp uzaktan SCP ile tek komutla çekebilirsiniz.
+        </p>
+        <div style="background:#0f172a; border-radius:10px; padding:0.9rem 1.25rem; font-family:monospace; font-size:0.88rem; color:#38bdf8; display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+          <span>{{ scp_command }}</span>
+          <button type="button" class="btn btn-sm btn-secondary" data-copy="{{ scp_command }}" style="padding:0.25rem 0.6rem; font-size:0.75rem; cursor:pointer;">
+            <i class="fa-solid fa-copy"></i> Kopyala
+          </button>
+        </div>
+        <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+          <a href="/backup/create-source-bundle" class="btn btn-primary">
+            <i class="fa-solid fa-arrows-rotate"></i> <span data-i18n="Paketi Şimdi Güncelle / Oluştur">Paketi Şimdi Güncelle / Oluştur</span>
+          </a>
+          <a href="/backup/download-source-bundle" class="btn btn-secondary">
+            <i class="fa-solid fa-file-arrow-down"></i> <span data-i18n="Paketi Doğrudan İndir (.tar.gz)">Paketi Doğrudan İndir (.tar.gz)</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3><i class="fa-solid fa-database"></i> Mevcut Yedek Dosyaları</h3>
+        <span class="badge" style="background:#e0e7ff; color:#3730a3;">{{ backups | length }} Arşiv</span>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:50px;">#</th>
+              <th>Dosya Adı</th>
+              <th>Yedek Türü</th>
+              <th>Boyut</th>
+              <th>SHA256 Bütünlük</th>
+              <th>Oluşturulma</th>
+              <th style="text-align:right;">İşlemler</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for b in backups %}
+            <tr>
+              <td style="color:#94a3b8; font-weight:600;">{{ loop.index }}</td>
+              <td><strong>{{ b.filename }}</strong></td>
+              <td>
+              {% if b.is_full %}
+                <span class="badge" style="background:#f3e8ff; color:#7e22ce;"><i class="fa-solid fa-box-archive"></i> Tam Sistem (DB+Config)</span>
+              {% else %}
+                <span class="badge" style="background:#e0e7ff; color:#3730a3;"><i class="fa-solid fa-database"></i> SQL Veritabanı</span>
+              {% endif %}
+              </td>
+              <td><code>{{ b.size }}</code>{% if b.empty %} <span class="badge" style="background:#fee2e2; color:#b91c1c;">Boş</span>{% endif %}</td>
+              <td><code style="font-size:0.75rem; color:#64748b;">{{ b.checksum or 'Özet yok' }}</code></td>
+              <td>{{ b.created_at }}</td>
+              <td style="text-align:right; white-space:nowrap;">
+                <a href="/backup/download/{{ b.filename | url_seg }}" class="btn btn-secondary btn-sm"><i class="fa-solid fa-download"></i> İndir</a>
+                <a href="/backup/restore/{{ b.filename | url_seg }}" class="btn btn-danger btn-sm" data-on-click="return confirm('UYARI: Bu yedeği geri yüklemek mevcut ayarları değiştirecektir! Emin misiniz?');">
+                  <i class="fa-solid fa-rotate-left"></i> Geri Yükle
+                </a>
+                <a href="/backup/delete/{{ b.filename | url_seg }}" class="btn btn-secondary btn-sm" data-on-click="return confirm('{{ b.filename | js }} silinsin mi?');" title="Sil">
+                  <i class="fa-solid fa-trash"></i>
+                </a>
+              </td>
+            </tr>
+          {% else %}
+            <tr><td colspan="7" style="text-align:center; padding:3rem; color:#94a3b8;">Henüz yedek dosyası bulunmuyor.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/backups.js?v={{ asset_version }}"></script>
+{% endblock %}

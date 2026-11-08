@@ -1,0 +1,21 @@
+# Legacy code and files pulled from servers may contain settings or secrets
+legacy/
+
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.env
+!*.env.example
+*.tgz
+*.log
+*.tar.gz
+# NMS SQLite databases (TACACS secrets, SNMP communities)
+nms/data/
+*.db
+*.db-shm
+*.db-wal
+
+# Local tooling and scratch folders
+.claude/
+emredius_sync/

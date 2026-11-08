@@ -1,0 +1,329 @@
+{% extends "base.html" %}
+{% block extra_head %}<link href="/static/css/dashboard-stats.css?v={{ asset_version }}" rel="stylesheet">{% endblock %}
+{% block content %}
+    {% if summary.db_error %}
+    <div class="alert alert-warning"><i class="fa-solid fa-triangle-exclamation"></i>
+      <span>Veritabanına ulaşılamadı; RADIUS özet bilgileri gösterilemiyor.</span></div>
+    {% endif %}
+    <!-- TOP RADIUS SUMMARY STAT CARDS -->
+    <div class="stats-grid">
+      <div class="stat-card blue">
+        <div class="info">
+          <div class="lbl" data-i18n="Toplam Kullanıcı">Toplam Kullanıcı</div>
+          <div class="val" id="statTotalUsers">{{ summary.total_users }}</div>
+        </div>
+        <div class="icon-box"><i class="fa-solid fa-users"></i></div>
+      </div>
+      <div class="stat-card green">
+        <div class="info">
+          <div class="lbl" data-i18n="Canlı Oturumlar">Canlı Oturumlar</div>
+          <div class="val" id="statActiveSessions">{{ summary.active_sessions }}</div>
+        </div>
+        <div class="icon-box"><i class="fa-solid fa-wifi"></i></div>
+      </div>
+      <div class="stat-card purple">
+        <div class="info">
+          <div class="lbl" data-i18n="Kayıtlı NAS Cihazı">Kayıtlı NAS Cihazı</div>
+          <div class="val" id="statTotalNas">{{ summary.total_nas }}</div>
+        </div>
+        <div class="icon-box"><i class="fa-solid fa-network-wired"></i></div>
+      </div>
+      <div class="stat-card amber">
+        <div class="info">
+          <div class="lbl" data-i18n="Toplam Ağ Trafiği">Toplam Ağ Trafiği</div>
+          <div class="val" id="statTotalTraffic">{{ summary.total_bytes | format_bytes }}</div>
+        </div>
+        <div class="icon-box"><i class="fa-solid fa-chart-line"></i></div>
+      </div>
+    </div>
+
+    <!-- KPI / TREND PANELİ (veri /api/dashboard/stats'tan; verisi olmayan kart ve grafikler gizlenir) -->
+    <section id="kpiPanel" class="kpi-panel" hidden>
+      <div class="kpi-toolbar">
+        <div class="kpi-ranges" id="kpiRanges">
+          <button type="button" class="kpi-range" data-range="1h">1 Saat</button>
+          <button type="button" class="kpi-range active" data-range="24h">24 Saat</button>
+          <button type="button" class="kpi-range" data-range="7d">7 Gün</button>
+          <button type="button" class="kpi-range" data-range="30d">30 Gün</button>
+        </div>
+        <button type="button" class="kpi-refresh" id="kpiRefresh"><i class="fa-solid fa-rotate"></i> Yenile</button>
+      </div>
+      <div class="kpi-cards" id="kpiCards"></div>
+      <div class="kpi-grid">
+        <div class="card kpi-box" id="boxAuth" hidden><div class="card-header">Kimlik Doğrulama Sonucu</div><div class="card-body"><canvas id="chAuth"></canvas></div></div>
+        <div class="card kpi-box" id="boxNas" hidden><div class="card-header">Cihaza Göre Oturumlar</div><div class="card-body"><canvas id="chNas"></canvas></div></div>
+        <div class="card kpi-box" id="boxEp" hidden><div class="card-header">Endpoint Dağılımı (Üretici)</div><div class="card-body"><canvas id="chEp"></canvas></div></div>
+      </div>
+      <div class="card kpi-box" id="boxTrend" hidden><div class="card-header">Kimlik Doğrulama Trendi</div><div class="card-body"><canvas id="chTrend"></canvas></div></div>
+      <div class="kpi-grid">
+        <div class="card kpi-box" id="boxAlarms" hidden><div class="card-header">Aktif Alarmlar</div><div class="card-body"><ul class="kpi-list" id="kpiAlarms"></ul></div></div>
+        <div class="card kpi-box" id="boxNasBars" hidden><div class="card-header">Cihaz Başına Oturum</div><div class="card-body" id="kpiNasBars"></div></div>
+      </div>
+    </section>
+
+    <!-- LINUX SYSTEM HARDWARE TELEMETRY & CONSUMPTION DASHBOARD -->
+    <div class="card" style="margin-top: 1.5rem; margin-bottom: 2rem; border-radius: 14px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06); overflow: hidden;">
+      
+      <!-- Section Header -->
+      <div style="padding: 1.15rem 1.4rem; background: var(--card-bg, #fff); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.85rem;">
+          <div class="telemetry-header-icon" style="width: 44px; height: 44px; border-radius: 10px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+            <i class="fa-solid fa-server"></i>
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+              <span>Linux Sistem Donanım Tüketimleri & Canlı Telemetri</span>
+            </h3>
+            <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.2rem;" id="telemetrySysSubtitle">
+              Sistem Donanım & Çekirdek Telemetrisi Yükleniyor...
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+          <span style="font-size: 0.82rem; color: var(--text-muted);">Uptime: <strong id="telemetryUptime" style="color: var(--text-primary);">-</strong></span>
+
+          <!-- Zaman Dilimi Seçici Filtre (Son 15 Dk - 12 Saat) -->
+          <div class="telemetry-range-container">
+            <span style="font-size:0.78rem; font-weight:700; color:var(--text-muted); padding:0 5px;">Zaman:</span>
+            <button type="button" class="telemetry-range-btn active" data-range="15m" data-on-click="setTelemetryRange('15m')">15 Dk</button>
+            <button type="button" class="telemetry-range-btn" data-range="30m" data-on-click="setTelemetryRange('30m')">30 Dk</button>
+            <button type="button" class="telemetry-range-btn" data-range="1h" data-on-click="setTelemetryRange('1h')">1 Sa</button>
+            <button type="button" class="telemetry-range-btn" data-range="3h" data-on-click="setTelemetryRange('3h')">3 Sa</button>
+            <button type="button" class="telemetry-range-btn" data-range="6h" data-on-click="setTelemetryRange('6h')">6 Sa</button>
+            <button type="button" class="telemetry-range-btn" data-range="12h" data-on-click="setTelemetryRange('12h')">12 Sa</button>
+          </div>
+
+          <span class="badge" id="telemetryPulseBadge" style="background: #dcfce7; color: #15803d; font-weight: 700; padding: 0.4rem 0.8rem; border-radius: 20px; display: inline-flex; align-items: center; gap: 0.4rem; border: 1px solid #bbf7d0; transition: transform 0.25s ease, box-shadow 0.25s ease;">
+            <span class="live-dot-pulse"></span>
+            <span id="telemetryPulseLabel">CANLI (5s)</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Telemetry Spec Cards 4-Column Grid -->
+      <div class="telemetry-spec-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem; padding: 1.25rem 1.4rem; background: var(--bg-body, #f8fafc); border-bottom: 1px solid var(--border);">
+        
+        <!-- CPU Card -->
+        <div style="background: var(--card-bg, #fff); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <span style="font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase;">
+              <i class="fa-solid fa-microchip" style="color: #2563eb;"></i> İşlemci (CPU)
+            </span>
+            <span id="telemetryCpuPctBadge" style="font-size: 0.75rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; background: #eff6ff; color: #2563eb;">
+              %0.0
+            </span>
+          </div>
+          <div style="font-size: 1.45rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.2rem;" id="telemetryCpuPct">
+            %0.0
+          </div>
+          <div style="font-size: 0.75rem; color: #64748b; line-height: 1.4;">
+            <div id="telemetryCpuModel" style="font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">12th Gen Intel Core i7 (2 vCPU)</div>
+            <div id="telemetryLoadAvg">Yük: 0.02 | 0.04 | 0.05</div>
+            <div id="telemetryTasks" style="color: #0ea5e9;">152 Etkin Görev / İşlem</div>
+          </div>
+        </div>
+
+        <!-- RAM Card -->
+        <div style="background: var(--card-bg, #fff); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <span style="font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase;">
+              <i class="fa-solid fa-memory" style="color: #8b5cf6;"></i> Bellek (RAM)
+            </span>
+            <span id="telemetryRamPctBadge" style="font-size: 0.75rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; background: #f5f3ff; color: #7c3aed;">
+              -
+            </span>
+          </div>
+          <div style="font-size: 1.45rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.2rem;" id="telemetryRamUsed">
+            - / -
+          </div>
+          <div style="font-size: 0.75rem; color: #64748b; line-height: 1.4;">
+            <div>Boş: <strong id="telemetryRamFree" style="color: var(--text-primary);">-</strong> • Önbellek: <span id="telemetryRamCache">-</span></div>
+            <div>Kullanılabilir: <strong id="telemetryRamAvail" style="color: #10b981;">-</strong></div>
+            <div id="telemetrySwapInfo" style="color: #d97706;">Swap: -</div>
+          </div>
+        </div>
+
+        <!-- Storage Card -->
+        <div style="background: var(--card-bg, #fff); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <span style="font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase;">
+              <i class="fa-solid fa-hard-drive" style="color: #059669;"></i> Depolama (Disk /)
+            </span>
+            <span id="telemetryDiskPctBadge" style="font-size: 0.75rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; background: #ecfdf5; color: #059669;">
+              -
+            </span>
+          </div>
+          <div style="font-size: 1.45rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.2rem;" id="telemetryDiskUsed">
+            - / -
+          </div>
+          <div style="font-size: 0.75rem; color: #64748b; line-height: 1.4;">
+            <div>Bağlantı: <code style="color: var(--text-primary);">/ (almalinux-root)</code></div>
+            <div>Boş Disk Alanı: <strong id="telemetryDiskFree" style="color: #10b981;">-</strong></div>
+            <div style="color: #10b981;">● Sistem Bölümü Sağlıklı</div>
+          </div>
+        </div>
+
+        <!-- GPU & Graphics Card -->
+        <div style="background: var(--card-bg, #fff); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <span style="font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase;">
+              <i class="fa-solid fa-display" style="color: #ea580c;"></i> Ekran & GPU / Ağ
+            </span>
+            <span id="telemetryGpuBadge" style="font-size: 0.75rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; background: #fff7ed; color: #c2410c;">
+              Aktif
+            </span>
+          </div>
+          <div style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="telemetryGpuName">
+            Grafik Donanımı Algılanıyor...
+          </div>
+          <div style="font-size: 0.75rem; color: #64748b; line-height: 1.4;">
+            <div>Sürücü: <code style="color: var(--text-primary);" id="telemetryGpuDriver">DRM/KMS</code></div>
+            <div>Çözünürlük: <span id="telemetryGpuRes">-</span></div>
+            <div id="telemetryNetInfo" style="color: #2563eb;">Ağ: ↓ - | ↑ -</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Charts Section: Storage PIE CHART + CPU LINE CHART + RAM LINE CHART -->
+      <div style="padding: 1.25rem 1.4rem;">
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
+          
+          <!-- CHART 1: STORAGE PIE CHART (Depolama Dağılımı - Pie Chart) -->
+          <div style="background: var(--card-bg, #fff); border: 1px solid var(--border); border-radius: 12px; padding: 1.15rem; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; border-bottom: 1px solid var(--border); padding-bottom: 0.6rem;">
+              <h4 style="margin: 0; font-size: 0.95rem; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 0.45rem;">
+                <i class="fa-solid fa-chart-pie" style="color: #059669;"></i> Disk Depolama Dağılımı (Pie Chart)
+              </h4>
+              <span class="telemetry-subtle-badge" style="font-size: 0.75rem; color: var(--text-muted, #64748b); background: var(--bg-body, #f1f5f9); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border);">Root (/)</span>
+            </div>
+            <div style="position: relative; height: 240px; display: flex; justify-content: center; align-items: center;">
+              <canvas id="storagePieChart"></canvas>
+            </div>
+            <div style="margin-top: 0.75rem; display: flex; justify-content: space-around; font-size: 0.78rem; border-top: 1px solid var(--border); padding-top: 0.65rem;">
+              <div style="display: flex; align-items: center; gap: 0.35rem;">
+                <span style="width: 10px; height: 10px; border-radius: 50%; background: #2563eb; display: inline-block;"></span>
+                <span>Kullanılan: <strong id="pieLegendUsed">-</strong></span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.35rem;">
+                <span style="width: 10px; height: 10px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+                <span>Boş: <strong id="pieLegendFree">-</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- CHART 2: CPU USAGE LINE CHART (Zaman Serisi Çizgi Grafik) -->
+          <div style="background: var(--card-bg, #fff); border: 1px solid var(--border); border-radius: 12px; padding: 1.15rem; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; border-bottom: 1px solid var(--border); padding-bottom: 0.6rem;">
+              <h4 style="margin: 0; font-size: 0.95rem; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 0.45rem;">
+                <i class="fa-solid fa-chart-line" style="color: #2563eb;"></i> CPU Tüketim Trendi (Çizgi Grafik)
+              </h4>
+              <span style="font-size: 0.75rem; color: #2563eb; background: #eff6ff; padding: 2px 8px; border-radius: 4px; font-weight: 700;" id="cpuChartLiveBadge">
+                Anlık: %0.0
+              </span>
+            </div>
+            <div style="position: relative; height: 240px;">
+              <canvas id="cpuLineChart"></canvas>
+            </div>
+            <div style="margin-top: 0.75rem; display: flex; justify-content: space-between; font-size: 0.75rem; color: #64748b; border-top: 1px solid var(--border); padding-top: 0.65rem;">
+              <span>Hover: Mouse ile üzerine gelin</span>
+              <span style="color: #2563eb; font-weight: 700;" id="cpuRangeBadge">Aralık: Son 15 Dk</span>
+            </div>
+          </div>
+
+          <!-- CHART 3: RAM & SWAP LINE CHART (Bellek ve Takas Zaman Serisi Çizgi Grafik) -->
+          <div style="background: var(--card-bg, #fff); border: 1px solid var(--border); border-radius: 12px; padding: 1.15rem; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; border-bottom: 1px solid var(--border); padding-bottom: 0.6rem;">
+              <h4 style="margin: 0; font-size: 0.95rem; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 0.45rem;">
+                <i class="fa-solid fa-chart-area" style="color: #7c3aed;"></i> RAM & Swap Tüketimi (Çizgi Grafik)
+              </h4>
+              <span style="font-size: 0.75rem; color: #7c3aed; background: #f5f3ff; padding: 2px 8px; border-radius: 4px; font-weight: 700;" id="ramChartLiveBadge">
+                -
+              </span>
+            </div>
+            <div style="position: relative; height: 240px;">
+              <canvas id="ramLineChart"></canvas>
+            </div>
+            <div style="margin-top: 0.75rem; display: flex; justify-content: space-between; font-size: 0.75rem; color: #64748b; border-top: 1px solid var(--border); padding-top: 0.65rem;">
+              <span>Mor: RAM | Camgöbeği: Kullanılabilir | Sarı: Swap</span>
+              <span style="color: #7c3aed; font-weight: 700;" id="ramRangeBadge">Aralık: Son 15 Dk</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- SESSIONS & TOP TRAFFIC ROW -->
+    <div style="display:grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-header">
+          <h3><i class="fa-solid fa-satellite-dish" style="color:#10b981;"></i> Canlı Bağlı Cihazlar</h3>
+          <a href="/sessions" class="btn btn-secondary btn-sm">Tümünü Yönet</a>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <table>
+            <thead>
+              <tr>
+                <th>Kullanıcı</th>
+                <th>İstemci IP</th>
+                <th>AP / Switch</th>
+                <th>Süre</th>
+                <th>Trafik</th>
+                <th style="text-align:right;">İşlem</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in summary.active_list %}
+              <tr>
+                <td><strong>{{ s.username }}</strong></td>
+                <td><code>{{ s.framedipaddress or '-' }}</code></td>
+                <td>{{ s.nasipaddress }}</td>
+                <td>{{ s.acctsessiontime | format_seconds }}</td>
+                <td>{{ ((s.acctinputoctets or 0) + (s.acctoutputoctets or 0)) | format_bytes }}</td>
+                <td style="text-align:right;">
+                  {% if can_disconnect %}
+                  <a href="/session/disconnect/{{ s.radacctid | urlencode }}" class="btn btn-danger btn-sm" data-on-click="return confirm('Bu kullanıcının bağlantısını kesmek istediğinize emin misiniz?');">
+                    <i class="fa-solid fa-bolt"></i> Ağdan At
+                  </a>
+                  {% else %}
+                  <span style="color:#94a3b8;">-</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:2.5rem;">Şu an aktif bağlı cihaz yok.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-header">
+          <h3><i class="fa-solid fa-chart-bar"></i> En Çok Trafik (MB)</h3>
+        </div>
+        <div class="card-body">
+          <canvas id="trafficChart" height="230"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:1.5rem; text-align:center; font-size:0.85rem; color:#94a3b8;">
+      <span data-i18n="Geliştirici">Geliştirici</span>:
+      <a href="https://github.com/emreyigit-tasdelen" target="_blank" rel="noopener noreferrer" style="color:inherit; font-weight:600;"><i class="fa-brands fa-github"></i> Emre Yiğit Taşdelen</a>
+      · <a href="https://github.com/sponsors/emreyigit-tasdelen" target="_blank" rel="noopener noreferrer" style="color:inherit;"><i class="fa-solid fa-heart" style="color:#ec4899;"></i> <span data-i18n="Projeyi Destekle">Projeyi Destekle</span></a>
+    </div>
+
+    <script type="application/json" id="dashboardTrafficChart">{{ traffic_chart | tojson }}</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/chart.js"></script>
+<script src="/static/js/dashboard.js?v={{ asset_version }}"></script>
+<script src="/static/js/dashboard-stats.js?v={{ asset_version }}"></script>
+{% endblock %}

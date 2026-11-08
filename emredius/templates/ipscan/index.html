@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block content %}
+    <p style="color:#64748b; font-size:0.95rem; margin-bottom:1.5rem;">
+      Girdiğiniz IP, alt ağ veya IPv6 ağında ICMP ping taraması yapar; yanıt veren cihazların yanıt süresi, MAC adresi,
+      üreticisi ve DNS adı gösterilir. İsterseniz bulunan her cihazın TCP portları da aynı taramada taranır. Ağın boyutunu her taramada siz belirlersiniz (ör. /24 = 254, /16 = 65.534 adres).
+      Her yönetici aynı anda aşağıdaki sınır kadar tarama başlatabilir ve yalnızca kendi taramalarını görür; son 20 taramanız saklanır.
+    </p>
+
+    <div class="card" style="margin-bottom:1.5rem;">
+      <div class="card-header">
+        <h3><i class="fa-solid fa-network-wired"></i> Ağ Taraması Başlat</h3>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="/ip-scan/start" class="scan-form" id="ipscanForm">
+          {{ csrf_input() }}
+          <div class="form-group sf-target">
+            <label for="isTarget">Hedef Ağ (CIDR veya tek IP)</label>
+            <input type="text" id="isTarget" name="target" value="{{ target }}" maxlength="64" placeholder="Örn: 192.168.1.0/24 · 10.0.0.0/16 · 8.8.8.8" required>
+          </div>
+          <div class="form-group sf-ports">
+            <label for="isPortMode">Port taraması</label>
+            <select id="isPortMode" name="port_mode">
+              <option value="off" {{ 'selected' if port_form.mode == 'off' else '' }}>Kapalı (yalnızca ping)</option>
+              {% for k, label in port_presets.items() %}<option value="{{ k }}" data-count="{{ port_counts[k] }}"{{ 'selected' if port_form.mode == k else '' }}>{{ label }}</option>{% endfor %}
+              <option value="custom" {{ 'selected' if port_form.mode == 'custom' else '' }}>Özel port listesi</option>
+            </select>
+          </div>
+          <div class="form-group sf-custom" id="isCustomWrap" {{ '' if port_form.mode == 'custom' else 'hidden' }}>
+            <label for="isPorts">Portlar</label>
+            <input type="text" id="isPorts" name="ports" value="{{ port_form.ports }}" maxlength="512" placeholder="22,80,443,8000-8100">
+          </div>
+          <div class="form-group sf-timeout" id="isTimeoutWrap" {{ 'hidden' if port_form.mode == 'off' else '' }}>
+            <label for="isPortTimeout">Port zaman aşımı</label>
+            <select id="isPortTimeout" name="port_timeout">
+              {% for t in port_timeouts %}<option value="{{ t }}" {{ 'selected' if t == port_form.timeout else '' }}>{{ t }} sn</option>{% endfor %}
+            </select>
+          </div>
+          <div class="form-group sf-check">
+            <label class="check-line"><input type="checkbox" name="resolve_names" value="1" {{ 'checked' if resolve_names else '' }}> DNS adlarını çöz</label>
+          </div>
+          <div class="form-group sf-go">
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Taramayı Başlat</button>
+          </div>
+        </form>
+        <div id="isCalc" data-limit="{{ max_probes }}" data-super="{{ 1 if is_super else 0 }}" style="display:none; margin-top:0.75rem; font-size:0.85rem; color:#64748b;"></div>
+        <small style="color:#64748b; font-size:0.75rem; margin-top:0.75rem; display:block;">ICMP'yi engelleyen cihazlar yalnızca sunucuyla aynı alt ağdaysa (ARP/NDP) bulunur. Her tarama denetim kaydına yazılır.</small>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:1.5rem;">
+      <div class="card-header">
+        <h3><i class="fa-solid fa-sliders"></i> Eşzamanlı Tarama Sınırı (kullanıcı başına)</h3>
+        <span class="status-pill {{ 'online' if own_running < max_concurrent else 'offline' }}">Sizin taramalarınız: {{ own_running }} / {{ max_concurrent }}</span>
+      </div>
+      <div class="card-body">
+        {% if is_super %}
+        <form method="POST" action="/ip-scan/settings" class="scan-form">
+          {{ csrf_input() }}
+          <div class="form-group sf-num">
+            <label for="isMax">Her kullanıcı aynı anda en fazla kaç tarama başlatabilir</label>
+            <input type="number" id="isMax" name="max_concurrent" value="{{ max_concurrent }}" min="1" max="{{ max_limit }}" required>
+          </div>
+          <div class="form-group sf-go"><button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Kaydet</button></div>
+        </form>
+        {% else %}
+        <div class="form-group" style="margin-bottom:0;">
+          <label>Her kullanıcı aynı anda en fazla kaç tarama başlatabilir</label>
+          <input type="number" value="{{ max_concurrent }}" disabled>
+          <small style="color:#64748b; font-size:0.75rem; display:block; margin-top:0.25rem;">Bu değeri yalnızca Süper Yönetici değiştirebilir.</small>
+        </div>
+        {% endif %}
+        {% if running %}
+        <table style="margin-top:1rem;">
+          <thead><tr><th>{{ 'Tüm Aktif Taramalar' if is_super else 'Devam Eden Taramalarınız' }}</th>{% if is_super %}<th>Başlatan</th>{% endif %}<th>İlerleme</th><th></th></tr></thead>
+          <tbody>
+          {% for r in running %}
+            <tr><td>{{ r.network }}</td>{% if is_super %}<td>{{ r.user }}</td>{% endif %}<td>{{ r.done }} / {{ r.total }}</td>
+                <td style="text-align:right;"><a class="btn btn-sm js-view" href="/ip-scan?job={{ r.id }}"><i class="fa-solid fa-eye"></i> Görüntüle</a></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:1.5rem;">
+      <div class="card-header">
+        <h3><i class="fa-solid fa-clock-rotate-left"></i> Son Taramalarınız</h3>
+        <span class="status-pill">En fazla 20</span>
+      </div>
+      <div class="card-body" style="padding:0;">
+        {% if history %}
+        <table>
+          <thead><tr><th>Tarih</th><th>Ağ</th><th>Durum</th><th>Aktif Host</th><th>Süre</th><th></th></tr></thead>
+          <tbody>
+          {% for h in history %}
+            <tr data-scan-id="{{ h.id }}">
+              <td data-ts="{{ h.started_at|int }}" class="is-ts">{{ h.started_at|int }}</td>
+              <td>{{ h.network }}</td>
+              <td>{{ {'done': 'Tamamlandı', 'cancelled': 'Durduruldu', 'error': 'Hata'}.get(h.status, h.status) }}</td>
+              <td>{{ h.alive_count }} / {{ h.total }}</td>
+              <td>{{ h.elapsed }} sn</td>
+              <td style="text-align:right; white-space:nowrap;"><a class="btn btn-sm js-view" href="/ip-scan?job={{ h.id }}"><i class="fa-solid fa-eye"></i> Görüntüle</a>
+                {% if is_super %}<button type="button" class="btn btn-danger btn-sm js-del" data-url="/ip-scan/history/{{ h.id }}/delete" title="Sil"><i class="fa-solid fa-trash"></i></button>{% endif %}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div style="text-align:center; padding:1.5rem 1rem; color:#94a3b8;">Henüz tamamlanmış taramanız yok.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if job %}
+    <div class="card" id="ipscanResult" data-job-id="{{ job.id }}" data-ports="{{ 1 if job.ports_scanned else 0 }}">
+      <div class="card-header">
+        <h3><i class="fa-solid fa-list"></i> {{ job.network }} Sonuçları</h3>
+        <span id="isBadge" class="status-pill">Taranıyor</span>
+      </div>
+      <div class="card-body">
+        <div id="isSummary" style="color:#64748b; font-size:0.9rem; margin-bottom:0.5rem;"></div>
+        <div class="scan-bar"><div id="isBar"></div></div>
+        <button type="button" id="isCancel" class="btn btn-danger" style="display:none; margin-bottom:0.75rem;"><i class="fa-solid fa-stop"></i> Durdur</button>
+        <input type="search" id="isSearch" autocomplete="off" placeholder="Ara: IP, cihaz adı, MAC, üretici, port..." style="margin-bottom:0.75rem;">
+        <table>
+          <thead>
+            <tr><th>IP Adresi</th><th>Yanıt Süresi</th><th>MAC Adresi</th><th>Tahmini Üretici</th><th>Cihaz Adı</th><th>Açık Portlar</th></tr>
+          </thead>
+          <tbody id="isRows"></tbody>
+        </table>
+        <div id="isEmpty" style="display:none; text-align:center; padding:3rem 1rem; color:#94a3b8;">
+          <i class="fa-solid fa-circle-question" style="font-size:2.5rem; margin-bottom:1rem;"></i>
+          <p>Bu ağda yanıt veren host bulunamadı.</p>
+        </div>
+        <div id="isTruncated" style="display:none; color:#b45309; font-size:0.85rem; margin-top:0.75rem;">Kayıtlı listede en fazla 5000 host saklanır; fazlası gösterilmiyor.</div>
+      </div>
+    </div>
+    {% endif %}
+{% endblock %}
+{% block extra_js %}
+<script src="/static/js/ipscan.js?v={{ asset_version }}"></script>
+{% endblock %}

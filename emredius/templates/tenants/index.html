@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1rem;">
+  Her kiracının envanteri, topolojisi, alarmları, panoları, IPAM ve konfig verisi ayrıdır. Süper yönetici aşağıdan çalıştığı kiracıyı değiştirir; diğer yöneticiler atandıkları kiracıda çalışır
+  (atama yoksa Varsayılan). Verisi olan kiracı silinmez. API için ?tenant=&lt;id&gt; kullanılır.
+</p>
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-building"></i> Kiracılar</h3><span class="status-pill online">Çalışılan: {{ (tenants | selectattr('id', 'equalto', current) | list | first).name }}</span></div>
+  <div class="card-body">
+    <form method="POST" action="/tenants/add" style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:flex-end; margin-bottom:1rem;">{{ csrf_input() }}
+      <div class="form-group" style="flex:1 1 220px; margin-bottom:0;"><label>Yeni kiracı adı</label><input type="text" name="name" maxlength="64" required></div>
+      <button class="btn btn-primary"><i class="fa-solid fa-plus"></i> Ekle</button></form>
+    <div style="overflow-x:auto;"><table><thead><tr><th>ID</th><th>Ad</th><th>Yöneticiler</th><th>Oluşturma</th><th></th></tr></thead><tbody>
+      {% for t in tenants %}<tr><td>{{ t.id }}</td>
+        <td><form method="POST" action="/tenants/{{ t.id }}/rename" style="display:flex; gap:0.4rem;">{{ csrf_input() }}<input type="text" name="name" value="{{ t.name }}" maxlength="64" required><button class="btn">Adlandır</button></form></td>
+        <td>{% for a in t.admins %}<form method="POST" action="/tenants/unassign" style="display:inline;">{{ csrf_input() }}<input type="hidden" name="username" value="{{ a }}"><button class="btn" style="padding:0.2rem 0.6rem;">{{ a }} ✕</button></form> {% else %}-{% endfor %}</td>
+        <td>{{ t.created }}</td>
+        <td style="white-space:nowrap;">
+          <form method="POST" action="/tenants/switch" style="display:inline;">{{ csrf_input() }}<input type="hidden" name="tenant_id" value="{{ t.id }}"><button class="btn {{ 'btn-primary' if t.id == current }}">{{ 'Seçili' if t.id == current else 'Bu kiracıya geç' }}</button></form>
+          {% if t.id != 1 %}<form method="POST" action="/tenants/{{ t.id }}/delete" style="display:inline;" class="t-del">{{ csrf_input() }}<button class="btn btn-danger"><i class="fa-solid fa-trash"></i></button></form>{% endif %}</td></tr>
+      {% endfor %}
+    </tbody></table></div>
+  </div>
+</div>
+<div class="card">
+  <div class="card-header"><h3><i class="fa-solid fa-user-tag"></i> Yönetici ataması</h3></div>
+  <div class="card-body">
+    <form method="POST" action="/tenants/assign" style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:flex-end;">{{ csrf_input() }}
+      <div class="form-group" style="flex:1 1 200px; margin-bottom:0;"><label>Yönetici kullanıcı adı</label><input type="text" name="username" maxlength="64" required></div>
+      <div class="form-group" style="flex:1 1 200px; margin-bottom:0;"><label>Kiracı</label><select name="tenant_id">{% for t in tenants %}<option value="{{ t.id }}">{{ t.name }}</option>{% endfor %}</select></div>
+      <button class="btn btn-primary">Ata</button></form>
+    <p style="font-size:0.85rem; color:var(--text-muted);">Süper yönetici hesapları atamadan etkilenmez; kiracıyı yukarıdan değiştirir.</p>
+  </div>
+</div>
+<div class="card" style="margin-top:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-link"></i> RADIUS / TACACS+ kaydı kiracıya bağla</h3></div>
+  <div class="card-body">
+    <form method="POST" action="/tenants/own" style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:flex-end;">{{ csrf_input() }}
+      <div class="form-group" style="flex:1 1 180px; margin-bottom:0;"><label>Tür</label><select name="kind">
+        <option value="radius_user">RADIUS kullanıcısı</option><option value="nas">NAS (adres)</option>
+        <option value="tacacs_client">TACACS+ istemcisi (IP/CIDR)</option><option value="tacacs_user">TACACS+ kullanıcısı</option></select></div>
+      <div class="form-group" style="flex:1 1 200px; margin-bottom:0;"><label>Kullanıcı adı / adres</label><input type="text" name="key" maxlength="128" required></div>
+      <div class="form-group" style="flex:1 1 200px; margin-bottom:0;"><label>Kiracı</label><select name="tenant_id">{% for t in tenants %}<option value="{{ t.id }}">{{ t.name }}</option>{% endfor %}</select></div>
+      <button class="btn btn-primary">Bağla</button></form>
+    <p style="font-size:0.85rem; color:var(--text-muted);">Bağlanmayan kayıtlar Varsayılan kiracıdadır. Kimlik doğrulama davranışı değişmez; kiracı yalnızca panelde görünürlüğü ayırır. Yeni RADIUS kullanıcısı/NAS, oluşturan yöneticinin kiracısına bağlanır.</p>
+  </div>
+</div>
+<script src="/static/js/tenants.js?v={{ asset_version }}"></script>
+{% endblock %}

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head><meta charset="UTF-8"><title>EMredius - Giriş</title>
+<link href="/static/vendor/fontawesome/css/all.min.css" rel="stylesheet">
+<link href="/static/css/login.css?v={{ asset_version }}" rel="stylesheet">
+</head>
+<body>
+<div class="card">
+  <div class="logo"><i class="fa-solid fa-tower-broadcast"></i></div>
+  <h2>EMredius</h2>
+  <p>Güvenli Yönetim Paneli</p>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+  <div class="alert">{{ msg }}</div>
+  {% endfor %}
+  {% endwith %}
+  <form method="POST">
+    <div class="form-group">
+      <label>Kullanıcı Adı</label>
+      <input type="text" name="username" placeholder="Kullanıcı adınız (root veya web yöneticisi)" required autofocus>
+    </div>
+    <div class="form-group">
+      <label>Şifre</label>
+      <input type="password" name="password" placeholder="••••••••" required>
+    </div>
+    <button type="submit">Giriş Yap</button>
+  </form>
+  <p style="margin:1.25rem 0 0; text-align:center; font-size:.78rem; color:#94a3b8;">
+    Geliştirici: <a href="https://github.com/emreyigit-tasdelen" target="_blank" rel="noopener noreferrer" style="color:inherit;">Emre Yiğit Taşdelen</a> ·
+    <a href="https://github.com/sponsors/emreyigit-tasdelen" target="_blank" rel="noopener noreferrer" style="color:inherit;">Destekle</a>
+  </p>
+</div>
+</body></html>

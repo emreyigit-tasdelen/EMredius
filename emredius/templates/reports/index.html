@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1rem;">
+  NetFlow verisinden top-talker raporu (en çok trafik üreten/alan IP, konuşmalar, uygulamalar). Anında üretin veya günlük/haftalık zamanlayın.
+  E-posta gönderimi varsayılan KAPALI{{ ' (şu an kapalı)' if not mail_on else ' (açık)' }}: açmak için ayar <code>report_mail_enabled=1</code> ve Alarmlar'daki SMTP sunucusu gerekir.
+</p>
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-file-lines"></i> Rapor üret</h3></div>
+  <div class="card-body">
+    <form method="post" action="/reports/generate" style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:center;">
+      {{ csrf_input() }}
+      <select name="window" style="width:auto;">{% for w in windows %}<option value="{{ w }}" {{ 'selected' if w == '24h' else '' }}>Son {{ w }}</option>{% endfor %}</select>
+      <select name="fmt" style="width:auto;"><option value="csv">CSV</option><option value="pdf">PDF</option></select>
+      <button class="btn btn-primary" type="submit"><i class="fa-solid fa-play"></i> Üret</button>
+      <a class="btn" href="/flows">Akış Analizi</a>
+    </form>
+  </div>
+</div>
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3><i class="fa-solid fa-calendar-check"></i> Zamanlanmış raporlar</h3></div>
+  <div class="card-body" style="overflow-x:auto;">
+    <form method="post" action="/reports/schedule/add" style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:center; margin-bottom:1rem;">
+      {{ csrf_input() }}
+      <input type="text" name="name" placeholder="Ad" required maxlength="64" style="flex:1 1 160px;">
+      <select name="window" style="width:auto;">{% for w in windows %}<option value="{{ w }}" {{ 'selected' if w == '24h' else '' }}>Son {{ w }}</option>{% endfor %}</select>
+      <select name="fmt" style="width:auto;"><option value="csv">CSV</option><option value="pdf">PDF</option></select>
+      <select name="every" style="width:auto;"><option value="daily">Günlük</option><option value="weekly">Haftalık</option></select>
+      <input type="text" name="email_to" placeholder="E-posta (isteğe bağlı)" style="flex:1 1 180px;">
+      <button class="btn btn-primary" type="submit">Ekle</button>
+    </form>
+    <table>
+      <thead><tr><th>Ad</th><th>Pencere</th><th>Biçim</th><th>Sıklık</th><th>E-posta</th><th>Son çalışma</th><th>Durum</th><th></th></tr></thead>
+      <tbody>
+      {% for s in schedules %}
+        <tr><td>{{ s.name }}</td><td>{{ s.win }}</td><td>{{ s.fmt|upper }}</td><td>{{ 'Günlük' if s.every == 'daily' else 'Haftalık' }}</td>
+          <td>{{ s.email_to or '-' }}</td><td>{{ s.last }}</td><td>{{ 'Açık' if s.enabled else 'Kapalı' }}</td>
+          <td style="white-space:nowrap;">
+            {% for a, t in (('run', 'Şimdi çalıştır'), ('toggle', 'Aç/Kapa'), ('delete', 'Sil')) %}
+            <form method="post" action="/reports/schedule/{{ s.id }}/{{ a }}" style="display:inline;">
+              {{ csrf_input() }}<button class="btn" type="submit">{{ t }}</button></form>
+            {% endfor %}
+          </td></tr>
+      {% else %}
+        <tr><td colspan="8" style="color:var(--text-muted);">Zamanlama yok.</td></tr>
+      {% endfor %}
+      </tbody></table>
+  </div>
+</div>
+<div class="card">
+  <div class="card-header"><h3><i class="fa-solid fa-box-archive"></i> Üretilen raporlar (son 30)</h3></div>
+  <div class="card-body" style="overflow-x:auto;"><table>
+    <thead><tr><th>Rapor</th><th>Biçim</th><th>Tarih</th><th>Boyut</th><th>E-posta</th><th></th></tr></thead>
+    <tbody>
+    {% for r in runs %}
+      <tr><td>{{ r.name }}</td><td>{{ r.fmt|upper }}</td><td>{{ r.created_at }}</td><td>{{ human(r.size) }}</td><td>{{ 'gönderildi' if r.mailed else '-' }}</td>
+        <td><a class="btn" href="/reports/download/{{ r.id }}">İndir</a></td></tr>
+    {% else %}
+      <tr><td colspan="6" style="color:var(--text-muted);">Henüz rapor yok.</td></tr>
+    {% endfor %}
+    </tbody></table></div>
+</div>
+{% endblock %}

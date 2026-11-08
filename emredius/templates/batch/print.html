@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Misafir Wi-Fi Kuponları (QR Kodlu)</title>
+<script src="/static/js/csp-actions.js?v={{ asset_version }}"></script>
+<script src="/static/vendor/qrcode.min.js"></script>
+<link href="/static/css/voucher-print.css?v={{ asset_version }}" rel="stylesheet">
+</head>
+<body>
+<div class="no-print" style="text-align:center; margin-bottom:2rem;">
+  <button type="button" data-on-click="window.print()" style="padding:0.75rem 1.75rem; font-size:1rem; font-weight:700; background:#2563eb; color:white; border:none; border-radius:8px; cursor:pointer;">
+    🖨️ Sayfayı Yazdır (A4 Kart Çıktısı)
+  </button>
+  {% if truncated %}<div style="color:#b45309; font-size:0.85rem; margin-top:0.75rem;">Yalnızca en yeni {{ limit }} kupon listelendi.</div>{% endif %}
+</div>
+<div class="grid">
+{% for v in cards %}
+  <div class="voucher-box" style="border:2px dashed #0f172a; border-radius:14px; padding:1.5rem; background:white; width:340px; box-sizing:border-box; page-break-inside:avoid; display:flex; flex-direction:column; justify-content:space-between;">
+    <div>
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:0.6rem; margin-bottom:1rem;">
+        <div>
+          <strong style="font-size:1.1rem; color:#2563eb;">📶 {{ brand }}</strong>
+          <div style="font-size:0.78rem; color:#475569;">SSID: <strong>{{ ssid }}</strong></div>
+        </div>
+        <span style="font-size:0.78rem; background:#fef3c7; color:#b45309; padding:3px 7px; border-radius:5px; font-weight:700;">MİSAFİR</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+        <div>
+          <div style="font-size:0.8rem; color:#64748b;">Kullanıcı Adı:</div>
+          <div style="font-size:1.2rem; font-weight:800; font-family:monospace;">{{ v.code }}</div>
+          <div style="font-size:0.8rem; color:#64748b; margin-top:0.4rem;">Şifre:</div>
+          <div style="font-size:1.2rem; font-weight:800; font-family:monospace; color:#2563eb;">{{ v.password }}</div>
+        </div>
+        <div id="{{ v.qr_id }}" style="padding:4px; background:white; border:1px solid #e2e8f0; border-radius:8px;"></div>
+      </div>
+    </div>
+    <div style="font-size:0.75rem; color:#64748b; border-top:1px solid #f1f5f9; padding-top:0.6rem; display:flex; justify-content:space-between;">
+      <span>Süre: <strong>{{ v.timing }}</strong></span>
+      <span style="color:#94a3b8;">Kameranızla QR kodu taratın</span>
+    </div>
+  </div>
+{% else %}
+  <div style="color:#64748b; padding:3rem; text-align:center;">Yazdırılacak kupon bulunamadı.</div>
+{% endfor %}
+</div>
+<script type="application/json" id="voucherQrItems">{{ qr_items | tojson }}</script>
+<script src="/static/js/voucher-print.js?v={{ asset_version }}"></script>
+</body></html>

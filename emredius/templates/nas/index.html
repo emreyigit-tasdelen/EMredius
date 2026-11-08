@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block content %}
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+      <p style="color:#64748b; font-size:0.95rem;">RADIUS ile konuşan Access Point, Switch ve Güvenlik Duvarları (Canlı Heartbeat Denetimi). NAS ekleme/silme sonrası FreeRADIUS otomatik yeniden yüklenir.</p>
+      <button class="btn btn-primary" data-on-click="openModal('addNasModal');">
+        <i class="fa-solid fa-plus"></i> Yeni Ağ Cihazı Ekle
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3><i class="fa-solid fa-network-wired"></i> Tanımlı Ağ Donanımları (NAS)</h3>
+        <span class="badge" style="background:#e0e7ff; color:#3730a3;">{{ nas_list | length }} Cihaz</span>
+      </div>
+      <div class="card-body" style="padding:0; overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:50px;">#</th>
+              <th>Cihaz Adı</th>
+              <th>IP Adresi / CIDR</th>
+              <th>Canlı Durum</th>
+              <th>Shared Secret</th>
+              <th>Tip / CoA Port</th>
+              <th>Açıklama</th>
+              <th style="text-align:right;">İşlem</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for n in nas_list %}
+            <tr>
+              <td style="color:#94a3b8; font-weight:600;">{{ loop.index }}</td>
+              <td><strong>{{ n.shortname or '-' }}</strong></td>
+              <td><code>{{ n.nasname }}</code></td>
+              <td>{% if n.reach == 'block' %}<span class="badge" style="background:#f1f5f9; color:#64748b;" title="CIDR bloğu: tek bir cihaz olmadığı için ping atılmaz">Ağ Bloğu</span>{% elif n.reach == 'up' %}<span class="status-pill online" style="padding:2px 8px; font-size:0.75rem;"><span class="status-dot"></span> Erişilebilir</span>{% else %}<span class="status-pill offline" style="padding:2px 8px; font-size:0.75rem;"><span class="status-dot"></span> Yanıt Yok</span>{% endif %}</td>
+              <td>
+                <span id="mask-nas-{{ n.id }}" style="font-family:monospace;">••••••••</span>
+                <span id="raw-nas-{{ n.id }}" style="display:none; font-family:monospace; color:#0284c7;">{{ n.secret }}</span>
+                <button type="button" class="btn btn-secondary btn-sm" data-on-click="togglePw('nas-{{ n.id }}')" title="Göster / Gizle" style="padding:2px 6px; margin-left:0.5rem;"><i class="fa-regular fa-eye"></i></button>
+              </td>
+              <td><span class="badge" style="background:#f1f5f9; color:#475569;">{{ n.type or 'other' }} (CoA: {{ n.coa_port }})</span></td>
+              <td style="color:#64748b;">{{ n.description or '-' }}</td>
+              <td style="text-align:right;">
+                <a href="/nas/delete/{{ n.id }}" class="btn btn-danger btn-sm" data-on-click="return confirm('{{ (n.shortname or n.nasname or '') | js }} cihazını silmek istediğinize emin misiniz? (FreeRADIUS yeniden yüklenecek)');">
+                  <i class="fa-solid fa-trash"></i> Sil
+                </a>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" style="text-align:center; padding:3rem; color:#94a3b8;">Henüz kayıtlı NAS cihazı bulunmuyor.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Modal: Add NAS -->
+    <div class="modal-backdrop" id="addNasModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Yeni Ağ Cihazı (NAS) Tanımla</h3>
+          <button type="button" class="btn btn-secondary btn-sm" data-on-click="closeModal('addNasModal');">&times;</button>
+        </div>
+        <form method="POST" action="/nas/add" autocomplete="off">
+          {{ csrf_input() }}
+          <div class="modal-body">
+            <div class="form-group">
+              <label>Cihaz Kısa Adı</label>
+              <input type="text" name="shortname" placeholder="Örn: Kat1-Aruba-AP, Core-Switch" required maxlength="32" title="Harf, rakam, nokta, alt çizgi ve tire (en fazla 32 karakter)">
+            </div>
+            <div class="form-group">
+              <label>IP Adresi, CIDR Bloğu veya Host Adı</label>
+              <input type="text" name="nasname" placeholder="Örn: 192.168.1.50 veya 192.168.1.0/24" required maxlength="128">
+            </div>
+            <div class="form-group">
+              <label>Shared Secret (Ortak Gizli Anahtar)</label>
+              <input type="text" name="secret" placeholder="Cihaz ile RADIUS arasındaki ortak şifre (4-60 karakter, boşluksuz)" required minlength="4" maxlength="60" autocomplete="off">
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Cihaz Tipi</label>
+                <select name="type">
+                  {% for k, v in type_choices %}<option value="{{ k }}">{{ v }}</option>{% endfor %}
+                </select>
+              </div>
+              <div class="form-group">
+                <label>CoA Portu</label>
+                <input type="number" name="ports" value="3799" min="1" max="65535" placeholder="3799 veya 1700">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Açıklama</label>
+              <input type="text" name="description" maxlength="200" placeholder="Örn: Merkez bina 1. kat tavan AP">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-on-click="closeModal('addNasModal');">İptal</button>
+            <button type="submit" class="btn btn-primary">Kaydet</button>
+          </div>
+        </form>
+      </div>
+    </div>
+{% endblock %}

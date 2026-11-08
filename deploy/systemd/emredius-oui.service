@@ -1,0 +1,8 @@
+[Unit]
+Description=EMredius OUI (MAC vendor) table refresh from IEEE
+After=network-online.target
+
+[Service]
+Type=oneshot
+Environment=EMREDIUS_ENV_FILE=/etc/emredius/emredius.env
+ExecStart=/opt/emredius/.venv/bin/python /opt/emredius/scripts/update_oui.py

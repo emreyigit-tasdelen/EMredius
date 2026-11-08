@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block content %}
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+      <div>
+        <h2 style="font-size:1.35rem; font-weight:800; color:var(--text-primary); margin:0;" data-i18n="Toplu & Misafir Kullanıcılar">Toplu & Misafir Kullanıcılar</h2>
+        <p style="color:var(--text-muted); font-size:0.9rem; margin:0.25rem 0 0;" data-i18n="Otel, misafirhane, kafe, seminer ve etkinlikler için üretilmiş kuponlar ve wireless hesapları.">Otel, misafirhane, kafe, seminer ve etkinlikler için üretilmiş kuponlar ve wireless hesapları.</p>
+      </div>
+      <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+        <button type="button" class="btn btn-primary" data-on-click="openModal('generateBatchModal')">
+          <i class="fa-solid fa-ticket"></i> <span data-i18n="Toplu Kupon Üret">Toplu Kupon Üret</span>
+        </button>
+        <button type="button" class="btn btn-secondary" data-on-click="openModal('importCsvModal')">
+          <i class="fa-solid fa-file-import"></i> <span data-i18n="CSV İçe Aktar">CSV İçe Aktar</span>
+        </button>
+        <a href="/vouchers/print" target="_blank" class="btn btn-secondary">
+          <i class="fa-solid fa-print"></i> <span data-i18n="Kuponları Yazdır">Kuponları Yazdır</span>
+        </a>
+        <a href="/vouchers/purge-expired" class="btn btn-danger" data-on-click="return confirm('Süresi dolmuş ve kullanım kotası tükenmiş tüm kuponlar silinecek. Emin misiniz?');">
+          <i class="fa-solid fa-broom"></i> <span data-i18n="Süresi Dolanları Temizle">Süresi Dolanları Temizle</span>{% if expired_count %} ({{ expired_count }}){% endif %}
+        </a>
+      </div>
+    </div>
+
+    <!-- KPI Kartları -->
+    <div class="stats-grid">
+      <div class="stat-card amber">
+        <div class="info">
+          <div class="lbl" data-i18n="Toplam Toplu Hesap">Toplam Toplu Hesap</div>
+          <div class="val">{{ accounts | length }}</div>
+        </div>
+        <div class="icon-box"><i class="fa-solid fa-users-rectangle"></i></div>
+      </div>
+      <div class="stat-card green">
+        <div class="info">
+          <div class="lbl" data-i18n="Aktif Bağlı Misafir">Aktif Bağlı Misafir</div>
+          <div class="val">{{ online_count }}</div>
+        </div>
+        <div class="icon-box"><i class="fa-solid fa-signal"></i></div>
+      </div>
+      <div class="stat-card blue">
+        <div class="info">
+          <div class="lbl" data-i18n="Tanımlı Profiller">Tanımlı Profiller</div>
+          <div class="val">{{ group_count }}</div>
+        </div>
+        <div class="icon-box"><i class="fa-solid fa-layer-group"></i></div>
+      </div>
+    </div>
+
+    <!-- Kaynak Filtreleme Butonları -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.75rem;">
+      <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+        <button type="button" class="btn btn-primary btn-sm btn-filter" data-source="all"><span data-i18n="Tüm Kaynaklar">Tüm Kaynaklar</span> ({{ accounts | length }})</button>
+        <button type="button" class="btn btn-secondary btn-sm btn-filter" data-source="voucher"><i class="fa-solid fa-ticket"></i> <span data-i18n="Kupon / Voucher">Kupon / Voucher</span></button>
+        <button type="button" class="btn btn-secondary btn-sm btn-filter" data-source="wireless"><i class="fa-solid fa-wifi"></i> <span data-i18n="Wireless / Hotspot">Wireless / Hotspot</span></button>
+        <button type="button" class="btn btn-secondary btn-sm btn-filter" data-source="radius"><i class="fa-solid fa-database"></i> <span data-i18n="Radius DB">Radius DB</span></button>
+        <button type="button" class="btn btn-secondary btn-sm btn-filter" data-source="csv"><i class="fa-solid fa-file-csv"></i> <span data-i18n="Toplu CSV">Toplu CSV</span></button>
+      </div>
+      <div>
+        <input type="text" id="batchSearch" placeholder="Kullanıcı ara..." maxlength="100" autocomplete="off" class="form-control" style="width:220px; font-size:0.85rem; padding:0.4rem 0.8rem;">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body" style="padding:0;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px;">#</th>
+              <th data-i18n="Kullanıcı Adı / Kod">Kullanıcı Adı / Kod</th>
+              <th data-i18n="Şifre / PIN">Şifre / PIN</th>
+              <th data-i18n="Kaynak">Kaynak</th>
+              <th data-i18n="VLAN">VLAN</th>
+              <th data-i18n="Hız Limiti">Hız Limiti</th>
+              <th data-i18n="Süre Kotası">Süre Kotası</th>
+              <th data-i18n="Durum">Durum</th>
+              <th style="text-align:right;" data-i18n="İşlemler">İşlemler</th>
+            </tr>
+          </thead>
+          <tbody id="batchTableBody">
+            {% for v in accounts %}
+            <tr class="batch-row" data-source="{{ v.source_cat }}">
+              <td style="color:#94a3b8; font-weight:600;">{{ loop.index }}</td>
+              <td><strong style="font-family:monospace; font-size:1.05rem; color:#2563eb;">{{ v.code }}</strong>{% if v.description %}<div style="font-size:0.75rem; color:#64748b; margin-top:2px;">{{ v.description }}</div>{% endif %}</td>
+              <td>
+                <span style="font-family:monospace;" id="mask-batch-{{ loop.index }}">••••••••</span>
+                <span style="font-family:monospace; display:none; color:#0f172a; font-weight:700;" id="raw-batch-{{ loop.index }}">{{ v.password }}</span>
+                <button type="button" class="btn btn-secondary btn-sm" style="padding:2px 6px; margin-left:6px;" data-on-click="togglePw('batch-{{ loop.index }}')" title="Şifreyi Göster">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </td>
+              <td>{% if v.source_cat == 'wireless' %}<span class="badge" style="background:#ecfdf5; color:#047857; border:1px solid #a7f3d0;"><i class="fa-solid fa-wifi"></i> Wireless / Hotspot</span>{% elif v.source_cat == 'csv' %}<span class="badge" style="background:#f3e8ff; color:#7e22ce; border:1px solid #d8b4fe;"><i class="fa-solid fa-file-csv"></i> Toplu CSV</span>{% elif v.source_cat == 'voucher' %}<span class="badge" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a;"><i class="fa-solid fa-ticket"></i> Kupon / Voucher</span>{% else %}<span class="badge" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe;"><i class="fa-solid fa-database"></i> Radius DB</span>{% endif %}</td>
+              <td>{% if v.vlan_id %}<span class="badge badge-vlan">VLAN {{ v.vlan_id }}</span>{% else %}Varsayılan{% endif %}</td>
+              <td>{% if v.rate_limit %}<span class="badge badge-rate">{{ v.rate_limit }}</span>{% else %}Limitsiz{% endif %}</td>
+              <td><span class="badge badge-voucher"><i class="fa-solid fa-hourglass-half"></i> {{ v.quota }}</span></td>
+              <td>{% if v.status == 'online' %}<span class="badge badge-active"><i class="fa-solid fa-signal"></i> Bağlı</span>{% elif v.status == 'expired' %}<span class="badge badge-disabled"><i class="fa-solid fa-ban"></i> Süresi Doldu</span>{% else %}<span class="badge badge-rate"><i class="fa-solid fa-clock"></i> Aktif</span>{% endif %}</td>
+              <td style="text-align:right; white-space:nowrap;">
+                {% if v.printable %}<a href="/vouchers/print?code={{ v.code | url_seg }}" target="_blank" class="btn btn-secondary btn-sm" title="Kuponu Yazdır"><i class="fa-solid fa-print"></i></a>{% endif %}
+                <a href="/voucher/delete/{{ v.code | url_seg }}" class="btn btn-danger btn-sm" data-on-click="return confirm('{{ v.code | js }} kodunu silmek istediğinize emin misiniz?');">
+                  <i class="fa-solid fa-trash"></i>
+                </a>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="9" style="text-align:center; padding:3rem; color:#94a3b8;">Henüz toplu veya misafir hesabı oluşturulmadı.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Modal Generate Batch Vouchers -->
+    <div class="modal-backdrop" id="generateBatchModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:99999; align-items:center; justify-content:center; backdrop-filter:blur(4px); padding:1rem;" data-on-click="if(event.target===this) closeModal('generateBatchModal')">
+      <div class="modal-card" style="background:var(--card-bg, #ffffff); border-radius:16px; width:100%; max-width:580px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); border:1px solid var(--border, #e2e8f0); display:flex; flex-direction:column; overflow:hidden;">
+        <div class="modal-header">
+          <h3 data-i18n="Toplu Wi-Fi Kuponu Üret">Toplu Wi-Fi Kuponu Üret</h3>
+          <button type="button" class="btn btn-secondary btn-sm" data-on-click="closeModal('generateBatchModal')">&times;</button>
+        </div>
+        <form method="POST" action="/voucher/generate">
+          {{ csrf_input() }}
+          <div class="modal-body">
+            <div class="form-grid">
+              <div class="form-group">
+                <label data-i18n="Üretilecek Kupon Sayısı">Üretilecek Kupon Sayısı</label>
+                <input type="number" name="count" value="10" min="1" max="500" step="1" required>
+              </div>
+              <div class="form-group">
+                <label data-i18n="Kullanım Süresi">Kullanım Süresi</label>
+                <select name="duration">{% for k, label in duration_options %}<option value="{{ k }}"{% if k == "1d" %} selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label data-i18n="Süre Başlangıcı">Süre Başlangıcı</label>
+              <select name="timing_mode">
+                <option value="first_login" selected>İlk girişte başlar (toplam kullanım süresi)</option>
+                <option value="fixed">Sabit bitiş (üretim anından itibaren)</option>
+              </select>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label data-i18n="İndirme / Yükleme Hızı">İndirme / Yükleme Hızı</label>
+                <select name="rate_limit">{% for k, label in rate_options %}<option value="{{ k }}"{% if k == "10M/5M" %} selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+              </div>
+              <div class="form-group">
+                <label data-i18n="VLAN (Opsiyonel)">VLAN (Opsiyonel)</label>
+                <input type="number" name="vlan_id" min="1" max="4094" step="1" placeholder="Örn: 30 (Misafir VLAN)">
+              </div>
+            </div>
+            <div class="form-group">
+              <label data-i18n="Açıklama / Etiket">Açıklama / Etiket</label>
+              <input type="text" name="description" maxlength="255" placeholder="Örn: Otel Misafirleri, Kafe Ziyaretçileri">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-on-click="closeModal('generateBatchModal')" data-i18n="İptal">İptal</button>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="Hemen Üret">Hemen Üret</span></button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Import CSV -->
+    <div class="modal-backdrop" id="importCsvModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:99999; align-items:center; justify-content:center; backdrop-filter:blur(4px); padding:1rem;" data-on-click="if(event.target===this) closeModal('importCsvModal')">
+      <div class="modal-card" style="background:var(--card-bg, #ffffff); border-radius:16px; width:100%; max-width:580px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); border:1px solid var(--border, #e2e8f0); display:flex; flex-direction:column; overflow:hidden;">
+        <div class="modal-header">
+          <h3 data-i18n="CSV İle Toplu Kullanıcı Aktarımı">CSV İle Toplu Kullanıcı Aktarımı</h3>
+          <button type="button" class="btn btn-secondary btn-sm" data-on-click="closeModal('importCsvModal')">&times;</button>
+        </div>
+        <form method="POST" action="/users/import-csv" enctype="multipart/form-data">
+          {{ csrf_input() }}
+          <div class="modal-body">
+            <p style="color:#64748b; font-size:0.88rem; margin-bottom:1rem;">CSV dosyanız <code>username,password,vlan_id,rate_limit,description</code> sütunlarını içermelidir.</p>
+            <div class="form-group">
+              <label data-i18n="CSV Dosyası Seç">CSV Dosyası Seç</label>
+              <input type="file" name="csv_file" accept=".csv,.txt" required class="form-control">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-on-click="closeModal('importCsvModal')" data-i18n="İptal">İptal</button>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-file-import"></i> <span data-i18n="İçe Aktar">İçe Aktar</span></button>
+          </div>
+        </form>
+      </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/batch.js?v={{ asset_version }}"></script>
+{% endblock %}

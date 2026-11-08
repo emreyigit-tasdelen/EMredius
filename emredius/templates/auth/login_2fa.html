@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>İki Adımlı Doğrulama (2FA) - EMredius</title>
+<link href="/static/vendor/fontawesome/css/all.min.css" rel="stylesheet">
+<link href="/static/css/login-2fa.css?v={{ asset_version }}" rel="stylesheet">
+</head>
+<body>
+<div class="card">
+  <div class="icon"><i class="fa-solid fa-shield-halved"></i></div>
+  <h2>İki Adımlı Doğrulama (2FA)</h2>
+  <p><strong>{{ pending_user }}</strong> hesabı için mobil Authenticator uygulamanızdaki (Google / Microsoft / FreeOTP) 6 haneli kodu girin.</p>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for cat, msg in messages %}
+        <div class="alert"><i class="fa-solid fa-triangle-exclamation"></i> {{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  <form method="POST">
+    <input type="text" name="token" maxlength="6" pattern="[0-9]{6}" placeholder="000000" autofocus required autocomplete="off" inputmode="numeric">
+    <button type="submit"><i class="fa-solid fa-check"></i> Doğrula ve Giriş Yap</button>
+  </form>
+  <a href="/login" class="back-link"><i class="fa-solid fa-arrow-left"></i> Giriş ekranına geri dön</a>
+</div>
+</body>
+</html>

@@ -1,0 +1,544 @@
+{% extends "base.html" %}
+{% block extra_head %}
+<style>
+    .modal-backdrop.show {
+      display: flex !important;
+    }
+    .tab-btn {
+      padding: 0.75rem 1.25rem;
+      border: none;
+      background: transparent;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.92rem;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover {
+      color: var(--primary);
+      background: rgba(59, 130, 246, 0.05);
+    }
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      background: rgba(59, 130, 246, 0.08);
+    }
+    [data-theme="dark"] .tab-btn:hover {
+      color: #60a5fa !important;
+      background: rgba(255, 255, 255, 0.04) !important;
+    }
+    [data-theme="dark"] .tab-btn.active {
+      color: #60a5fa !important;
+      border-bottom-color: #60a5fa !important;
+    }
+    .data-table code {
+      background: rgba(0,0,0,0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-family: monospace;
+    }
+    [data-theme="dark"] .data-table code {
+      background: rgba(255,255,255,0.08);
+      color: #38bdf8;
+    }
+    </style>
+{% endblock %}
+{% block content %}
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+      <div>
+        <h2 style="font-size:1.35rem; font-weight:800; color:var(--text-primary); margin:0;">TACACS+ AAA & Komut Yetkilendirme Motoru</h2>
+        <p style="color:var(--text-secondary); margin:0.25rem 0 0; font-size:0.9rem;">RFC 8907 Kurumsal Ağ Cihazı Yönetim Güvenliği, Privilege (0-15) ve Komut Denetim İzi</p>
+      </div>
+      <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+        <button type="button" class="btn btn-primary" data-on-click="openModal('modalAddClient')"><i class="fa-solid fa-plus"></i> <span data-i18n="Yeni Cihaz Ekle">Yeni Cihaz Ekle</span></button>
+        <button type="button" class="btn btn-secondary" data-on-click="openModal('modalAddUser')"><i class="fa-solid fa-user-plus"></i> <span data-i18n="Yeni Kullanıcı Ekle">Yeni Kullanıcı Ekle</span></button>
+        <button type="button" class="btn btn-secondary" data-on-click="openModal('modalAddRule')"><i class="fa-solid fa-shield"></i> <span data-i18n="Yeni Kural Ekle">Yeni Kural Ekle</span></button>
+        <a href="/api/tacacs/accounting/export" download="tacacs_accounting_logs.csv" class="btn btn-secondary"><i class="fa-solid fa-download"></i> <span data-i18n="CSV İndir">CSV İndir</span></a>
+      </div>
+    </div>
+
+    <!-- Top KPI Cards -->
+    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
+      <div class="stat-card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div class="label" data-i18n="Servis Durumu">Servis Durumu</div>
+            <div class="val" style="font-size:1.2rem; display:flex; align-items:center; gap:0.5rem; margin-top:0.25rem;">
+              <span class="status-dot" style="background:{{ daemon.color }};"></span>
+              <span>{{ daemon.text }}</span>
+            </div>
+          </div>
+          <i class="fa-solid fa-server" style="font-size:1.8rem; color:#3b82f6; opacity:0.7;"></i>
+        </div>
+        <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:0.5rem;">Uptime: {{ daemon.uptime }} | Aktif Oturum: {{ daemon.active_sessions }}</div>
+        <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.2rem;">Son sinyal: {{ daemon.last_heartbeat }}</div>
+      </div>
+      <div class="stat-card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div class="label" data-i18n="Yetkili Cihazlar">Yetkili Cihazlar</div>
+            <div class="val">{{ clients | length }}</div>
+          </div>
+          <i class="fa-solid fa-network-wired" style="font-size:1.8rem; color:#8b5cf6; opacity:0.7;"></i>
+        </div>
+        <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:0.5rem;">Cisco, Huawei, Juniper, MikroTik vb.</div>
+      </div>
+      <div class="stat-card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div class="label" data-i18n="Aktif Kullanıcılar">Aktif Kullanıcılar</div>
+            <div class="val">{{ enabled_user_count }}</div>
+          </div>
+          <i class="fa-solid fa-user-shield" style="font-size:1.8rem; color:#10b981; opacity:0.7;"></i>
+        </div>
+        <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:0.5rem;">Privilege Level 0-15 Profilleri</div>
+      </div>
+      <div class="stat-card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div class="label" data-i18n="Komut Yetki Kuralları">Komut Yetki Kuralları</div>
+            <div class="val">{{ rules | length }}</div>
+          </div>
+          <i class="fa-solid fa-filter" style="font-size:1.8rem; color:#f59e0b; opacity:0.7;"></i>
+        </div>
+        <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:0.5rem;">Regex İzin/Engelleme Matrisi</div>
+      </div>
+      <div class="stat-card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div class="label" data-i18n="Denetim Kayıtları">Denetim Kayıtları</div>
+            <div class="val" id="kpiAcctCount">{{ acct_total }}</div>
+          </div>
+          <i class="fa-solid fa-file-shield" style="font-size:1.8rem; color:#ec4899; opacity:0.7;"></i>
+        </div>
+        <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:0.5rem;">Gerçek Zamanlı Komut Audit Log</div>
+      </div>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="tab-nav-container">
+      <button type="button" class="tab-btn active" data-tab="tab-clients" data-on-click="switchTab('tab-clients', this)">
+        <i class="fa-solid fa-network-wired" style="color:#2563eb;"></i>
+        <span data-i18n="TACACS+ Cihazları (NAS)">TACACS+ Cihazları (NAS)</span>
+        <span class="tab-count">{{ clients | length }}</span>
+      </button>
+      <button type="button" class="tab-btn" data-tab="tab-users" data-on-click="switchTab('tab-users', this)">
+        <i class="fa-solid fa-user-shield" style="color:#7c3aed;"></i>
+        <span data-i18n="Kullanıcılar & Privilege (0-15)">Kullanıcılar & Privilege (0-15)</span>
+        <span class="tab-count">{{ users | length }}</span>
+      </button>
+      <button type="button" class="tab-btn" data-tab="tab-rules" data-on-click="switchTab('tab-rules', this)">
+        <i class="fa-solid fa-shield-halved" style="color:#059669;"></i>
+        <span data-i18n="Komut Yetki Kuralları">Komut Yetki Kuralları</span>
+        <span class="tab-count">{{ rules | length }}</span>
+      </button>
+      <button type="button" class="tab-btn" data-tab="tab-acct" data-on-click="switchTab('tab-acct', this)">
+        <i class="fa-solid fa-terminal" style="color:#d97706;"></i>
+        <span data-i18n="Canlı Komut Denetim Kayıtları">Canlı Komut Denetim Kayıtları</span>
+        <span class="tab-count" id="tabAcctCount">{{ acct_total }}</span>
+      </button>
+      <button type="button" class="tab-btn" data-tab="tab-tester" data-on-click="switchTab('tab-tester', this)">
+        <i class="fa-solid fa-vial-circle-check" style="color:#ec4899;"></i>
+        <span data-i18n="Canlı Kural Testi">Canlı Kural Testi</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: Clients -->
+    <div id="tab-clients" class="tab-content" style="display:block;">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+          <div style="font-weight:600; font-size:1.05rem; display:flex; align-items:center; gap:0.5rem;">
+            <i class="fa-solid fa-network-wired" style="color:#2563eb;"></i>
+            <span>Yetkili TACACS+ İstemcileri (NAS)</span>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" data-on-click="openModal('modalAddClient')">
+            <i class="fa-solid fa-plus"></i> <span data-i18n="Yeni Cihaz Ekle">Yeni Cihaz Ekle</span>
+          </button>
+        </div>
+        <table class="data-table" id="clientsTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th data-i18n="Cihaz Adı">Cihaz Adı</th>
+              <th data-i18n="IP / CIDR">IP / CIDR</th>
+              <th data-i18n="Üretici / Marka">Üretici / Marka</th>
+              <th data-i18n="Ortak Parola (Secret)">Ortak Parola (Secret)</th>
+              <th data-i18n="Durum">Durum</th>
+              <th data-i18n="İşlemler">İşlemler</th>
+            </tr>
+          </thead>
+          <tbody>
+{% for c in clients %}
+            <tr id="row_client_{{ c.id }}">
+              <td>{{ c.id }}</td>
+              <td style="font-weight:600;">{{ c.name }}</td>
+              <td><code>{{ c.ip }}</code></td>
+              <td><span class="badge" style="background:{{ c.color }}22; color:{{ c.color }}; border:1px solid {{ c.color }}44;">{{ c.vendor }}</span></td>
+              <td>
+                <span id="sec_{{ c.id }}" data-secret="{{ c.secret }}">••••••••</span>
+                <button type="button" class="btn btn-sm btn-secondary" data-on-click="toggleSecret('sec_{{ c.id }}')" title="Göster/Gizle" style="margin-left:0.35rem;"><i class="fa-solid fa-eye"></i></button>
+              </td>
+              <td>{% if c.active %}<span class="badge" style="background:#dcfce7; color:#166534;">Aktif</span>{% else %}<span class="badge" style="background:#f1f5f9; color:#64748b;">Pasif</span>{% endif %}</td>
+              <td>
+                <button type="button" class="btn btn-sm btn-danger" data-on-click="deleteClient({{ c.id }}, '{{ c.name | js }}')" title="Sil"><i class="fa-solid fa-trash"></i></button>
+              </td>
+            </tr>
+{% else %}<tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--text-secondary);" data-i18n="Henüz kayıtlı TACACS+ cihazı bulunamadı.">Henüz kayıtlı TACACS+ cihazı bulunamadı.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 2: Users -->
+    <div id="tab-users" class="tab-content" style="display:none;">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+          <div style="font-weight:600; font-size:1.05rem; display:flex; align-items:center; gap:0.5rem;">
+            <i class="fa-solid fa-user-shield" style="color:#7c3aed;"></i>
+            <span>Yetkili TACACS+ Kullanıcıları</span>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" data-on-click="openModal('modalAddUser')">
+            <i class="fa-solid fa-user-plus"></i> <span data-i18n="Yeni Kullanıcı Ekle">Yeni Kullanıcı Ekle</span>
+          </button>
+        </div>
+        <table class="data-table" id="usersTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th data-i18n="Kullanıcı Adı">Kullanıcı Adı</th>
+              <th data-i18n="Yetki Seviyesi (Privilege 0-15)">Yetki Seviyesi (Privilege 0-15)</th>
+              <th data-i18n="Grup">Grup</th>
+              <th data-i18n="Enable Şifresi">Enable Şifresi</th>
+              <th data-i18n="CHAP Secret">CHAP Secret</th>
+              <th data-i18n="Durum">Durum</th>
+              <th data-i18n="İşlemler">İşlemler</th>
+            </tr>
+          </thead>
+          <tbody>
+{% for u in users %}
+            <tr id="row_user_{{ u.id }}">
+              <td>{{ u.id }}</td>
+              <td style="font-weight:600;"><i class="fa-solid fa-user"></i> {{ u.name }}</td>
+              <td><span class="badge" style="background:{{ u.priv_color }}22; color:{{ u.priv_color }}; border:1px solid {{ u.priv_color }}44; font-weight:700;">Priv {{ u.priv }}</span></td>
+              <td>{{ u.group }}</td>
+              <td><span class="badge" style="background:{{ '#dcfce7' if u.has_enable else '#f1f5f9' }}; color:{{ '#166534' if u.has_enable else '#64748b' }};">{{ 'Tanımlı' if u.has_enable else 'Yok' }}</span></td>
+              <td><span class="badge" style="background:{{ '#dcfce7' if u.has_chap else '#f1f5f9' }}; color:{{ '#166534' if u.has_chap else '#64748b' }};">{{ 'Tanımlı' if u.has_chap else 'Yok' }}</span></td>
+              <td>{% if u.enabled %}<span class="badge" style="background:#dcfce7; color:#166534;">Aktif</span>{% else %}<span class="badge" style="background:#f1f5f9; color:#64748b;">Pasif</span>{% endif %}</td>
+              <td>
+                {% if u.protected %}<span style="font-size:0.75rem; color:var(--text-muted);">Sistem</span>{% else %}<button type="button" class="btn btn-sm btn-danger" data-on-click="deleteUser({{ u.id }}, '{{ u.name | js }}')" title="Sil"><i class="fa-solid fa-trash"></i></button>{% endif %}
+              </td>
+            </tr>
+{% else %}<tr><td colspan="8" style="text-align:center; padding:2rem; color:var(--text-secondary);" data-i18n="Henüz kayıtlı TACACS+ kullanıcısı bulunamadı.">Henüz kayıtlı TACACS+ kullanıcısı bulunamadı.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 3: Rules -->
+    <div id="tab-rules" class="tab-content" style="display:none;">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+          <div style="font-weight:600; font-size:1.05rem; display:flex; align-items:center; gap:0.5rem;">
+            <i class="fa-solid fa-shield-halved" style="color:#059669;"></i>
+            <span>Komut Yetki Kuralları (ACL / Regex)</span>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" data-on-click="openModal('modalAddRule')">
+            <i class="fa-solid fa-plus"></i> <span data-i18n="Yeni Kural Ekle">Yeni Kural Ekle</span>
+          </button>
+        </div>
+        <table class="data-table" id="rulesTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th data-i18n="Grup">Grup</th>
+              <th data-i18n="Öncelik">Öncelik</th>
+              <th data-i18n="Komut Deseni (Regex)">Komut Deseni (Regex)</th>
+              <th data-i18n="Eylem">Eylem</th>
+              <th data-i18n="Açıklama">Açıklama</th>
+              <th data-i18n="İşlemler">İşlemler</th>
+            </tr>
+          </thead>
+          <tbody>
+{% for r in rules %}
+            <tr id="row_rule_{{ r.id }}">
+              <td>{{ r.id }}</td>
+              <td style="font-weight:600;">{{ r.group }}</td>
+              <td><code>{{ r.priority }}</code></td>
+              <td><code>{{ r.pattern }}</code></td>
+              <td>{% if r.permit %}<span class="badge" style="background:#dcfce7; color:#166534; font-weight:700;">PERMIT</span>{% else %}<span class="badge" style="background:#fee2e2; color:#991b1b; font-weight:700;">DENY</span>{% endif %}</td>
+              <td style="color:var(--text-secondary);">{{ r.description }}</td>
+              <td>
+                <button type="button" class="btn btn-sm btn-danger" data-on-click="deleteRule({{ r.id }})" title="Sil"><i class="fa-solid fa-trash"></i></button>
+              </td>
+            </tr>
+{% else %}<tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--text-secondary);" data-i18n="Henüz tanımlı komut kuralı bulunamadı.">Henüz tanımlı komut kuralı bulunamadı.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 4: Accounting Logs -->
+    <div id="tab-acct" class="tab-content" style="display:none;">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+          <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+            <input type="text" id="acctSearch" class="form-control" placeholder="Komut veya kullanıcı ara..." style="width:260px;" data-on-keyup="filterAcctTable()">
+            <button type="button" id="btnRefreshAcct" class="btn btn-secondary btn-sm" data-on-click="refreshAcctLogs()">
+              <i class="fa-solid fa-rotate"></i> <span data-i18n="Yenile">Yenile</span>
+            </button>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <span style="color:var(--text-secondary); font-size:0.85rem;"><span data-i18n="Son 50 komut denetim kaydı">Son 50 komut denetim kaydı</span> (Toplam: <b id="acctTotalLabel">{{ acct_total }}</b>)</span>
+            <a href="/api/tacacs/accounting/export" download="tacacs_accounting_logs.csv" class="btn btn-secondary btn-sm">
+              <i class="fa-solid fa-download"></i> <span data-i18n="CSV İndir">CSV İndir</span>
+            </a>
+          </div>
+        </div>
+        <table class="data-table" id="acctTable">
+          <thead>
+            <tr>
+              <th data-i18n="Zaman">Zaman</th>
+              <th data-i18n="Cihaz IP">Cihaz IP</th>
+              <th data-i18n="İstemci IP">İstemci IP</th>
+              <th data-i18n="Kullanıcı">Kullanıcı</th>
+              <th data-i18n="Priv">Priv</th>
+              <th data-i18n="Komut">Komut</th>
+              <th data-i18n="Durum">Durum</th>
+            </tr>
+          </thead>
+          <tbody>
+{% for a in acct_logs %}
+            <tr>
+              <td style="font-size:0.85rem; color:var(--text-secondary);">{{ a.ts }}</td>
+              <td><code>{{ a.device_ip }}</code></td>
+              <td><code>{{ a.client_ip }}</code></td>
+              <td style="font-weight:600;">{{ a.username }}</td>
+              <td><span class="badge" style="background:#f1f5f9; color:#475569;">Priv {{ a.priv }}</span></td>
+              <td><code>{{ a.cmd }}</code></td>
+              <td>{% if a.permitted %}<span class="badge" style="background:#dcfce7; color:#166534;">PERMITTED</span>{% else %}<span class="badge" style="background:#fee2e2; color:#991b1b;">DENIED</span>{% endif %}</td>
+            </tr>
+{% else %}<tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--text-secondary);" data-i18n="Henüz komut denetim kaydı oluşmadı.">Henüz komut denetim kaydı oluşmadı.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 5: Live Rule Tester -->
+    <div id="tab-tester" class="tab-content" style="display:none;">
+      <div class="card" style="max-width:720px; margin:0 auto;">
+        <h3 style="font-size:1.15rem; font-weight:700; margin-bottom:0.5rem;" data-i18n="Canlı Regex Komut Yetki Doğrulayıcı">
+          <i class="fa-solid fa-vial-circle-check" style="color:#ec4899;"></i> Canlı Regex Komut Yetki Doğrulayıcı
+        </h3>
+        <p style="color:var(--text-secondary); font-size:0.88rem; margin-bottom:1.5rem;" data-i18n="Belirli bir kullanıcı ve komut için TACACS+ kural motorunun vereceği izin/ret cevabını anında simüle edin.">
+          Belirli bir kullanıcı ve komut için TACACS+ kural motorunun vereceği izin/ret cevabını anında simüle edin.
+        </p>
+        
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label style="display:block; font-weight:600; margin-bottom:0.25rem;" data-i18n="Kullanıcı Adı">Kullanıcı Adı</label>
+          <input type="text" id="testUser" class="form-control" value="operator" style="width:100%;">
+        </div>
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label style="display:block; font-weight:600; margin-bottom:0.25rem;" data-i18n="Yetki Seviyesi (Privilege 0-15)">Yetki Seviyesi (Privilege 0-15)</label>
+          <input type="number" id="testPriv" class="form-control" value="7" min="0" max="15" style="width:100%;">
+        </div>
+        <div class="form-group" style="margin-bottom:0.75rem;">
+          <label style="display:block; font-weight:600; margin-bottom:0.25rem;" data-i18n="Test Edilecek Komut (CLI)">Test Edilecek Komut (CLI)</label>
+          <input type="text" id="testCmd" class="form-control" value="show running-config" placeholder="Örn: show ip int brief veya reload" style="width:100%; font-family:monospace;" data-on-keydown="if(event.key==='Enter') runRuleTest();">
+        </div>
+
+        <!-- Quick examples -->
+        <div style="margin-bottom:1.5rem; display:flex; gap:0.4rem; flex-wrap:wrap; font-size:0.82rem;">
+          <span style="color:var(--text-muted); align-self:center; margin-right:0.25rem;">Hızlı Örnekler:</span>
+          <button type="button" class="btn btn-sm btn-secondary" data-on-click="setQuickTest('show running-config', 'operator', 7)">show running-config</button>
+          <button type="button" class="btn btn-sm btn-secondary" data-on-click="setQuickTest('show ip int brief', 'helpdesk', 1)">show ip int brief</button>
+          <button type="button" class="btn btn-sm btn-secondary" data-on-click="setQuickTest('reload', 'operator', 7)">reload</button>
+          <button type="button" class="btn btn-sm btn-secondary" data-on-click="setQuickTest('configure terminal', 'operator', 7)">configure terminal</button>
+          <button type="button" class="btn btn-sm btn-secondary" data-on-click="setQuickTest('write memory', 'admin', 15)">write memory</button>
+        </div>
+        
+        <div style="display:flex; gap:0.75rem;">
+          <button type="button" id="btnRunTest" class="btn btn-primary" data-on-click="runRuleTest()" style="flex:1;">
+            <i class="fa-solid fa-play"></i> <span data-i18n="Yetkiyi Test Et">Yetkiyi Test Et</span>
+          </button>
+          <button type="button" class="btn btn-secondary" data-on-click="hideTestResultBox()" title="Temizle">
+            <i class="fa-solid fa-eraser"></i>
+          </button>
+        </div>
+
+        <div id="testResultBox" style="margin-top:1.5rem; display:none; padding:1.25rem; border-radius:10px;"></div>
+      </div>
+    </div>
+
+    <!-- Modals for TACACS+ -->
+    <!-- Modal 1: Add Client -->
+    <div id="modalAddClient" class="modal-backdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:99999; align-items:center; justify-content:center; backdrop-filter:blur(4px); padding:1rem;" data-on-click="if(event.target===this) closeModal('modalAddClient')">
+      <div class="modal-card" style="background:var(--card-bg, #1e293b); border-radius:16px; padding:1.5rem; width:100%; max-width:540px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); border:1px solid var(--border, #334155); display:flex; flex-direction:column;">
+        <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border, #334155); padding-bottom:1rem; margin-bottom:1.25rem;">
+          <h3 style="margin:0; font-size:1.15rem; display:flex; align-items:center; gap:0.5rem;"><i class="fa-solid fa-server" style="color:#2563eb;"></i> <span data-i18n="Yeni TACACS+ Cihazı Ekle">Yeni TACACS+ Cihazı Ekle</span></h3>
+          <button type="button" class="btn btn-secondary btn-sm" data-on-click="closeModal('modalAddClient')">&times;</button>
+        </div>
+        <div class="modal-body" style="overflow-y:auto; max-height:calc(85vh - 130px);">
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label style="display:flex; align-items:center; gap:0.4rem; font-weight:600; margin-bottom:0.35rem;">
+              <i class="fa-solid fa-tag" style="color:#2563eb; font-size:0.85rem;"></i>
+              <span data-i18n="Cihaz Adı">Cihaz Adı</span>
+            </label>
+            <input type="text" id="mCliName" class="form-control" placeholder="Örn: Core-Switch-01" style="width:100%;">
+          </div>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label style="display:flex; align-items:center; gap:0.4rem; font-weight:600; margin-bottom:0.35rem;">
+              <i class="fa-solid fa-network-wired" style="color:#10b981; font-size:0.85rem;"></i>
+              <span data-i18n="IP / CIDR">IP / CIDR</span>
+            </label>
+            <input type="text" id="mCliIp" class="form-control" placeholder="Örn: 192.168.1.1/32" style="width:100%;">
+          </div>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label style="display:flex; align-items:center; gap:0.4rem; font-weight:600; margin-bottom:0.35rem;">
+              <i class="fa-solid fa-key" style="color:#f59e0b; font-size:0.85rem;"></i>
+              <span data-i18n="Ortak Parola (Shared Secret)">Ortak Parola (Shared Secret)</span>
+            </label>
+            <input type="password" id="mCliSec" class="form-control" placeholder="Güçlü paylaşımlı anahtar (Secret Key)" style="width:100%;">
+          </div>
+          <div class="form-group" style="margin-bottom:0.5rem;">
+            <label style="display:flex; align-items:center; gap:0.4rem; font-weight:600; margin-bottom:0.35rem;">
+              <i class="fa-solid fa-microchip" style="color:#8b5cf6; font-size:0.85rem;"></i>
+              <span data-i18n="Üretici / Marka">Üretici / Marka</span>
+            </label>
+            <select id="mCliVendor" class="form-control" style="width:100%;">
+              <option value="cisco">Cisco Systems (IOS / IOS-XE / NX-OS)</option>
+              <option value="mikrotik">MikroTik RouterOS (v6 / v7)</option>
+              <option value="huawei">Huawei Enterprise (VRP)</option>
+              <option value="juniper">Juniper Networks (JunOS)</option>
+              <option value="fortinet">Fortinet FortiGate (FortiOS)</option>
+              <option value="hp_aruba">HP / Aruba Enterprise</option>
+              <option value="generic">Generic Standard</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:0.75rem; border-top:1px solid var(--border, #334155); padding-top:1rem; margin-top:1.25rem;">
+          <button type="button" class="btn btn-secondary" data-on-click="closeModal('modalAddClient')" data-i18n="İptal">İptal</button>
+          <button type="button" class="btn btn-primary" data-on-click="submitAddClient()"><i class="fa-solid fa-check"></i> <span data-i18n="Kaydet">Kaydet</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 2: Add User -->
+    <div id="modalAddUser" class="modal-backdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:99999; align-items:center; justify-content:center; backdrop-filter:blur(4px); padding:1rem;" data-on-click="if(event.target===this) closeModal('modalAddUser')">
+      <div class="modal-card" style="background:var(--card-bg, #1e293b); border-radius:16px; padding:1.5rem; width:100%; max-width:540px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); border:1px solid var(--border, #334155); display:flex; flex-direction:column;">
+        <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border, #334155); padding-bottom:1rem; margin-bottom:1.25rem;">
+          <h3 style="margin:0; font-size:1.15rem; display:flex; align-items:center; gap:0.5rem;"><i class="fa-solid fa-user-plus" style="color:#10b981;"></i> <span data-i18n="Yeni TACACS+ Kullanıcısı Ekle">Yeni TACACS+ Kullanıcısı Ekle</span></h3>
+          <button type="button" class="btn btn-secondary btn-sm" data-on-click="closeModal('modalAddUser')">&times;</button>
+        </div>
+        <div class="modal-body" style="overflow-y:auto; max-height:calc(85vh - 130px);">
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label style="display:flex; align-items:center; gap:0.4rem; font-weight:600; margin-bottom:0.35rem;">
+              <i class="fa-solid fa-user" style="color:#2563eb; font-size:0.85rem;"></i>
+              <span data-i18n="Kullanıcı Adı">Kullanıcı Adı</span>
+            </label>
+            <input type="text" id="mUname" class="form-control" placeholder="Örn: netadmin" style="width:100%;">
+          </div>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label style="display:flex; align-items:center; gap:0.4rem; font-weight:600; margin-bottom:0.35rem;">
+              <i class="fa-solid fa-users" style="color:#7c3aed; font-size:0.85rem;"></i>
+              <span data-i18n="Kullanıcı Grubu">Kullanıcı Grubu</span>
+            </label>
+            <select id="mUGroup" class="form-control" style="width:100%;" data-on-change="onUserGroupSelect(this)">
+              {% for g in groups %}<option value="{{ g.id }}" data-priv="{{ g.priv }}">{{ g.name }} (Priv {{ g.priv }})</option>{% else %}<option value="">Grup tanımlı değil</option>{% endfor %}
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label style="display:flex; align-items:center; gap:0.4rem; font-weight:600; margin-bottom:0.35rem;">
+              <i class="fa-solid fa-lock" style="color:#f59e0b; font-size:0.85rem;"></i>
+              <span data-i18n="Giriş Şifresi">Giriş Şifresi</span>
+            </label>
+            <input type="password" id="mPass" class="form-control" placeholder="Kullanıcı giriş parolası" style="width:100%;">
+          </div>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label style="display:flex; align-items:center; gap:0.4rem; font-weight:600; margin-bottom:0.35rem;">
+              <i class="fa-solid fa-shield-halved" style="color:#8b5cf6; font-size:0.85rem;"></i>
+              <span data-i18n="Enable Şifresi (İsteğe Bağlı)">Enable Şifresi (İsteğe Bağlı)</span>
+            </label>
+            <input type="password" id="mEnPass" class="form-control" placeholder="Enable modu parolası (boş bırakılabilir)" style="width:100%;">
+          </div>
+          <div class="form-group" style="margin-bottom:0.5rem;">
+            <label style="display:flex; align-items:center; gap:0.4rem; font-weight:600; margin-bottom:0.35rem;">
+              <i class="fa-solid fa-medal" style="color:#ec4899; font-size:0.85rem;"></i>
+              <span data-i18n="Yetki Seviyesi (Privilege 0-15)">Yetki Seviyesi (Privilege 0-15)</span>
+            </label>
+            <input type="number" id="mPriv" class="form-control" value="15" min="0" max="15" style="width:100%;">
+            <small style="color:var(--text-muted); font-size:0.75rem; margin-top:0.25rem; display:block;">15: Tam Yönetici (Admin), 7: Operatör, 1: İzleme / Yardım Masası</small>
+          </div>
+        </div>
+        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:0.75rem; border-top:1px solid var(--border, #334155); padding-top:1rem; margin-top:1.25rem;">
+          <button type="button" class="btn btn-secondary" data-on-click="closeModal('modalAddUser')" data-i18n="İptal">İptal</button>
+          <button type="button" class="btn btn-primary" data-on-click="submitAddUser()"><i class="fa-solid fa-check"></i> <span data-i18n="Kaydet">Kaydet</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 3: Add Rule -->
+    <div id="modalAddRule" class="modal-backdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:99999; align-items:center; justify-content:center; backdrop-filter:blur(4px); padding:1rem;" data-on-click="if(event.target===this) closeModal('modalAddRule')">
+      <div class="modal-card" style="background:var(--card-bg, #1e293b); border-radius:16px; padding:1.5rem; width:100%; max-width:540px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); border:1px solid var(--border, #334155); display:flex; flex-direction:column;">
+        <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border, #334155); padding-bottom:1rem; margin-bottom:1.25rem;">
+          <h3 style="margin:0; font-size:1.15rem; display:flex; align-items:center; gap:0.5rem;"><i class="fa-solid fa-shield" style="color:#f59e0b;"></i> <span data-i18n="Yeni Komut Yetki Kuralı Ekle">Yeni Komut Yetki Kuralı Ekle</span></h3>
+          <button type="button" class="btn btn-secondary btn-sm" data-on-click="closeModal('modalAddRule')">&times;</button>
+        </div>
+        <div class="modal-body" style="overflow-y:auto; max-height:calc(85vh - 130px);">
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label style="display:flex; align-items:center; gap:0.4rem; font-weight:600; margin-bottom:0.35rem;">
+              <i class="fa-solid fa-users" style="color:#2563eb; font-size:0.85rem;"></i>
+              <span data-i18n="Hedef Grup">Hedef Grup</span>
+            </label>
+            <select id="mRuleGroup" class="form-control" style="width:100%;">
+              {% for g in groups %}<option value="{{ g.id }}">{{ g.name }} (Priv {{ g.priv }})</option>{% else %}<option value="">Grup tanımlı değil</option>{% endfor %}
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label style="display:flex; align-items:center; gap:0.4rem; font-weight:600; margin-bottom:0.35rem;">
+              <i class="fa-solid fa-arrow-down-1-9" style="color:#10b981; font-size:0.85rem;"></i>
+              <span data-i18n="Öncelik (1-1000, küçük olan önce işletilir)">Öncelik (1-1000, küçük olan önce işletilir)</span>
+            </label>
+            <input type="number" id="mRulePrio" class="form-control" value="100" min="1" max="1000" style="width:100%;">
+          </div>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label style="display:flex; align-items:center; gap:0.4rem; font-weight:600; margin-bottom:0.35rem;">
+              <i class="fa-solid fa-code" style="color:#8b5cf6; font-size:0.85rem;"></i>
+              <span data-i18n="Komut Deseni (Regex)">Komut Deseni (Regex)</span>
+            </label>
+            <input type="text" id="mRulePattern" class="form-control" placeholder="Örn: ^show.* veya ^reload" style="width:100%; font-family:monospace;">
+            <small style="color:var(--text-muted); font-size:0.75rem; margin-top:0.25rem; display:block;">Regex örnekleri: <code>^show(\s.*)?$</code>, <code>^ping(\s.*)?$</code>, <code>^reload.*</code></small>
+          </div>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label style="display:flex; align-items:center; gap:0.4rem; font-weight:600; margin-bottom:0.35rem;">
+              <i class="fa-solid fa-traffic-light" style="color:#ec4899; font-size:0.85rem;"></i>
+              <span data-i18n="Eylem">Eylem</span>
+            </label>
+            <select id="mRuleAction" class="form-control" style="width:100%;">
+              <option value="permit">İzin Ver (PERMIT)</option>
+              <option value="deny">Engelle (DENY)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0.5rem;">
+            <label style="display:flex; align-items:center; gap:0.4rem; font-weight:600; margin-bottom:0.35rem;">
+              <i class="fa-solid fa-comment-dots" style="color:#64748b; font-size:0.85rem;"></i>
+              <span data-i18n="Açıklama (İsteğe Bağlı)">Açıklama (İsteğe Bağlı)</span>
+            </label>
+            <input type="text" id="mRuleDesc" class="form-control" placeholder="Örn: Diagnostic okuma komutları" style="width:100%;">
+          </div>
+        </div>
+        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:0.75rem; border-top:1px solid var(--border, #334155); padding-top:1rem; margin-top:1.25rem;">
+          <button type="button" class="btn btn-secondary" data-on-click="closeModal('modalAddRule')" data-i18n="İptal">İptal</button>
+          <button type="button" class="btn btn-primary" data-on-click="submitAddRule()"><i class="fa-solid fa-check"></i> <span data-i18n="Kaydet">Kaydet</span></button>
+        </div>
+      </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/tacacs.js?v={{ asset_version }}"></script>
+{% endblock %}

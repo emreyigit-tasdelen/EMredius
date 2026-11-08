@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1rem;">
+  Cihazlarınızı NetFlow v5/v9 veya IPFIX ihracatçısı olarak bu sunucunun UDP 2055 portuna yönlendirin; akışlar dakikalık özetlenir ve burada
+  en çok konuşanlar, hedefler, uygulamalar ve ihracatçı bazında görünür. NetFlow v5/v9, IPFIX (UDP 2055) ve sFlow v5 (UDP 6343) desteklenir. 15 sn'de bir kendiliğinden yenilenir.
+</p>
+<div class="card">
+  <div class="card-header"><h3><i class="fa-solid fa-water"></i> Akış analizi</h3>
+    <span class="status-pill online" id="fStats">{{ stats.flows_24h }} akış (24 sa) · {{ stats.exporters }} ihracatçı{% if stats.sflow_packets %} · sFlow {{ stats.sflow_packets }} paket{% endif %}</span></div>
+  <div class="card-body">
+    <div style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem;">
+      <select id="fGroup"><option value="src">Kaynak IP</option><option value="dst">Hedef IP</option><option value="app">Uygulama</option><option value="exporter">İhracatçı cihaz</option></select>
+      <select id="fRange"><option value="15m">15 dk</option><option value="1h" selected>1 saat</option><option value="6h">6 saat</option><option value="24h">24 saat</option><option value="7d">7 gün</option></select>
+      <input type="text" id="fQ" placeholder="Ara: IP…" style="flex:1 1 200px;">
+      <a class="btn" id="fCsv" href="/flows/export.csv">CSV</a><a class="btn" id="fJson" href="/flows/export.json">JSON</a>
+      <a class="btn" href="/inventory">Aktif Cihazlar</a><a class="btn" href="/health">Trafik</a>
+    </div>
+    <div id="fInfo" style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem;"></div>
+    <canvas id="fChart" height="120" style="width:100%; display:none; margin-bottom:1rem;"></canvas>
+    <div style="overflow-x:auto;"><table><thead><tr><th>#</th><th>Anahtar</th><th>Ad</th><th>Bayt</th><th>Paket</th><th>Akış</th><th>Pay</th></tr></thead>
+      <tbody id="fBody"></tbody></table></div>
+  </div>
+</div>
+<script src="/static/js/flows.js?v={{ asset_version }}"></script>
+{% endblock %}

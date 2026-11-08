@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" id="npCard">
+  <div class="card-header">
+    <h3><i class="fa-solid fa-bell"></i> Bildirimlerim</h3>
+    <button type="button" class="btn btn-secondary btn-sm" id="npReadAll"><i class="fa-solid fa-check-double"></i> Tümünü okundu yap</button>
+  </div>
+  <div class="card-body">
+    <div class="np-filters" role="tablist">
+      <button type="button" class="np-pill active" data-status="all">Tümü <span id="npCntAll"></span></button>
+      <button type="button" class="np-pill" data-status="unread">Okunmamış <span id="npCntUnread"></span></button>
+      <button type="button" class="np-pill" data-status="read">Okunmuş</button>
+    </div>
+    <div id="npList" class="np-list"></div>
+    <div id="npEmpty" class="notif-empty" hidden>Bu görünümde bildirim yok.</div>
+    <div style="text-align:center; margin-top:1rem;"><button type="button" class="btn btn-secondary" id="npMore" hidden>Daha fazla göster</button></div>
+    <small style="color:#64748b; display:block; margin-top:1rem;">Bildirimler 30 gün saklanır. Yalnızca yetkiniz olan sayfalardan, yetkinizin verildiği andan sonra oluşan olaylar listelenir. Okuduğunuz bildirimler sağ üstteki çan listesinden kalkar, burada kalır.</small>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="/static/js/notifications-page.js?v={{ asset_version }}"></script>
+{% endblock %}

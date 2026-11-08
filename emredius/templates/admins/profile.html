@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block content %}
+    <div style="max-width:750px; margin:0 auto;">
+      <div class="card">
+        <div class="card-header">
+          <h3><i class="fa-solid fa-id-card"></i> Yönetici Profil Bilgileri</h3>
+        {% if auth_type == 'web' %}
+          <span class="badge badge-vlan"><i class="fa-solid fa-globe"></i> Bağımsız Web Hesabı</span>
+        {% else %}
+          <span class="badge badge-rate"><i class="fa-brands fa-linux"></i> AlmaLinux OS Hesabı</span>
+        {% endif %}
+        </div>
+        <div class="card-body">
+          <div style="display:flex; align-items:center; gap:1.5rem; margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:1px solid #e2e8f0;">
+            <div style="width:65px; height:65px; border-radius:50%; background:#eff6ff; color:#2563eb; display:flex; align-items:center; justify-content:center; font-size:2rem;">
+              <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <div>
+              <h2 style="font-size:1.35rem; font-weight:800; margin-bottom:0.25rem;">{{ admin.full_name or username }}</h2>
+              <div style="color:var(--text-muted); font-size:0.9rem; display:flex; gap:1rem; align-items:center;">
+                <span>Kullanıcı Adı: <strong>{{ username }}</strong></span>
+                <span>•</span>
+                <span>Yetki: <strong>{{ role_label }}</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-grid" style="margin-bottom:1.5rem;">
+            <div style="background:#f8fafc; padding:1rem; border-radius:8px; border:1px solid #e2e8f0;">
+              <span style="font-size:0.75rem; color:#64748b; text-transform:uppercase; font-weight:700;">E-posta</span>
+              <div style="font-size:0.95rem; font-weight:600; margin-top:0.25rem;">{{ admin.email or 'Belirtilmedi' }}</div>
+            </div>
+            <div style="background:#f8fafc; padding:1rem; border-radius:8px; border:1px solid #e2e8f0;">
+              <span style="font-size:0.75rem; color:#64748b; text-transform:uppercase; font-weight:700;">Son Giriş Zamanı</span>
+              <div style="font-size:0.95rem; font-weight:600; margin-top:0.25rem;">{{ admin.last_login or 'İlk Giriş' }}</div>
+            </div>
+            <div style="background:#f8fafc; padding:1rem; border-radius:8px; border:1px solid #e2e8f0;">
+              <span style="font-size:0.75rem; color:#64748b; text-transform:uppercase; font-weight:700;">Son Giriş IP Adresi</span>
+              <div style="font-size:0.95rem; font-weight:600; margin-top:0.25rem; font-family:monospace;">{{ admin.last_login_ip or '127.0.0.1' }}</div>
+            </div>
+            <div style="background:#f8fafc; padding:1rem; border-radius:8px; border:1px solid #e2e8f0;">
+              <span style="font-size:0.75rem; color:#64748b; text-transform:uppercase; font-weight:700;">Hesap Durumu</span>
+              <div style="font-size:0.95rem; font-weight:600; margin-top:0.25rem;"><span class="badge badge-active"><i class="fa-solid fa-check"></i> Aktif</span></div>
+            </div>
+          </div>
+
+          <!-- 2FA (TOTP) Güvenlik Kartı -->
+          <div style="margin-top:1.5rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
+              <h4 style="margin:0; font-size:1rem; color:#0f172a; display:flex; align-items:center; gap:0.5rem;">
+                <i class="fa-solid fa-shield-halved" style="color:#2563eb;"></i>
+                <span data-i18n="İki Aşamalı Doğrulama (2FA - TOTP)">İki Aşamalı Doğrulama (2FA - TOTP)</span>
+              </h4>
+            {% if admin.totp_enabled %}
+              <span class="badge" style="background:#dcfce7; color:#15803d; font-weight:700;"><i class="fa-solid fa-shield-check"></i> 2FA Aktif</span>
+            {% else %}
+              <span class="badge" style="background:#fef3c7; color:#92400e; font-weight:700;"><i class="fa-solid fa-shield-slash"></i> 2FA Devre Dışı</span>
+            {% endif %}
+            </div>
+            <p style="color:#64748b; font-size:0.88rem; line-height:1.5; margin-bottom:1rem;">
+              Google Authenticator, Microsoft Authenticator veya FreeOTP ile hesabınızı koruyun. 2FA aktif olduğunda şifrenize ek olarak 6 haneli zaman bazlı kod istenir.
+            </p>
+          {% if admin.totp_enabled %}
+            <form method="POST" action="/profile/2fa/disable" style="display:flex; align-items:flex-end; gap:0.6rem; flex-wrap:wrap;" data-on-submit="return confirm('İki aşamalı doğrulamayı (2FA) devre dışı bırakmak istediğinize emin misiniz?');">
+              {{ csrf_input() }}
+              <div class="form-group" style="margin:0;">
+                <label style="font-size:0.8rem; font-weight:700;">Mevcut 2FA Kodu</label>
+                <input type="text" name="token" required maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" style="width:150px; text-align:center; letter-spacing:4px; font-family:monospace;">
+              </div>
+              <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-shield-xmark"></i> 2FA'yı Devre Dışı Bırak</button>
+            </form>
+            <small style="color:#64748b; font-size:0.78rem; display:block; margin-top:0.4rem;">Güvenlik için Authenticator uygulamanızdaki güncel 6 haneli kodu girmeniz gerekir.</small>
+          {% else %}
+            <a href="/profile/2fa/setup" class="btn btn-primary btn-sm"><i class="fa-solid fa-shield-plus"></i> 2FA'yı Kur ve Etkinleştir</a>
+          {% endif %}
+          </div>
+
+        {% if auth_type == 'web' %}
+          <form method="POST" action="/profile/change-password" style="margin-top:1.5rem;">
+            {{ csrf_input() }}
+            <h4 style="font-size:1rem; margin-bottom:1rem; color:#0f172a;"><i class="fa-solid fa-key"></i> Şifre Değiştir</h4>
+            <div class="form-group">
+              <label>Mevcut Şifreniz</label>
+              <input type="password" name="current_password" required autocomplete="current-password">
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Yeni Şifre</label>
+                <input type="password" name="new_password" required minlength="{{ min_pw }}" autocomplete="new-password" placeholder="En az {{ min_pw }} karakter">
+              </div>
+              <div class="form-group">
+                <label>Yeni Şifre (Tekrar)</label>
+                <input type="password" name="confirm_password" required minlength="{{ min_pw }}" autocomplete="new-password">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Şifremi Güncelle</button>
+          </form>
+        {% else %}
+          <div style="margin-top:1.5rem; background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:1.25rem; color:#1e40af;">
+            <h4 style="margin-bottom:0.4rem; display:flex; align-items:center; gap:0.5rem;"><i class="fa-brands fa-linux"></i> Linux OS Şifre Yönetimi</h4>
+            <p style="font-size:0.88rem; line-height:1.5;">Bu hesap doğrudan AlmaLinux işletim sistemine bağlıdır. Şifrenizi sunucu terminalinde <code>passwd {{ username }}</code> komutu ile değiştirebilirsiniz. Terminalde değiştirdiğiniz anda web paneli şifreniz sıfır gecikmeyle otomatik güncellenecektir.</p>
+          </div>
+        {% endif %}
+        </div>
+      </div>
+    </div>
+{% endblock %}
