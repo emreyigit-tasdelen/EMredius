@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """NetFlow v5, NetFlow v9 and IPFIX (v10) packet parser. Pure functions + a per-exporter template cache.
 Returns flow dicts: src, dst, sport, dport, proto, bytes, pkts, in_if, out_if, flags, ts (end time, epoch s)."""
 from __future__ import annotations

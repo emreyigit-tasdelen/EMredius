@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """MAC Tarama: cihaz -> port -> MAC -> üretici/IP/kullanıcı -> PoE tek tabloda. MAC/port verisi Ekipman servisinden (Q-BRIDGE/BRIDGE),
 bu modül ek olarak PoE (POWER-ETHERNET-MIB, Cisco cpeExt) ve ARP (ipNetToMedia/ipNetToPhysical) toplar; LLDP komşusu topo_links'ten,
 RADIUS oturumu radacct'tan gelir. Tablolar NMS veritabanında, her satırda tenant_id. Salt okunur ağ erişimi; PoE yoksa sessizce atlanır."""

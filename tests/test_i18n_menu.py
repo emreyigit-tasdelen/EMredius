@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Sol menü etiketleri base.html ile i18n sözlüğü arasında birebir ve titremesiz olmalı."""
 import re
 from pathlib import Path

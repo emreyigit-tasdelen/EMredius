@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 # Verified DB dump for deploy backups: db_dump.sh <out.sql.gz> [db]   (default db: radius)
 # Uses the same defaults file as the panel (no password on the command line), fails loudly and checks the result:
 # mysqldump exit status (pipefail), gzip integrity and mysqldump's "Dump completed" trailer.

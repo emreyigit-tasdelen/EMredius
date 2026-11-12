@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Aktif Cihazlar (/inventory): kayıtlı IP aralıkları, keşif ve cihaz envanteri (arama/filtre, CSV/JSON, canlı yenileme)."""
 import json
 

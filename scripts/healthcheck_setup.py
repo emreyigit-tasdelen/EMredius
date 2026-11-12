@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """One-time setup for scripts/healthcheck.py. Creates, with random passwords generated here:
   - panel admin  'healthcheck'          (role auditor = read-only, no 2FA)
   - RADIUS user  'emredius-healthcheck' (accepted only with NAS-IP-Address 127.0.0.1)

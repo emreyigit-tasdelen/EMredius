@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Landing page: RADIUS summary, live system telemetry charts, latest live sessions, top traffic."""
 from flask import jsonify, render_template, request
 

@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """RADIUS user accounts (radcheck / radreply / radusergroup / radius_meta): validation, CRUD, CSV export/import.
 No HTTP handling here: functions take plain values and return data or raise ServiceError."""
 import csv

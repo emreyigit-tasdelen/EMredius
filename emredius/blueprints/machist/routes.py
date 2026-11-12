@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """MAC Geçmişi (/machist): kullanıcı/MAC bazlı "son N günde hangi portlardan bağlandı" + RADIUS oturumları."""
 from flask import Response, jsonify, render_template, request, session
 

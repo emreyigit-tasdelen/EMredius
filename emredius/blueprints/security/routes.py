@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Superadmin security centre (/security: 2FA + password resets), host telemetry APIs and the root CA download."""
 import base64
 import os

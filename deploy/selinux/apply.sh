@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 # SELinux tip düzeltmesi: yedek -> restorecon (-F yok) -> kontrol -> başarısızsa geri yükle.
 #   apply.sh <yedek_dizini> stage|live
 set -uo pipefail

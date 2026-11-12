@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Sertifikalar: EAP (RADIUS), web paneli ve CA sertifikalarının geçerlilik takibi. Yalnızca okur; özel anahtara dokunmaz.
 Süre sonu uyarısı eşiği `cert_warn_days`; dışarı bildirim `cert_alert_enabled` (varsayılan KAPALI)."""
 import time

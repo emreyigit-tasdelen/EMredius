@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """scripts/backup_verify.py: dump safety checks, row-count comparison, archive extraction (no MariaDB needed)."""
 import gzip
 import importlib.util

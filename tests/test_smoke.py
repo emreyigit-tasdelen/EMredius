@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Smoke test over every registered route: anonymous access is refused, logged-in GETs never crash (DB is
 unreachable in tests: pages degrade or answer 503, never 500), unsafe methods need a CSRF token."""
 from conftest import login_as

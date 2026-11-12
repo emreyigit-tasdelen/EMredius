@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Restore test of the newest DB backup (run by emredius-backup-verify.timer, see deploy/systemd/).
 
 Loads the latest dump from BACKUP_DIR (radius_full_system_*.tar.gz or radius_backup_*.sql.gz, SHA256 sidecar

@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Runtime configuration. Values come from the environment, which is pre-filled from
 /etc/emredius/emredius.env (KEY=VALUE lines; variables already set are not overridden)."""
 import os

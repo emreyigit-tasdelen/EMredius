@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Web terminal: runs one shell command (superadmin only) and path/command autocomplete.
 Commands run through a shell on purpose (pipes, redirects); obviously destructive or TTY-bound commands are refused."""
 import os

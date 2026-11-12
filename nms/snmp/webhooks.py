@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Webhook Dispatchers: Asynchronous non-blocking delivery of alert notifications
 to Telegram Bot API and Slack Incoming Webhooks without external dependencies.
 """

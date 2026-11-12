@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Auto-Discovery CIDR Scanner, Multi-Credential Waterfall Probing,
 Vendor Hardware Fingerprinting, and RFC 2863 IF-MIB Interface Walk.
 """

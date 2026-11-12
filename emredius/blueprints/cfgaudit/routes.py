@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Konfig Denetimi (/configs/audit, süper yönetici): sürümler arası fark + uyum raporu. Salt okunur."""
 import json
 import re

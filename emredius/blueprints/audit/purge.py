@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Law 5651 retention clean-up screen (superadmin only): settings, preview, re-authenticated delete."""
 from flask import current_app, flash, redirect, render_template, request, session
 

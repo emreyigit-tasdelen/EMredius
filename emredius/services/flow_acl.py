@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Kaynak IP izin listesi (UDP akış toplayıcıları için). Liste boşsa herkese açık (eski davranış)."""
 from __future__ import annotations
 

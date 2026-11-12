@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Web terminal page (/cli, /terminal) and /api/cli/* (superadmin only; every execution is audit-logged)."""
 from flask import jsonify, render_template, request, session
 

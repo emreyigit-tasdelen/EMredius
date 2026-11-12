@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Kara Liste (/blacklist), Karantina (/quarantine), Uygulama Kayıtları (/enforcement).
 Yalnızca kayıt/işaretleme: cihaza veya NAS'a hiçbir şey yazılmaz, veri silinmez."""
 from flask import Response, jsonify, render_template, request, session

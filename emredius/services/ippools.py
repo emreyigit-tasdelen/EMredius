@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """IP Havuzları: FreeRADIUS radippool tablosu (adres satırları) + Framed-Pool atamaları (radreply / radgroupreply).
 Havuz üst verisi NMS veritabanında (tenant_id'li); adresler RADIUS veritabanındaki radippool'a yazılır. sqlippool modülü sitede
 etkin olmayabilir: etkinse havuz adresleri dağıtır, değilse yalnızca Framed-Pool özniteliği gönderilir."""

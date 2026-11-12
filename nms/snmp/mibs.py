@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Standard RFC 1213 MIB-II, RFC 2863 IF-MIB (32-bit and 64-bit HC),
 and 6-Vendor Enterprise OID Catalogs and Normalized Health Metric Adapters.
 """

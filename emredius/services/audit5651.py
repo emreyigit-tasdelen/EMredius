@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Law 5651 accounting search (radacct), CSV export and verification of the signed daily archive.
 
 Archive layout (written daily by scripts/maintenance.py):

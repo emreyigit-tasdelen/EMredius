@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Emre Yiğit Taşdelen
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: AGPL-3.0-only
 (function () {
   var NS = 'http://www.w3.org/2000/svg';
   var svg = document.getElementById('topoSvg'), info = document.getElementById('topoInfo');

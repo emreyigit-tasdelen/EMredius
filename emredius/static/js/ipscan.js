@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Emre Yiğit Taşdelen
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // IP tarama sayfası: sayfa yenilemeden başlat / görüntüle / sil; çalışan taramayı yoklayıp canlı gösterir.
 (function () {
   const STATUS = { running: 'Taranıyor', done: 'Tamamlandı', cancelled: 'Durduruldu', error: 'Hata' };

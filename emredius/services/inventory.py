@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Aktif Cihazlar: IP aralıkları + keşif (ICMP/ARP -> SNMP -> SSH banner) ve cihaz envanteri.
 Tablolar NMS veritabanında (SQLite); her satırda tenant_id (çok kiracılı yapı). Salt okunur ağ erişimi."""
 import asyncio

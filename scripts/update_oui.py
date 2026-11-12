@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Refreshes emredius/data/oui.tsv from the IEEE OUI registry (run monthly by emredius-oui.timer).
 
   update_oui.py [--url URL] [--file local.csv] [--out PATH]

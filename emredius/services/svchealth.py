@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Servis Sağlığı: systemd servisleri ve TCP uçları yoklanır; servis düşünce e-posta/Telegram alarmı.
 Dışarı bildirim gönderen anahtarlar varsayılan KAPALI (svchealth_alert_enabled, svchealth_email_enabled)."""
 import logging

@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Unified enterprise daemons runner for TACACS+ TCP 49 and SNMP NMS Poller."""
 
 from __future__ import annotations

@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Minimal test runner for hosts without pytest (supports the fixtures used here: app, client, tmp_path,
 monkeypatch). With pytest installed simply run `python -m pytest tests`.
 usage: python tests/run_tests.py [test_module ...]"""

@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Session-bound CSRF token. Verified for every unsafe request in core.security; the base layout JS adds
 the token to POST forms (`_csrf_token`) and same-origin fetch() calls (`X-CSRF-Token`)."""
 import secrets

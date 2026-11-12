@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Real-browser check of every panel page (headless Chromium via Playwright). Reports per page: HTTP status,
 console errors, JS page errors, failed/4xx/5xx sub-requests and hangs (load slower than --slow seconds).
 

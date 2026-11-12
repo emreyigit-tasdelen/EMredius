@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """MAC Geçmişi: eq_macs anlık görüntüsünden (kullanıcı/MAC başına) hangi cihaz-portlardan ne zaman bağlandığını biriktirir.
 mh_hist = (MAC, cihaz, port, VLAN) başına ilk/son görülme; mh_changes = MAC taşınması / yeni MAC olayları (alarm modülü okur).
 RADIUS oturumlarıyla radacct üzerinden çapraz bağlanır. Tablolar NMS veritabanında, her satırda tenant_id."""

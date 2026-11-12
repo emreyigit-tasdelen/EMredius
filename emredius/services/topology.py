@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Ağ Topolojisi: LLDP (IEEE 802.1AB) ve CDP komşuluklarını SNMP ile toplar, envanterle eşleyip grafiğe çevirir.
 Tablo topo_links NMS veritabanında, her satırda tenant_id. Salt okunur ağ erişimi."""
 import asyncio

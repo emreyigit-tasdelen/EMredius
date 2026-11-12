@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Syslog message parser: RFC 3164 (BSD) and RFC 5424. Never raises; unknown input becomes a plain message
 (facility user=1, severity notice=5, the PRI default for unparsable datagrams)."""
 from __future__ import annotations

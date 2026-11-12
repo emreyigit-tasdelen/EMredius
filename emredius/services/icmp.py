@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """ICMP echo sweep over one socket: no `ping` process per address. Packets are sent back to back at a fixed rate
 and replies are collected by a receiver thread as they arrive, so a dead address costs no waiting of its own;
 the sweep waits `timeout` once, after the last packet.

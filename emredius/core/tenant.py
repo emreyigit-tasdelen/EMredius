@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Çok kiracılı yapı: kiracı tablosu, yönetici->kiracı eşlemesi ve istek bağlamındaki geçerli kiracı.
 Servisler `tenant_id=None` alır; None ise `resolve_tenant` geçerli kiracıyı verir (istek yoksa 1). Süper yönetici oturumda kiracı
 değiştirebilir; diğer yöneticiler atandıkları kiracıda (atama yoksa 1) çalışır. API (/api/v1/*) `?tenant=<id>` ile kiracı seçer."""

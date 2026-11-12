@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Emre Yiğit Taşdelen
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Services page: live status polling, journal terminal, restart / reboot confirmations
 var currentSelectedService = 'radiusd';
     var autoRefreshTimer = null;

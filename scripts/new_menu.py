@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Yeni menü iskeleti:  python scripts/new_menu.py <ad> "<Başlık>" [/url]
 Üretir: blueprints/<ad>/, services/<ad>.py, templates/<ad>/index.html, tests/test_<ad>.py
 Sonra elle (3 satır): blueprints/__init__.py listesi, core/rbac.py PAGE_DEFINITIONS, templates/base.html nav.

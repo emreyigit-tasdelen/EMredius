@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Server-push (SSE) topology updates. One background monitor re-checks ping + NMS DB state every few seconds while
 at least one page is subscribed and broadcasts only when something changed, so N open pages cost one ping round.
 gunicorn runs 1 worker x 16 threads: every open stream pins a thread, hence MAX_STREAMS and MAX_LIFETIME

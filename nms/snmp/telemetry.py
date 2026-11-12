@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Telemetry Math Engine: Delta rate computation, 32/64-bit counter wrap handling,
 reboot spike prevention, and time-series persistence into SQLite WAL.
 """

@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Emre Yiğit Taşdelen
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // 2FA setup: QR code rendered locally (the secret never leaves the browser), copy button
 (function() {
   var box = document.getElementById('totpQr');

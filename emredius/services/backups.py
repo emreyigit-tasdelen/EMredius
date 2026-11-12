@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Backups: SQL dump / full system image (DB + raddb), SHA256 sidecars, per-type rotation, restore,
 automatic backup policy (systemd timer) and the single-file source bundle.
 

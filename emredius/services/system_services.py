@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Managed systemd services: status, journal tail, restart (with a radiusd -C pre-check), probes, server reboot."""
 import os
 import socket

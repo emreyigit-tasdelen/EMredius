@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Bildirimler: kullanıcı başına gelen kutusu.
 Olaylar (`publish`) bir sayfa anahtarına (page_key: ipscan, snmp, alarms ...) bağlıdır ve herkese değil, o sayfaya yetkisi olan
 rollere düşer. Bir role sayfa yetkisi verildiği an `notif_access.since_ts` olarak kaydedilir; yalnızca o andan SONRAKİ olaylar

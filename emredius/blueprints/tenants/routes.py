@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Kiracılar (/tenants, yalnızca süper yönetici): kiracı ekle/adlandır/sil, yönetici ataması, çalışılan kiracıyı değiştirme."""
 from flask import flash, jsonify, redirect, render_template, request, session
 

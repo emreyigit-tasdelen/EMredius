@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Emre Yiğit Taşdelen
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Settings page: NTP "sync now" button (in-page update + popup, no reload)
 (function() {
   var btn = document.getElementById('btnSyncNtpSet');

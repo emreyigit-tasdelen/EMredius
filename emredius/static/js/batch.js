@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Emre Yiğit Taşdelen
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Batch / guest accounts page: source filter + search.
 (function() {
   // openModal / closeModal / togglePw come from BASE_LAYOUT.

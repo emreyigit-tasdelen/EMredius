@@ -1,4 +1,4 @@
-/* Copyright (c) 2026 Emre Yiğit Taşdelen | SPDX-License-Identifier: Apache-2.0 */
+/* Copyright (c) 2026 Emre Yiğit Taşdelen | SPDX-License-Identifier: AGPL-3.0-only */
 .kpi-panel { margin-bottom: 2rem; }
 .kpi-panel[hidden], .kpi-box[hidden] { display: none; }
 .kpi-toolbar { display: flex; justify-content: space-between; align-items: center; gap: .75rem; flex-wrap: wrap; margin-bottom: 1rem; }

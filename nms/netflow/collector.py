@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Async UDP flow collector. `python -m nms.netflow` (systemd: emredius-netflow.service).
 Env: NETFLOW_PORTS (default 2055,4739), NETFLOW_BIND (0.0.0.0), NMS_DB_PATH, NETFLOW_RETENTION_DAYS."""
 from __future__ import annotations

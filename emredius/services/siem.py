@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """SIEM yönlendirme: yönetici işlem günlüğü olaylarını syslog (RFC 5424) veya CEF olarak UDP/TCP ile dışarı yollar.
 Varsayılan KAPALI (siem_enabled=0). Gönderim istek iş parçacığını bekletmez; hata panelde görülür, işlemi bozmaz."""
 import logging

@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """IP scan (host discovery): ICMP ping sweep over any IPv4/IPv6 network the administrator enters, plus ARP/NDP
 (MAC / vendor) and reverse DNS for the hosts that answer. Pings go out over one ICMP socket (services/icmp.py);
 when the process may not open one, it falls back to one `ping` process per address. Read-only.

@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Emre Yiğit Taşdelen
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // O ana kadar ayrıştırılan sayfayı ilk boyamadan önce seçili dile çevirir (app.js head'de yüklü).
 try {
   var _l = window.CURRENT_APP_LANG;

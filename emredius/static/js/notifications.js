@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Emre Yiğit Taşdelen
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Üst çubuk bildirim paneli (çan): kullanıcının gelen kutusunu yoklar, tıklanınca kaynağa götürür.
 (function () {
   var btn = document.getElementById('notifBtn');

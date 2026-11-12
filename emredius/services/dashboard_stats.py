@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Dashboard KPI/grafik verisi (RADIUS radpostauth/radacct + SNMP + alarm tabloları).
 
 Hesaplanamayan her bölüm eksik kalır ve arayüzde gizlenir; uydurma değer yoktur.

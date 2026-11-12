@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """RADIUS accounting sessions: listing, RFC 5176 Disconnect-Request via radclient, ghost session cleanup."""
 import ipaddress
 import logging

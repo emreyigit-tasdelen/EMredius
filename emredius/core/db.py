@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Database access.
 
 MariaDB (`radius`): small thread-safe connection pool. `get_db()` returns a pooled connection with the same API

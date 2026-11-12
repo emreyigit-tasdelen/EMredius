@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Role based page access. Every route declares the page key(s) it belongs to with @require_page(...).
 Page access implies the actions on that page, except for READ_ONLY_ROLES which can never mutate state
 (enforced globally in core.security)."""

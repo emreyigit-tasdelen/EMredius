@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Ekipman & MAC Tabloları: SNMP ile port envanteri (IF-MIB), MAC adres tabloları (Q-BRIDGE/BRIDGE-MIB) ve
 şasi/modül envanteri (ENTITY-MIB). Tablolar NMS veritabanında, her satırda tenant_id. Salt okunur ağ erişimi."""
 import asyncio

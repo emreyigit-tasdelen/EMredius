@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Rotates the MariaDB password of the RADIUS DB user (default 'radius') used by FreeRADIUS and the panel.
 
   rotate:   rotate_db_password.py --backup-dir /root/emredius_dbpw_<TS>

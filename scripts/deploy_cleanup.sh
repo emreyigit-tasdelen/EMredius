@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 # Yayın yedek temizliği: /root/emredius_deploy_<YYYYMMDD_HHMMSS> klasörlerini siler.
 # Kullanım: deploy_cleanup.sh [-n] [KORUNACAK_YEDEK_DİZİNİ]
 #   -n : kuru çalıştırma (sadece listeler)

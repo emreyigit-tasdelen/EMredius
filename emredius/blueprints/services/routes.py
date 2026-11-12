@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Services page: status / journal of the managed systemd services, restart, probes, server reboot, /restart-radius."""
 from datetime import datetime
 

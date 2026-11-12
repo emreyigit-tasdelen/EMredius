@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Sertifikalar (/certs, yalnızca süper yönetici): EAP/web/CA sertifika geçerliliği ve süre sonu uyarısı."""
 from flask import flash, jsonify, redirect, render_template, request, session
 

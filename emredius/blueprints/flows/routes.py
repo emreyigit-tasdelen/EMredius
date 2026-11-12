@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Akış Analizi (/flows): NetFlow/IPFIX en çok konuşanlar, uygulamalar, zaman çizelgesi; canlı yenileme, CSV/JSON."""
 import json
 

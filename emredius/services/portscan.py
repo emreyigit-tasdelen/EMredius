@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """TCP connect port scanner (/portscan). Pure Python (no nmap / root): one connect() per port with a short
 timeout, run in a thread pool. A scan runs as a background job (a full 1-65535 scan outlives one HTTP
 request); the page polls its progress. Jobs live in process memory (gunicorn runs a single worker).

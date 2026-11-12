@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """NTP time server page (chrony status, upstream sources, device config snippets) and /api/ntp/* actions."""
 from concurrent.futures import ThreadPoolExecutor
 

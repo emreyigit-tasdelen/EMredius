@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Konfig yönetimi: sürümlü yapılandırma yedeği (SSH ile çekme ya da elle yükleme), sürümler arası fark, şablonlar,
 uyumluluk kuralları ve tek/filo gönderim. Gönderim varsayılan KAPALI (ayar cfg_push_enabled=1) ve her gönderimden önce otomatik yedek alınır.
 SSH için paramiko gerekir; kurulu değilse çekme/gönderim kullanılamaz, diğer her şey çalışır. Kimlik bilgileri Fernet ile şifreli saklanır

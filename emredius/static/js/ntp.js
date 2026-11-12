@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Emre Yiğit Taşdelen
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // NTP page: device config snippets filter, chrony sync / restart
 // Birbirine bağlı filtre: arama + marka + cihaz tipi (AND); marka/tip satırları diğer filtrelere göre daralır
 var NTP_TYPES = {

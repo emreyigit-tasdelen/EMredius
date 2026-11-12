@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Shared core layer (no routes). Blueprints import what they need from here."""
 from .audit import log_admin_action, log_audit
 from .auth import (ROLE_LABELS, authenticate_admin, get_role_display, get_system_linux_users, is_ip_locked,

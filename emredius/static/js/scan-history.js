@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Emre Yiğit Taşdelen
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // IP / port scan pages: "Son Taramalar" list. View opens the saved result in a popup and delete removes the
 // row via fetch, neither reloads the page.
 (function () {

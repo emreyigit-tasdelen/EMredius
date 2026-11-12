@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """End-to-end health check with the dedicated accounts from scripts/healthcheck_setup.py:
   1. panel: real HTTPS login (nginx -> gunicorn -> MariaDB), dashboard 200, logout
   2. RADIUS: Access-Request via radclient to 127.0.0.1:1812, expects Access-Accept

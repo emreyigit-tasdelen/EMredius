@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """RFC 8907 Accounting Processor and Real-Time SQLite WAL Logger."""
 
 from __future__ import annotations

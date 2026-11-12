@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Misafir Silme (Erasures): süresi dolan kupon / misafir hesaplarının önizlemesi; silme yalnızca elle, mevcut purge mantığıyla."""
 from .vouchers import list_batch_accounts, purge_expired_vouchers
 

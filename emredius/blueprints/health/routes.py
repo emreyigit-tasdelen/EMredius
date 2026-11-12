@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Ekipman Sağlığı & Trafik (/health): CPU/bellek/sıcaklık, geçmiş grafik, en yoğun arayüzler; canlı yenileme, CSV/JSON."""
 import json
 

@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Panel administrators, custom roles (RBAC), own profile / password / 2FA, admin audit CSV."""
 import csv
 import io

@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Emre Yiğit Taşdelen
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Admins & roles page: add/edit admin and role modals (data from JSON script tags)
 var ALL_ADMINS = JSON.parse(document.getElementById('adminsData').textContent);
     var ALL_ROLES = JSON.parse(document.getElementById('rolesData').textContent);

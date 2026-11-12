@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Scheduled maintenance jobs (run by systemd timers, see deploy/systemd/).
 
   maintenance.py backup [--sql|--full]   backup into BACKUP_DIR + rotation by the panel's policy (default: full)

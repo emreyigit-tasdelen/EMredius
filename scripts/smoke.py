@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Read-only smoke test against the REAL configuration of this host (staging or live): builds the app from
 EMREDIUS_ENV_FILE, opens a session as an existing active superadmin (no password involved, in-process test
 client only) and GETs every route without URL parameters plus the vendor static files. Nothing is written

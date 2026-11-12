@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Entegrasyonlar ve bildirim kanalları: Telegram/Slack (Sistem Ayarları), SMTP (Servis Sağlığı) durumu + genel webhook.
 Genel webhook varsayılan KAPALI (int_webhook_enabled=0); uyarılar JSON olarak POST edilir, gizli anahtar varsa HMAC-SHA256 imzalanır."""
 import hashlib

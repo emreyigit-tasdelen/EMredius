@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Comprehensive Test Suite for Milestone M2: Universal Multi-Vendor SNMPv2c/v3 Engine.
 
 Covers:

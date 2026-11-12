@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Döngü (loop) tespiti: (1) topolojideki L2 halkaları (LLDP/CDP grafiğinde döngü = STP'siz ise yayın fırtınası riski),
 (2) MAC taşınması: aynı MAC'in birden çok cihaz/porta uplink dışı görülmesi. Salt okunur; mevcut topo_links ve eq_macs verisini kullanır."""
 import csv

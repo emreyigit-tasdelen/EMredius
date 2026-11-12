@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Emre Yiğit Taşdelen
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Ek çeviri sözlüğü (app.js I18N_RAW ile birleştirilir). Satır: [tr, en, zh, ru, es, fr]
 window.I18N_EXTRA_ROWS = [
 ["Kimlik & RADIUS","Identity & RADIUS","身份与 RADIUS","Идентификация и RADIUS","Identidad y RADIUS","Identité & RADIUS"],

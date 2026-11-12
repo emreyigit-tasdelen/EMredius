@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Async UDP syslog collector. `python -m nms.syslogd` (systemd: emredius-syslog.service).
 Env: SYSLOG_PORTS (default 514), SYSLOG_BIND (0.0.0.0), NMS_DB_PATH. Sender allow-list: syslog_cfg key allowed_sources
 (CIDR list set from the panel; empty = everyone). Retention: syslog_cfg key retention_days."""

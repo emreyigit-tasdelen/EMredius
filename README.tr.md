@@ -12,7 +12,7 @@
 ![RADIUS](https://img.shields.io/badge/RADIUS-FreeRADIUS%20%2B%20MariaDB-4c1)
 ![TACACS+](https://img.shields.io/badge/TACACS%2B-RFC%208907-6366f1)
 ![Tests](https://img.shields.io/badge/pytest-500%2B%20test-2ea44f)
-![License](https://img.shields.io/badge/license-Apache%202.0-blue)
+![License](https://img.shields.io/badge/license-AGPL--3.0-blue)
 [![GitHub Sponsors](https://img.shields.io/badge/sponsor-GitHub%20Sponsors-ec4899?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/emreyigit-tasdelen)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support-f59e0b?logo=buymeacoffee&logoColor=white)](https://buymeacoffee.com/emreyigit.tasdelen)
 
@@ -259,7 +259,7 @@ Kural: yeni özellik = yeni blueprint + servis + şablon + test; HTML Jinja şab
 
 ## 🤝 Katkı ve lisans
 
-Katkı için [Geliştirme](#-geliştirme) bölümündeki akışı izleyin: her değişiklik ilgili testle birlikte gelir. Lisans: [Apache-2.0](LICENSE).
+Katkı için [Geliştirme](#-geliştirme) bölümündeki akışı izleyin: her değişiklik ilgili testle birlikte gelir. Lisans: [AGPL-3.0](LICENSE).
 
 ## 💖 Destek
 

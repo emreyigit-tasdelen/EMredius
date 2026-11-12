@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Akış analizi: NetFlow v5 / v9 ve IPFIX toplayıcı (UDP), dakikalık özetleme ve en çok konuşanlar sorguları.
 Toplayıcı panel sürecinde bir iş parçacığıdır; ham akış saklanmaz, (dakika, ihracatçı, kaynak, hedef, protokol, hedef port)
 anahtarında bayt/paket/akış toplamı tutulur. Tablo flow_rollup NMS veritabanında, tenant_id'li. sFlow henüz yok."""

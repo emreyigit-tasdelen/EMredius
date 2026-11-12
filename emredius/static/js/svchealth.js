@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Emre Yiğit Taşdelen
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: AGPL-3.0-only
 setInterval(function () {
   fetch('/svchealth/data').then(function (r) { return r.json(); }).then(function (j) {
     if (!j.success) return;

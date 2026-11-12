@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Yerel LLM (Ollama) istemcisi: tek HTTP noktası. Varsayılan KAPALI; kapalıyken veya hata olunca sessizce None döner.
 Dış API yok: URL yalnızca ayardan gelir ve loopback olmalıdır. Alarm yorumu (NMS (g)) bu iskeleti kullanacak."""
 import json

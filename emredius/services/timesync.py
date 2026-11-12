@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """System clock trust (chrony): panel banner, alerting and the 5651 archive guard.
 
 Levels: ok | warn (synced but |offset| > WARN_OFFSET_S) | crit (no selected NTP source / chronyc failed).

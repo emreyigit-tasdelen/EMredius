@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """IPAM: alt ağ planı, adres kayıtları (rezerve/statik), doluluk ve boş adresler, keşifle (Aktif Cihazlar envanteri) karşılaştırma.
 Tablolar NMS veritabanında, tenant_id'li. Yalnızca IPv4. Büyük alt ağlar asla tek tek dolaşılmaz (yalnızca kayıtlı/keşfedilen adresler ve
 ilk boş adres araması, üst sınırlı)."""

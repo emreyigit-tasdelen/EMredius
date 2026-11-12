@@ -1,4 +1,4 @@
-/* Copyright (c) 2026 Emre Yiğit Taşdelen | SPDX-License-Identifier: Apache-2.0 */
+/* Copyright (c) 2026 Emre Yiğit Taşdelen | SPDX-License-Identifier: AGPL-3.0-only */
 /* Ortak tasarım şeması: input / buton / toast / duyarlı tablo / bildirim paneli.
  * base.css'ten SONRA yüklenir; tek bir yerden tüm sayfaları aynı biçime getirir. */
 :root {

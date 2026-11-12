@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Emre Yiğit Taşdelen
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // SNMP NMS page: devices, charts, alarms, topology (vis-network), sample config modal
 window.TOPOLOGY_DEVICES = JSON.parse(document.getElementById('snmpTopology').textContent);
 window.TOPOLOGY_SERVER_IP = JSON.parse(document.getElementById('snmpServerIp').textContent);

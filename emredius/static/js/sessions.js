@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Emre Yiğit Taşdelen
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Sessions page: optional 10 s auto refresh (state kept in localStorage).
 (function() {
   var KEY = 'emredius_sessions_autorefresh';

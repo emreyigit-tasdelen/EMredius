@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Output escaping helpers for HTML built in Python code (Jinja templates autoescape on their own)."""
 import html
 import json

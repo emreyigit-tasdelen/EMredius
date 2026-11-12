@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Erişilebilirlik: Servis Sağlığı yoklamalarından durum değişimleri NMS veritabanında saklanır; 24 saat / 7 / 30 gün
 erişilebilirlik yüzdesi ve kesinti listesi hesaplanır. Yalnızca up/down kaydedilir (unknown süreye katılmaz)."""
 import threading

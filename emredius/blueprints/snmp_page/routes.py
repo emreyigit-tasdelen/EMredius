@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """SNMP NMS page (data from the NMS SQLite DB; device/alarm CRUD goes through the NMS /api/snmp/* blueprint)."""
 from flask import Response, flash, jsonify, render_template, request
 

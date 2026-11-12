@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Universal SNMPv2c / SNMPv3 USM Client Engine, Pure-Python ASN.1 BER Codec,
 Cryptographic Subsystem (DES, AES-128/192/256-CFB, MD5, SHA-1/224/256),
 Dynamic EngineID Discovery, and Asyncio UDP Networking.

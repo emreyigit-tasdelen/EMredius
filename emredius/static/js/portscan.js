@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Emre Yiğit Taşdelen
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Port scan page: polls the background scan job and renders progress + open ports
 (function () {
   const card = document.getElementById('portscanResult');

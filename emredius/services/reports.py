@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Raporlar: NetFlow top-talker raporu (en çok trafik üreten/alan IP, konuşma, uygulama) CSV/PDF olarak anında veya zamanlanmış
 (günlük/haftalık) üretilir; üretilen dosyalar rp_runs'ta saklanır (kiracı başına son 30). E-posta gönderimi varsayılan KAPALI:
 ayar report_mail_enabled=1 VE Alarmlar'daki SMTP sunucusu tanımlı olmalı. Akış verisi flows toplayıcısından (flow_rollup) okunur."""

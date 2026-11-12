@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """IP scan (/ip-scan): host discovery on any network, as a background job with progress and a stop button.
 Each administrator may run up to N scans at once (N set here by the superadmin) and sees only their own scans;
 the superadmin also sees every running scan. The last 20 scans per administrator are kept."""

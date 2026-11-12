@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Law 5651 retention clean-up of `radacct`: only days past the retention period, whose signed archive verifies
 OK and whose archived row count covers the database rows, are deleted. Archive files / chain.log are never touched."""
 import csv

@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """gunicorn settings. One worker process with threads: the login brute-force counters, settings cache and
 background jobs are per process, so a single process keeps them consistent. Admin-panel traffic is low and
 I/O bound (MariaDB, systemctl, SNMP), which threads handle well."""

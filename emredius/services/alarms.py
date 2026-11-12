@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Alarmlar: eşik kuralları (CPU/bellek/sıcaklık/izlenen IP kapalı), SNMP trap alıcı (v1/v2c, varsayılan kapalı),
 olay yaşam döngüsü (aktif/onaylı/çözüldü) ve e-posta bildirimi (varsayılan kapalı; ayar alarm_smtp_enabled=1).
 Olaylar NMS veritabanında alm_events / alm_rules tablolarında, tenant_id'li. NMS poller'ın kendi `alarms` tablosu salt okunur

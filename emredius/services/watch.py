@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """İzlenen IP'ler: kayıtlı hedefleri periyodik ping ile izler; durum, gecikme (RTT) ve geçmiş saklanır.
 Tablolar NMS veritabanında, her satırda tenant_id. Yalnızca ICMP echo (komut satırı ping) kullanılır."""
 import csv

@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Korelasyon: bir kullanıcı adı, MAC veya IP için tüm kaynakları tek görünümde birleştirir:
 RADIUS kimlik doğrulama (radpostauth) + oturumlar (radacct) + bağlı olduğu cihaz/port (MAC geçmişi) + ARP IP + etkin
 kara liste/karantina işaretleri. Yalnız okur."""

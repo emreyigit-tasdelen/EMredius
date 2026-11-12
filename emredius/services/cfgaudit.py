@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Konfig denetimi: sürümler arası yan yana fark, son değişiklik akışı ve kural tabanlı uyum raporu.
 Yalnızca okur (cfg_backups, cfg_rules); cihaza hiçbir şey yazmaz. Kural yönetimi services/configs.py'de."""
 import csv

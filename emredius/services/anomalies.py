@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Anomaliler: radpostauth / radacct verisinden türetilen şüpheli davranışlar (yalnız okuma, hiçbir şey değiştirmez).
 Dedektörler: brute_force (çok sayıda ret), multi_mac_user (bir kullanıcı çok cihaz), shared_mac (bir MAC çok kullanıcı),
 multi_nas_user (bir kullanıcı çok NAS)."""

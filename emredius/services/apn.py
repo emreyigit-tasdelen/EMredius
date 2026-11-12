@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """APN envanteri: hatlar (lines), sağlayıcılar (providers), konumlar (locations). Tablolar NMS veritabanında, tenant_id'li.
 Hat -> sağlayıcı, konum, NAS IP'si, IP havuzu (ippools) ve profil (RADIUS grubu = Gruplar & Profiller) ile ilişkilendirilir.
 Salt envanterdir: RADIUS kayıtlarına yazmaz."""

@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """APN envanteri (/apn): hatlar, sağlayıcılar, konumlar (ekle / düzenle / sil)."""
 from flask import flash, redirect, render_template, request, session
 

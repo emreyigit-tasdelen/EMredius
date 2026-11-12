@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Settings: notification channels, voucher branding + API token, and host settings (/api/settings/*:
 DNS, sshd, firewalld, timezone). Superadmin-only page ("settings")."""
 from datetime import datetime

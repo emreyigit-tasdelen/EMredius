@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """16 üretici CLI ailesi: yapılandırma yedeği için sayfalama kapatma ve yapılandırma gösterme komutları, eşleştirme takma adları.
 Konfig Yönetimi (services/configs.py) komutları buradan alır; yeni üretici = tek satır ekleme."""
 

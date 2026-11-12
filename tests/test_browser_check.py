@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Logic of scripts/browser_check.py that needs no browser: route selection and the problem verdict."""
 import importlib.util
 import os

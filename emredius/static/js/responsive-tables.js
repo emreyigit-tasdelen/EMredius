@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Emre Yiğit Taşdelen
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: AGPL-3.0-only
 /* Dar ekranda tabloları kartlara çevirmek için td'lere başlık etiketi ekler (stil: ui-system.css, table.rt). */
 (function () {
   'use strict';

@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """MAC Alarmları: port flap, PoE bütçe aşımı, MAC taşınması, yeni/bilinmeyen MAC kuralları. Olaylar Alarmlar panelindeki
 alm_events tablosuna (kaynak "mac") yazılır; e-posta ancak kuralda adres VE alarm_smtp_enabled=1 ise gider (varsayılan kapalı).
 Veri: eq_ports (flap), ms_poe_main (PoE), mh_changes (taşınma / yeni MAC; machist doldurur)."""

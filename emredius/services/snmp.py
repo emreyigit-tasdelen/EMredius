@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """SNMP NMS page data from the NMS SQLite database (device/alarm CRUD lives in the NMS /api/snmp/* blueprint).
 Community strings and SNMPv3 keys never leave this module."""
 import logging

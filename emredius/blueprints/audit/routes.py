@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Law 5651 audit: accounting search, CSV export, signed daily archive (list / verify / download)."""
 import os
 import urllib.parse

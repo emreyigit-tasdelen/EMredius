@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Emre Yiğit Taşdelen
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Dashboard KPI paneli: /api/dashboard/stats verisiyle kartlar + halka/trend grafikleri. Veri yoksa ilgili kutu gizlenir.
 (function () {
   const panel = document.getElementById('kpiPanel');

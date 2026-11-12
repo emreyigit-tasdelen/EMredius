@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 """Radyolink / mikrodalga hat kalitesi: Ubiquiti, Cambium, MikroTik, Siklu cihazlarından sinyal, gürültü, CCQ ve hız okur.
 Üretici OID'leri OIDS tablosundadır; ayar `radiolink_oids` (JSON) ile üretici bazında değiştirilebilir. Zamanlayıcı
 varsayılan KAPALI (`radiolink_enabled=0`); elle "Şimdi yokla" her zaman çalışır. Geçmiş RETAIN_DAYS gün tutulur."""

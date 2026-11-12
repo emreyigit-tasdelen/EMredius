@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Emre Yiğit Taşdelen
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // Dashboard: top-traffic chart + live system telemetry (/api/system/telemetry*). Loaded only on the dashboard page.
 var storagePieChart = null;
 var cpuLineChart = null;

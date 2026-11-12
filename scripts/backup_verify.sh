@@ -1,6 +1,6 @@
 #!/bin/sh
 # Copyright (c) 2026 Emre Yiğit Taşdelen
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: AGPL-3.0-only
 # Entry point of emredius-backup-verify.service: restore-tests the newest DB backup (see backup_verify.py).
 DIR=$(cd "$(dirname "$0")/.." && pwd)
 PY="$DIR/.venv/bin/python"

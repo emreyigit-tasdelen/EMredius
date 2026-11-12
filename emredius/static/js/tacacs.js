@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Emre Yiğit Taşdelen
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // TACACS+ page: tabs, CRUD via /api/tacacs/*, accounting refresh, rule tester
 // Robust Modal Management
 window.openModal = function(id) {

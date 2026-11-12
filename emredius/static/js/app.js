@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Emre Yiğit Taşdelen
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: AGPL-3.0-only
 // ==================== I18N MULTI-LANGUAGE ENGINE (6 LANGUAGES) ====================
 window.I18N_RAW = {
 "CA kurulum yönergesi": {"en": "CA installation guide", "zh": "CA 安装指南", "ru": "Инструкция по установке CA", "es": "Guía de instalación de la CA", "fr": "Guide d'installation de la CA"},
